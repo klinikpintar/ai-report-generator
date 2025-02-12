@@ -10,7 +10,11 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
+import os
 from pathlib import Path
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -23,9 +27,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-+0iulj(k5%o%r+4ly=b20627t0y6802o0mpfkte&o4wf)&zyvb'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get("DEBUG", "True") == "True"
 
-ALLOWED_HOSTS = []
+if DEBUG:
+    ALLOWED_HOSTS = ['*']
+else:
+    ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
 
 
 # Application definition
@@ -73,12 +80,28 @@ WSGI_APPLICATION = 'app.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+if DEBUG:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.environ.get('DB_NAME_DEV'),
+            'USER': os.environ.get('DB_USER_DEV'),
+            'PASSWORD': os.environ.get('DB_PASS_DEV'),
+            'HOST': os.environ.get('DB_HOST_DEV'),
+            'PORT': os.environ.get('DB_PORT_DEV')
+        }
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.environ.get('DB_NAME_PROD'),
+            'USER': os.environ.get('DB_USER_PROD'),
+            'PASSWORD': os.environ.get('DB_PASS_PROD'),
+            'HOST': os.environ.get('DB_HOST_PROD'),
+            'PORT': os.environ.get('DB_PORT_PROD')
+        }
+    }
 
 
 # Password validation
