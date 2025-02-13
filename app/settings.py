@@ -92,16 +92,28 @@ if DEBUG:
         }
     }
 else:
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': os.environ.get('DB_NAME_PROD'),
-            'USER': os.environ.get('DB_USER_PROD'),
-            'PASSWORD': os.environ.get('DB_PASS_PROD'),
-            'HOST': os.environ.get('DB_HOST_PROD'),
-            'PORT': os.environ.get('DB_PORT_PROD')
-        }
-    }
+    if os.getenv("GITHUB_ACTIONS"):
+      DATABASES = {
+          "default": {
+              "ENGINE": "django.db.backends.postgresql",
+              "NAME": os.getenv("DB_NAME_TEST", "test_db"),
+              "USER": os.getenv("DB_USER_TEST", "test_user"),
+              "PASSWORD": os.getenv("DB_PASSWORD_TEST", "test_pass"),
+              "HOST": "localhost",
+              "PORT": "5432",
+          }
+      }
+    else:
+      DATABASES = {
+          'default': {
+              'ENGINE': 'django.db.backends.postgresql',
+              'NAME': os.environ.get('DB_NAME_PROD'),
+              'USER': os.environ.get('DB_USER_PROD'),
+              'PASSWORD': os.environ.get('DB_PASS_PROD'),
+              'HOST': os.environ.get('DB_HOST_PROD'),
+              'PORT': os.environ.get('DB_PORT_PROD')
+          }
+      }
 
 
 # Password validation
