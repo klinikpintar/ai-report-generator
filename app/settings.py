@@ -32,7 +32,7 @@ DEBUG = os.environ.get("DEBUG", "True") == "True"
 if DEBUG:
     ALLOWED_HOSTS = ['*']
 else:
-    ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
+    ALLOWED_HOSTS = ["ai-report-generator-staging.up.railway.app"]
 
 
 # Application definition
