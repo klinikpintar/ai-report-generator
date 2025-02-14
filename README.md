@@ -2,6 +2,12 @@
 
 AI Report Generator is a web application for generating AI-powered reports.
 
+## Build Status 
+[![Django CI/CD](https://github.com/klinikpintar/ai-report-generator/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/klinikpintar/ai-report-generator/actions/workflows/ci-cd.yml)
+
+## Code Coverage
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=kp-x-ppl-a1_ai-report-generator&metric=coverage)](https://sonarcloud.io/summary/new_code?id=kp-x-ppl-a1_ai-report-generator)
+
 ## Installation Guide
 
 Follow these steps to set up the project:
