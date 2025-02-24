@@ -1,58 +1,36 @@
-# AI Report Generator
+This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
-AI Report Generator is a web application for generating AI-powered reports.
+## Getting Started
 
-## Build Status 
-[![Django CI/CD](https://github.com/klinikpintar/ai-report-generator/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/klinikpintar/ai-report-generator/actions/workflows/ci-cd.yml)
+First, run the development server:
 
-## Code Coverage
-[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=kp-x-ppl-a1_ai-report-generator&metric=coverage)](https://sonarcloud.io/summary/new_code?id=kp-x-ppl-a1_ai-report-generator)
-
-## Installation Guide
-
-Follow these steps to set up the project:
-
-### 1. Set Up a Virtual Environment
-Create and activate a virtual environment:
-```sh
-python -m venv env
-source env/bin/activate  # On Windows use: env\Scripts\activate
+```bash
+npm run dev
+# or
+yarn dev
+# or
+pnpm dev
+# or
+bun dev
 ```
 
-### 2. Install Dependencies
-Install the required Python packages:
-```sh
-pip install -r requirements.txt
-```
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-### 3. Set Up Environment Variables
-Create a `.env` file in the project's root directory and add the following content:
+You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
-```ini
-# Development Database
-DB_NAME_DEV=dev
-DB_USER_DEV=postgres
-DB_PASS_DEV=password
-DB_HOST_DEV=localhost
-DB_PORT_DEV=5432
+This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
-## Debug
-DEBUG=True
-```
+## Learn More
 
-### 4. Apply Migrations
-Run the following command to set up the database schema:
-```sh
-python manage.py migrate
-```
+To learn more about Next.js, take a look at the following resources:
 
-### 5. Run the Development Server
-Start the Django development server:
-```sh
-python manage.py runserver
-```
+- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
+- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
 
-Now, you can access the application at `http://127.0.0.1:8000/`.
+You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
-## License
-This project is licensed under the MIT License.
+## Deploy on Vercel
+
+The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+
+Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.

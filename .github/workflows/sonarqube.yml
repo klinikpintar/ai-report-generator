@@ -27,43 +27,36 @@ jobs:
           --health-retries 5
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout Repository
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
       
-      - name: Setup Python
-        uses: actions/setup-python@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
         with:
-          python-version: "3.10"
+          node-version: 18
 
       - name: Install Dependencies
         run: |
-          python -m venv venv
-          source venv/bin/activate
-          pip install -r requirements.txt
+          npm install -g pnpm
+          pnpm install --frozen-lockfile
 
-      - name: Run Migrations
-        env:
-          GITHUB_ACTIONS: "true"
-          DEBUG: "false"
-          DB_NAME: test_db
-          DB_USER: test_user
-          DB_PASSWORD: test_pass
-        run: |
-          source venv/bin/activate
-          python manage.py migrate
+      # Nanti kalo udah butuh database, uncomment ini
+      # - name: Run Migrations
+      #   env:
+      #     GITHUB_ACTIONS: "true"
+      #     DEBUG: "false"
+      #     DB_NAME: test_db
+      #     DB_USER: test_user
+      #     DB_PASSWORD: test_pass
+      #   run: |
+      #     source venv/bin/activate
+      #     python manage.py migrate
 
       - name: Run Tests and Generate Coverage Report
-        env:
-          GITHUB_ACTIONS: "true"
-          DEBUG: "false"
-          DB_NAME: test_db
-          DB_USER: test_user
-          DB_PASSWORD: test_pass
         run: |
-          source venv/bin/activate
-          coverage run --source='.' manage.py test
-          coverage xml -o coverage.xml
+          pnpm run test:coverage
 
       - name: SonarQube Scan
         uses: SonarSource/sonarqube-scan-action@v4
