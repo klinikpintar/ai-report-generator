@@ -1,4 +1,4 @@
-name: SonarCloud analysis
+name: SonarQube analysis
 
 on:
   push:
@@ -32,17 +32,18 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+          fetch-depth: 0 
       
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 18
+          cache: 'pnpm'
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v2
         with:
-          version: 8  # Gunakan versi terbaru yang stabil
+          version: 8 
 
       - name: Install Dependencies
         run: pnpm install --frozen-lockfile
