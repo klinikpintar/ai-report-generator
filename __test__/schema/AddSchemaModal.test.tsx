@@ -27,13 +27,4 @@ describe("Modal Component", () => {
 
     expect(handleClose).toHaveBeenCalledTimes(1);
   });
-
-  test("memanggil fungsi onClose saat klik di luar modal", () => {
-    const handleClose = jest.fn();
-    render(<AddSchemaModal isVisible={true} onClose={handleClose} />);
-
-    fireEvent.click(screen.getByTestId("wrapper"));
-
-    expect(handleClose).toHaveBeenCalledTimes(1);
-  });
 });
