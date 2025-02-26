@@ -12,7 +12,10 @@
     "test:coverage": "jest --coverage"
   },
   "dependencies": {
+    "@ai-sdk/google": "^1.1.17",
+    "@ai-sdk/react": "^1.1.18",
     "@prisma/client": "6.4.1",
+    "ai": "^4.1.46",
     "next": "^15.1.7",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
@@ -32,9 +35,11 @@
     "eslint-plugin-testing-library": "^7.1.1",
     "jest": "^29.7.0",
     "jest-environment-jsdom": "^29.7.0",
+    "next-test-api-route-handler": "^4.0.14",
     "postcss": "^8",
     "prisma": "^6.4.1",
     "tailwindcss": "^3.4.1",
+    "ts-jest": "^29.2.6",
     "ts-node": "^10.9.2",
     "tsx": "^4.19.3",
     "typescript": "^5"
