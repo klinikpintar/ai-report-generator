@@ -1,30 +1,19 @@
 import { NextResponse } from "next/server";
-import jwt from "jsonwebtoken";
-import prisma from "@/lib/prisma";
-
-const ACCESS_SECRET = process.env.JWT_ACCESS_SECRET;
-const REFRESH_SECRET = process.env.JWT_REFRESH_SECRET;
-const EXPIRES_ACCESS = parseInt(process.env.JWT_ACCESS_EXPIRES || "3600", 10);
-const EXPIRES_REFRESH = parseInt(
-  process.env.JWT_REFRESH_EXPIRES || "86400",
-  10
-);
+import {
+  verifyToken,
+  getUserById,
+  extractRefreshToken,
+} from "../../../utils/authUtils";
+import {
+  generateAccessToken,
+  generateRefreshToken,
+} from "../../../utils/generateToken";
+import config from "../../../../config";
 
 export async function POST(req: Request) {
   try {
-    if (!ACCESS_SECRET || !REFRESH_SECRET) {
-      return NextResponse.json(
-        {
-          message: "Internal server error",
-        },
-        { status: 500 }
-      );
-    }
-
-    const refreshToken = req.headers
-      .get("Cookie")
-      ?.split("refresh_token=")[1]
-      ?.split(";")[0];
+    const cookie = req.headers.get("Cookie");
+    const refreshToken = extractRefreshToken(cookie!);
 
     if (!refreshToken) {
       return NextResponse.json(
@@ -33,7 +22,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const decoded = jwt.verify(refreshToken, REFRESH_SECRET) as jwt.JwtPayload;
+    const decoded = verifyToken(refreshToken, config.JWT_REFRESH_SECRET);
     if (!decoded) {
       return NextResponse.json(
         { message: "Invalid refresh token" },
@@ -41,12 +30,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const user = await prisma.user.findUnique({
-      where: {
-        id: decoded.id,
-      },
-    });
-
+    const user = await getUserById(decoded.id);
     if (!user) {
       return NextResponse.json(
         { message: "Invalid refresh token" },
@@ -54,15 +38,11 @@ export async function POST(req: Request) {
       );
     }
 
-    const newAccessToken = jwt.sign(
-      { id: user.id, role: user.role },
-      ACCESS_SECRET,
-      { expiresIn: EXPIRES_ACCESS }
-    );
-
-    const newRefreshToken = jwt.sign({ id: user.id }, REFRESH_SECRET, {
-      expiresIn: EXPIRES_REFRESH,
+    const newAccessToken = generateAccessToken({
+      id: user.id,
+      role: user.role,
     });
+    const newRefreshToken = generateRefreshToken({ id: user.id });
 
     const response = NextResponse.json({
       data: { access_token: newAccessToken },
@@ -73,7 +53,7 @@ export async function POST(req: Request) {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       path: "/",
-      maxAge: EXPIRES_REFRESH,
+      maxAge: config.JWT_REFRESH_EXPIRES,
     });
 
     return response;
