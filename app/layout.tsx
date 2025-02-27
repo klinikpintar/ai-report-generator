@@ -14,14 +14,15 @@ export const metadata = {
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className="h-screen overflow-hidden flex flex-col">
-        <Navbar />
-        <div className="flex flex-1">
-          <Sidebar />
-          <main className="flex-1">{children}</main>
+      <body className={inter.className}>
+        <div className="h-screen overflow-hidden flex flex-col">
+          <Navbar />
+          <div className="flex flex-1">
+            <Sidebar />
+            <main className="flex-1">{children}</main>
+          </div>
         </div>
       </body>
     </html>
   );
 }
-
