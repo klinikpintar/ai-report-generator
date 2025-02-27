@@ -1,8 +1,22 @@
 import { POST } from '../../../api/chat/route';
+jest.mock('ai', () => ({
+  generateText: jest.fn().mockResolvedValue({
+    text: 'Mocked response',
+    finishReason: 'stop',
+    usage: {
+      promptTokens: 10,
+      completionTokens: 20,
+    },
+  }),
+}));
+
+jest.mock('@ai-sdk/google', () => ({
+  google: jest.fn().mockReturnValue('mocked-model'),
+}));
 
 describe('POST /api/chat', () => {
   it('checks if the API works', async () => {
-    // Create a mock Request object
+    // Now Request should be available globally from jest.setup.ts
     const req = new Request('http://localhost/api/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -11,14 +25,12 @@ describe('POST /api/chat', () => {
       }),
     });
 
-    // Call the handler directly
     const response = await POST(req);
-    
-    // Check the response
     expect(response.status).toBe(200);
-    
-    // If you want to check the response body
+
     const responseBody = await response.json();
-    expect(responseBody).toHaveProperty('aiResponse');
+    expect(responseBody).toHaveProperty('aiResponse', 'Mocked response');
+    expect(responseBody).toHaveProperty('userPrompt', 'Hello');
+    expect(responseBody).toHaveProperty('messageId');
   });
 });
