@@ -1,3 +1,4 @@
+"use client";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -15,10 +16,10 @@ import {
   PaginationLink,
   PaginationNext,
   PaginationPrevious,
-} from "@/components/ui/pagination"
-import { FileIcon } from 'lucide-react';
+} from "@/components/ui/pagination";
+import { FileIcon } from "lucide-react";
 import React from "react";
-import { schemas } from "../constant";
+import { dummySchemas } from "../constant";
 import { Chip } from "@/components/ui/chip";
 
 export const SchemaTable = () => {
@@ -35,26 +36,38 @@ export const SchemaTable = () => {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {schemas.map((schema) => (
-            <TableRow key={schema.name}>
+          {dummySchemas.map((schema) => (
+            <TableRow key={schema.id}>
               <TableCell>{schema.name}</TableCell>
               <TableCell className="px-2">
-                <Chip variant="orange" className="w-full cursor-default">{schema.platform}</Chip>
+                <Chip variant="orange" className="w-full cursor-default">
+                  {schema.service.platform.name}
+                </Chip>
               </TableCell>
               <TableCell className="px-2">
-                <Chip variant="pink" className="w-full cursor-default">{schema.service}</Chip>
+                <Chip variant="pink" className="w-full cursor-default">
+                  {schema.service.name}
+                </Chip>
               </TableCell>
               <TableCell>
-                <Button variant="ghost" size="sm" className="text-blue-500 hover:text-blue-700">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-[#00B0EB] hover:text-[#00B0EB]/90"
+                >
                   <FileIcon className="h-4 w-4 mr-1" />
                   File
                 </Button>
               </TableCell>
               <TableCell className="text-right">
-                <Button size="sm" className="mr-2 bg-blue-500 hover:bg-blue-700">
+                <Button size="sm" className="mr-2 bg-[#00B0EB] hover:bg-[#00B0EB]/90">
                   Edit
                 </Button>
-                <Button variant="outline" size="sm" className="text-red-500 hover:text-red-700 border-red-500 border-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-red-500 hover:text-red-700 border-red-500 border-2"
+                >
                   Delete
                 </Button>
               </TableCell>
@@ -63,34 +76,34 @@ export const SchemaTable = () => {
         </TableBody>
       </Table>
 
-      <Pagination>
+      <Pagination className="w-full flex justify-between">
         <PaginationContent>
           <PaginationItem>
-            <PaginationPrevious href="#" className="text-gray-500">Sebelumnya</PaginationPrevious>
+            <PaginationPrevious href="#" />
+          </PaginationItem>
+        </PaginationContent>
+        <PaginationContent>
+          <PaginationItem>
+            <PaginationLink href="#" isActive={true}>
+              1
+            </PaginationLink>
           </PaginationItem>
           <PaginationItem>
-            <PaginationLink href="#" className="bg-blue-500 text-white hover:bg-blue-600">1</PaginationLink>
+            <PaginationLink href="#">2</PaginationLink>
           </PaginationItem>
           <PaginationItem>
-            <PaginationLink href="#" className="text-gray-500">2</PaginationLink>
+            <PaginationEllipsis />
           </PaginationItem>
           <PaginationItem>
-            <PaginationLink href="#" className="text-gray-500">3</PaginationLink>
+            <PaginationLink href="#">9</PaginationLink>
           </PaginationItem>
           <PaginationItem>
-            <PaginationEllipsis className="text-gray-500" />
+            <PaginationLink href="#">10</PaginationLink>
           </PaginationItem>
+        </PaginationContent>
+        <PaginationContent>
           <PaginationItem>
-            <PaginationLink href="#" className="text-gray-500">8</PaginationLink>
-          </PaginationItem>
-          <PaginationItem>
-            <PaginationLink href="#" className="text-gray-500">9</PaginationLink>
-          </PaginationItem>
-          <PaginationItem>
-            <PaginationLink href="#" className="text-gray-500">10</PaginationLink>
-          </PaginationItem>
-          <PaginationItem>
-            <PaginationNext href="#" className="text-gray-500">Selanjutnya</PaginationNext>
+            <PaginationNext href="#" />
           </PaginationItem>
         </PaginationContent>
       </Pagination>
