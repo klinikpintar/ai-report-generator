@@ -16,7 +16,6 @@ jest.mock('@ai-sdk/google', () => ({
 
 describe('POST /api/chat', () => {
   it('checks if the API works', async () => {
-    // Now Request should be available globally from jest.setup.ts
     const req = new Request('http://localhost/api/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
