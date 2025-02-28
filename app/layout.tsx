@@ -3,6 +3,7 @@ import "./globals.css";
 import React from "react";
 import Navbar from "./components/navbar";
 import Sidebar from "./components/sidebar";
+import Dropdown from "./components/dropdown";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -15,11 +16,15 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <body className={inter.className}>
-        <div className="h-screen overflow-hidden flex flex-col">
+        <div className="h-screen overflow-hidden flex flex-col bg-white">
           <Navbar />
           <div className="flex flex-1">
             <Sidebar />
-            <main className="flex-1">{children}</main>
+            <main className="flex-1">
+              <div className="max-w-[1200px] w-full mx-auto px-6">
+                {children}
+              </div>
+            </main>
           </div>
         </div>
       </body>
