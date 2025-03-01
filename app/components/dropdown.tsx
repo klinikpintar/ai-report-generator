@@ -54,7 +54,7 @@ export default function Dropdown() {
   };
 
   return (
-    <div className="relative w-72">
+    <div className="relative w-72 pt-3 pl-5">
       <button
         className="w-full text-left flex items-center gap-5 font-bold text-lg"
         onClick={() => setIsOpen(!isOpen)}
