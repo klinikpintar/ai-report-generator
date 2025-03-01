@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import Dropdown from "../app/components/dropdown";
+import { useService } from "../app/context/serviceContext"; // Import context
 
 // Definisikan tipe data pesan
 interface Message {
@@ -16,6 +17,8 @@ export default function ChatBox() {
   const [hasChatted, setHasChatted] = useState(false);
   const username = "Virgillia Yeala";
   const chatContainerRef = useRef<HTMLDivElement>(null);
+  const { selectedService } = useService(); // Ambil service dari context
+
 
   const sendMessage = () => {
     if (!input.trim()) return;
@@ -80,7 +83,7 @@ export default function ChatBox() {
       <div className="sticky bottom-3 w-full bg-white py-4 px-6">
         {/* Service Name - Dipindahkan ke pojok kiri atas input */}
         <p className="text-sm text-gray-600 absolute left-6 top-2">
-          Reservasi: Pilih Service
+          Reservasi: {selectedService}
         </p>
 
         {/* Input Chat */}
