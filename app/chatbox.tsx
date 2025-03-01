@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import Dropdown from "../app/components/dropdown";
 
@@ -15,6 +15,7 @@ export default function ChatBox() {
   const [input, setInput] = useState("");
   const [hasChatted, setHasChatted] = useState(false);
   const username = "Virgillia Yeala";
+  const chatContainerRef = useRef<HTMLDivElement>(null);
 
   const sendMessage = () => {
     if (!input.trim()) return;
@@ -32,6 +33,12 @@ export default function ChatBox() {
     }, 1000);
   };
 
+  useEffect(() => {
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+    }
+  }, [messages]);
+
   return (
     <div className="ml-64 flex flex-col h-screen">
       <Dropdown />
@@ -45,7 +52,10 @@ export default function ChatBox() {
 
       {/* Bagian Chat Scrollable */}
       {hasChatted && (
-        <div className="flex-1 overflow-y-auto p-4 space-y-2 bg-white pb-24">
+        <div 
+          ref={chatContainerRef} // Gunakan ref di sini
+          className="flex-1 overflow-y-auto p-4 space-y-2 bg-white pb-24"
+        >
         {/* Pesan Selamat Datang, akan hilang setelah user chat */}
 
         {/* Chat Messages */}
