@@ -3,7 +3,6 @@ import "./globals.css";
 import React from "react";
 import Navbar from "./components/navbar";
 import Sidebar from "./components/sidebar";
-import Dropdown from "./components/dropdown";
 
 const inter = Inter({ subsets: ["latin"] });
 
