@@ -2,11 +2,13 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import { useService } from "../context/serviceContext"; // Import context
 
 export default function Dropdown() {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
-  const [selectedService, setSelectedService] = useState("Pilih Service"); // Default Service
+  const { selectedService, setSelectedService } = useService();
+
 
   const options = [
     "Select All",
@@ -31,27 +33,26 @@ export default function Dropdown() {
       let newSelection = selectedOptions.includes(option)
         ? selectedOptions.filter((item) => item !== option)
         : [...selectedOptions, option];
-
-      // Jika semua layanan dipilih satu per satu, otomatis aktifkan "Select All"
+  
+      // Jika semua layanan dipilih satu per satu, aktifkan "Select All"
       if (newSelection.length === options.length - 1) {
-        newSelection = options.slice(1);
+        setSelectedOptions(options.slice(1));
         setSelectedService("Select All");
+        return;
       }
-
+  
       setSelectedOptions(newSelection);
-
-      // **Menampilkan Service yang Dipilih**
-      if (newSelection.length === 1) {
-        setSelectedService(`${newSelection[0]}`);
-      } else if (newSelection.length > 1) {
-        setSelectedService(
-          `${newSelection[0]} dan ${newSelection.length - 1} more`
-        );
-      } else {
+  
+      // **Menampilkan Service yang Dipilih dengan logika yang lebih jelas**
+      if (newSelection.length === 0) {
         setSelectedService("Pilih Service");
+      } else if (newSelection.length === 1) {
+        setSelectedService(`${newSelection[0]}`);
+      } else {
+        setSelectedService(`${newSelection[0]} dan ${newSelection.length - 1} more`);
       }
     }
-  };
+  };  
 
   return (
     <div className="relative w-72 pt-3 pl-5">
