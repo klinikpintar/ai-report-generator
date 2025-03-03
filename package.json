@@ -12,6 +12,7 @@
     "test:coverage": "jest --coverage"
   },
   "dependencies": {
+    "@ai-sdk/deepseek": "^0.1.12",
     "@ai-sdk/google": "^1.1.17",
     "@ai-sdk/react": "^1.1.18",
     "@prisma/client": "6.4.1",

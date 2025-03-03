@@ -6,6 +6,7 @@ interface Message {
   id: string;
   role: 'user' | 'assistant';
   content: string;
+  modelUsed?: string; // Add this field
 }
 
 interface ApiResponse {
@@ -19,13 +20,22 @@ interface ApiResponse {
       promptTokens: number;
       completionTokens: number;
     };
+    modelUsed: string; // Add this field
   };
 }
+
+// Define available models
+const AI_MODELS = [
+  { id: 'gemini', name: 'Google Gemini' },
+  { id: 'deepseek', name: 'DeepSeek Chat' },
+  // Add more models as needed
+];
 
 export default function ChatPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedModel, setSelectedModel] = useState(AI_MODELS[0].id);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Auto scroll to bottom of messages
@@ -61,6 +71,7 @@ export default function ChatPage() {
             })),
             { role: 'user', content: input.trim() },
           ],
+          model: selectedModel, // Send selected model to API
         }),
       });
 
@@ -74,6 +85,7 @@ export default function ChatPage() {
         id: data.messageId,
         role: 'assistant',
         content: data.aiResponse,
+        modelUsed: data.metadata.modelUsed, // Include the model information
       };
 
       setMessages((prev) => [...prev, assistantMessage]);
@@ -98,6 +110,26 @@ export default function ChatPage() {
     <div className="min-h-screen flex flex-col p-4 max-w-3xl mx-auto">
       <h1 className="text-2xl font-bold mb-4">AI Report Generator</h1>
       
+      {/* Model selector */}
+      <div className="mb-4">
+        <label htmlFor="model-selector" className="block text-sm font-medium text-gray-700 mb-1">
+          Select AI Model
+        </label>
+        <select
+          id="model-selector"
+          value={selectedModel}
+          onChange={(e) => setSelectedModel(e.target.value)}
+          className="block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+          disabled={isLoading}
+        >
+          {AI_MODELS.map((model) => (
+            <option key={model.id} value={model.id}>
+              {model.name}
+            </option>
+          ))}
+        </select>
+      </div>
+      
       <div className="flex-1 overflow-auto mb-4 border border-gray-300 rounded-md p-4">
         {messages.length === 0 ? (
           <p className="text-gray-500">Start a conversation by sending a message.</p>
@@ -113,6 +145,7 @@ export default function ChatPage() {
             >
               <div className="font-semibold mb-1">
                 {message.role === 'user' ? 'You' : 'AI'}
+                {message.modelUsed && <span className="text-xs text-gray-500 ml-2">({message.modelUsed})</span>}
               </div>
               <div className="whitespace-pre-wrap">{message.content}</div>
             </div>
