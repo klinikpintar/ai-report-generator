@@ -1,3 +1,4 @@
+import { NextResponse } from "next/server";
 export interface Payload {
   id: string;
   role?: string;
@@ -27,4 +28,12 @@ export interface IAuthService {
    * @returns Decoded payload or null if invalid
    */
   verifyToken(token: string, secret: string): Payload | null;
+
+  /**
+   * Put Refresh Token in Cookie
+   * @param response - NextResponse object
+   * @param token - Refresh token
+   * @returns NextResponse object with cookie
+   */
+  putRefreshTokenInCookie(response: NextResponse, token: string): NextResponse;
 }

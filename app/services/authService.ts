@@ -3,6 +3,7 @@ import { IAuthService, Payload } from "../interfaces/IAuthService";
 import config from "../config";
 import prisma from "@/lib/prisma";
 import bcrypt from "bcryptjs";
+import { NextResponse } from "next/server";
 
 class AuthService implements IAuthService {
   generateAccessToken(payload: Payload): string {
@@ -31,6 +32,16 @@ class AuthService implements IAuthService {
     } catch {
       return null;
     }
+  }
+
+  putRefreshTokenInCookie(response: NextResponse, token: string): NextResponse {
+    response.cookies.set("refresh_token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      path: "/",
+      maxAge: config.JWT_REFRESH_EXPIRES,
+    });
+    return response;
   }
 }
 
