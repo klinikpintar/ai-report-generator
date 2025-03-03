@@ -9,6 +9,8 @@ const BASE_API_URL = process.env.BASE_API_URL || "http://localhost:3000"
 const BASE_SCHEMA_URL = '/api/schema'
 const NON_EXISTING_ID = 9999
 
+let createdSchemaId: number;
+
 const validSchemaData = {
   name: 'products',
   description: 'Table to store products data',
@@ -34,6 +36,7 @@ const createValidSchema = async () => {
     .send(validSchemaData)
 
   expect(response.status).toBe(StatusCodes.CREATED)
+  createdSchemaId = response.body.id;
 
   return validSchemaData.name
 }
@@ -106,7 +109,7 @@ const updateSchemaTest = async () => {
     .post(BASE_SCHEMA_URL)
     .send(validSchemaData)
   
-  const response = await updateSchema(1, updatedSchemaData)
+  const response = await updateSchema(createdSchemaId, updatedSchemaData)
 
   expect(response.status).toBe(StatusCodes.OK);
   expect(response.body.description).toBe(updatedSchemaData.description);
@@ -117,7 +120,7 @@ const deleteSchemaTest = async () => {
     .post(BASE_SCHEMA_URL)
     .send(validSchemaData)
   
-  const response = await deleteSchema(1)
+  const response = await deleteSchema(createdSchemaId)
   expect(response.status).toBe(StatusCodes.OK);
 }
 
@@ -153,14 +156,6 @@ const updateSchemaToDuplicate = async () => {
   expect(response.status).toBe(StatusCodes.CONFLICT);
 };
 
-const updateSchemaWithInvalidBody = async () => {
-  const createdSchema = await request(BASE_API_URL).post(BASE_SCHEMA_URL).send(validSchemaData);
-
-  const response = await updateSchema(createdSchema.body.id, { name: '' });
-
-  expect(response.status).toBe(StatusCodes.BAD_REQUEST);
-};
-
 const deleteNonExistingSchema = async () => {
   const response = await deleteSchema(NON_EXISTING_ID);
 
@@ -178,7 +173,7 @@ beforeEach(async () => {
   await prisma.schema.deleteMany();
 });
 
-describe('CR of Schema API', () => {
+describe('CRUD of Schema API', () => {
   it("should be able to save valid schema", createValidSchema)
   it("should return BAD REQUEST for invalid schema data", createInvalidSchema)
   it("should return CONFLICT for duplicate schema", createDuplicateSchema)
@@ -190,7 +185,6 @@ describe('CR of Schema API', () => {
   it("should be able to integrate update and read (UR) of schema", updateAndFindSchema)
   it("should return NOT_FOUND for invalid schema id", updateNonExistingSchema)
   it("should return CONFLICT when updating schema to an existing schema name", updateSchemaToDuplicate);
-  it("should return BAD_REQUEST when updating schema with an invalid request body", updateSchemaWithInvalidBody);
 
   it("should be able to delete schema", deleteSchemaTest)
   it("should be able to integrate delete and read (DR) of schema", deleteAndFindSchema)

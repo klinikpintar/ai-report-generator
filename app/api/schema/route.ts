@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { StatusCodes } from 'http-status-codes';
 import prisma from '@/lib/prisma';
 import { CreateSchemaDto } from '../dtos/schema.dtos';
@@ -13,7 +13,7 @@ export async function GET() {
   }
 }
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const validatedData = validateSchemaInput(body);
@@ -28,4 +28,47 @@ export async function POST(req: Request) {
   }
 }
 
-// note pake next request, supaya bisa mock request
+export async function PATCH(req: NextRequest) {
+  try {
+    const body = await req.json();
+
+    if (!body.id) {
+      return NextResponse.json({ error: 'Schema ID is required' }, { status: StatusCodes.BAD_REQUEST });
+    }
+
+    const existingSchema = await prisma.schema.findUnique({ where: { id: body.id } });
+    if (!existingSchema) {
+      return NextResponse.json({ error: 'Schema not found' }, { status: StatusCodes.NOT_FOUND });
+    }
+
+    const updatedSchema = await prisma.schema.update({
+      where: { id: body.id },
+      data: body,
+    });
+
+    return NextResponse.json(updatedSchema, { status: StatusCodes.OK });
+  } catch (error) {
+    return handlePrismaError(error);
+  }
+}
+
+export async function DELETE(req: NextRequest) {
+  try {
+    const body = await req.json();
+
+    if (!body.id) {
+      return NextResponse.json({ error: 'Schema ID is required' }, { status: StatusCodes.BAD_REQUEST });
+    }
+
+    const existingSchema = await prisma.schema.findUnique({ where: { id: body.id } });
+    if (!existingSchema) {
+      return NextResponse.json({ error: 'Schema not found' }, { status: StatusCodes.NOT_FOUND });
+    }
+
+    await prisma.schema.delete({ where: { id: body.id } });
+
+    return NextResponse.json({ message: 'Schema deleted successfully' }, { status: StatusCodes.OK });
+  } catch (error) {
+    return handlePrismaError(error);
+  }
+}
