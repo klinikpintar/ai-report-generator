@@ -149,6 +149,28 @@ describe('POST /api/chat', () => {
     const responseBody = await response.json();
     expect(responseBody).toHaveProperty('userPrompt', specialContent);
   });
+
+  it('handles missing finishReason and usage information', async () => {
+    (generateText as jest.Mock).mockResolvedValueOnce({
+      text: 'Mocked response with missing metadata',
+    });
+
+    const req = new Request('http://localhost/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        messages: [{ role: 'user', content: 'Hello' }],
+      }),
+    });
+
+    const response = await POST(req);
+    expect(response.status).toBe(200);
+    
+    const responseBody = await response.json();
+    expect(responseBody.metadata).toHaveProperty('finishReason', 'stop'); // Default value
+    expect(responseBody.metadata.usage).toHaveProperty('promptTokens', 0); // Default value
+    expect(responseBody.metadata.usage).toHaveProperty('completionTokens', 0); // Default value
+  });
 });
 
 // end-to-end
