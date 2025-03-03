@@ -1,19 +1,15 @@
 import { NextResponse } from "next/server";
-import {
-  verifyToken,
-  getUserById,
-  extractRefreshToken,
-} from "../../../utils/authUtils";
-import {
-  generateAccessToken,
-  generateRefreshToken,
-} from "../../../utils/generateToken";
+import { extractRefreshToken } from "../../../../utils/authUtils";
 import config from "../../../../config";
+import prisma from "@/lib/prisma";
+import bcrypt from "bcryptjs";
+import authService from "@/app/services/authService";
 
 export async function POST(req: Request) {
   try {
-    const cookie = req.headers.get("Cookie");
-    const refreshToken = extractRefreshToken(cookie!);
+    const cookie = req.headers.get("Cookie") || "";
+
+    const refreshToken = extractRefreshToken(cookie);
 
     if (!refreshToken) {
       return NextResponse.json(
@@ -22,27 +18,41 @@ export async function POST(req: Request) {
       );
     }
 
-    const decoded = verifyToken(refreshToken, config.JWT_REFRESH_SECRET);
+    const decoded = authService.verifyToken(
+      refreshToken,
+      config.JWT_REFRESH_SECRET
+    );
     if (!decoded) {
       return NextResponse.json(
-        { message: "Invalid refresh token" },
+        { message: "Invalid refresh token or expired" },
         { status: 403 }
       );
     }
 
-    const user = await getUserById(decoded.id);
-    if (!user) {
+    const storedToken = await prisma.refreshToken.findFirst({
+      where: { userId: decoded.id },
+    });
+
+    if (
+      !storedToken ||
+      !(await bcrypt.compare(refreshToken, storedToken.token))
+    ) {
       return NextResponse.json(
         { message: "Invalid refresh token" },
         { status: 403 }
       );
     }
 
-    const newAccessToken = generateAccessToken({
-      id: user.id,
-      role: user.role,
+    await prisma.refreshToken.deleteMany({ where: { userId: decoded.id } });
+    const user = await prisma.user.findUnique({ where: { id: decoded.id } });
+
+    const newAccessToken = authService.generateAccessToken({
+      id: user!.id,
+      role: user!.role,
     });
-    const newRefreshToken = generateRefreshToken({ id: user.id });
+    const newRefreshToken = await authService.generateRefreshToken({
+      id: user!.id,
+    });
 
     const response = NextResponse.json({
       data: { access_token: newAccessToken },

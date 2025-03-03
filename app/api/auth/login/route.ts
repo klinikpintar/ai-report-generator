@@ -2,11 +2,8 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { loginSchema } from "../../dtos/auth.dto";
-import {
-  generateAccessToken,
-  generateRefreshToken,
-} from "../../utils/generateToken";
 import config from "../../../config";
+import authService from "@/app/services/authService";
 
 export async function POST(req: Request) {
   try {
@@ -35,8 +32,14 @@ export async function POST(req: Request) {
       );
     }
 
-    const accessToken = generateAccessToken({ id: user.id, role: user.role });
-    const refreshToken = generateRefreshToken({ id: user.id });
+    await prisma.refreshToken.deleteMany({ where: { userId: user.id } });
+    const accessToken = authService.generateAccessToken({
+      id: user.id,
+      role: user.role,
+    });
+    const refreshToken = await authService.generateRefreshToken({
+      id: user.id,
+    });
 
     const response = NextResponse.json({
       data: { access_token: accessToken },
