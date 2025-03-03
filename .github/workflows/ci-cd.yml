@@ -6,6 +6,7 @@ on:
       - main
       - staging
       - development
+      - pbi/*
   pull_request:
     branches:
       - main
