@@ -10,18 +10,13 @@ const EditSchemaModal = ({ isVisible, onClose }: Props) => {
   if (!isVisible) return null;
 
   return (
-    <Modal>
-      <div className="flex items-center justify-center p-7 pb-1 rounded-t dark:border-gray-600 border-gray-200 ">
-        <h3 className="text-2xl font-semibold text-[#00B0EB] dark:text-white">
-          Edit Skema Database
-        </h3>
-      </div>
-      <div className="flex items-center justify-center md:pl-5 md:pr-5">
-        <p className="text-center">
-          Sesuaikan informasi skema database agar tetap relevan dengan kebutuhan
-          sistem
-        </p>
-      </div>
+    <Modal
+      isVisible={isVisible}
+      onClose={onClose}
+      title={"Edit Skema Database"}
+      subtitle="Sesuaikan informasi skema database agar tetap relevan dengan kebutuhan
+          sistem"
+    >
       <form className="p-4 md:p-5">
         <div className="grid gap-4 mb-4 grid-cols-2">
           <div className="col-span-2">
