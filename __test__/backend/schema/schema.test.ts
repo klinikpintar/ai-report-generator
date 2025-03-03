@@ -1,12 +1,13 @@
 import dotenv from 'dotenv';
 import request from 'supertest';
 import { StatusCodes } from 'http-status-codes';
-import prisma from '../../lib/prisma';
+import prisma from '../../../lib/prisma';
 
 dotenv.config()
 
 const BASE_API_URL = process.env.BASE_API_URL || "http://localhost:3000"
 const BASE_SCHEMA_URL = '/api/schema'
+const NON_EXISTING_ID = 9999
 
 const validSchemaData = {
   name: 'products',
@@ -21,6 +22,11 @@ const updatedSchemaData = {
 const invalidSchemaData = {
   name: 'products_invalid',
 };
+
+const nonExistingSchemaReqBody = {
+  id: NON_EXISTING_ID,
+  description: 'Trying to update a non-existing schema',
+}
 
 const createValidSchema = async () => {
   const response = await request(BASE_API_URL)
@@ -80,21 +86,19 @@ const createAndReadSchema = async () => {
   await findSchema(schemaName, true)
 }
 
-const updateSchema = async (schemaId: number) => {
+const updateSchema = async (schemaId: number, updateSchemaRequestBody: any) => {
   const response = await request(BASE_API_URL).patch(BASE_SCHEMA_URL).send({
     id: schemaId,
-    ...updatedSchemaData,
+    ...updateSchemaRequestBody,
   });
 
-  expect(response.status).toBe(StatusCodes.OK);
-  expect(response.body.description).toBe(updatedSchemaData.description);
+  return response
 };
 
 const deleteSchema = async (schemaId: number) => {
   const response = await request(BASE_API_URL).delete(BASE_SCHEMA_URL).send({ id: schemaId });
 
-  expect(response.status).toBe(StatusCodes.OK);
-  expect(response.body.message).toBe('Schema deleted successfully');
+  return response
 };
 
 const updateSchemaTest = async () => {
@@ -102,7 +106,10 @@ const updateSchemaTest = async () => {
     .post(BASE_SCHEMA_URL)
     .send(validSchemaData)
   
-  await updateSchema(1)
+  const response = await updateSchema(1, updatedSchemaData)
+
+  expect(response.status).toBe(StatusCodes.OK);
+  expect(response.body.description).toBe(updatedSchemaData.description);
 }
 
 const deleteSchemaTest = async () => {
@@ -110,7 +117,8 @@ const deleteSchemaTest = async () => {
     .post(BASE_SCHEMA_URL)
     .send(validSchemaData)
   
-  await deleteSchema(1)
+  const response = await deleteSchema(1)
+  expect(response.status).toBe(StatusCodes.OK);
 }
 
 const updateAndFindSchema = async () => {
@@ -120,6 +128,45 @@ const updateAndFindSchema = async () => {
   
   expect(response.body.description).toBe("Updated table description")
 }
+
+const updateNonExistingSchema = async () => {
+  const response = await updateSchema(NON_EXISTING_ID, nonExistingSchemaReqBody)
+
+  expect(response.status).toBe(StatusCodes.NOT_FOUND);
+};
+
+const updateSchemaToDuplicate = async () => {
+  const schemaA = await request(BASE_API_URL).post(BASE_SCHEMA_URL).send({
+    name: 'schema_A',
+    description: 'Schema A',
+    schemaText: 'CREATE TABLE schema_A (id SERIAL PRIMARY KEY, name TEXT);',
+  });
+
+  const schemaB = await request(BASE_API_URL).post(BASE_SCHEMA_URL).send({
+    name: 'schema_B',
+    description: 'Schema B',
+    schemaText: 'CREATE TABLE schema_B (id SERIAL PRIMARY KEY, name TEXT);',
+  });
+
+  const response = await updateSchema(schemaA.body.id, { name: schemaB.body.name });
+
+  expect(response.status).toBe(StatusCodes.CONFLICT);
+};
+
+const updateSchemaWithInvalidBody = async () => {
+  const createdSchema = await request(BASE_API_URL).post(BASE_SCHEMA_URL).send(validSchemaData);
+
+  const response = await updateSchema(createdSchema.body.id, { name: '' });
+
+  expect(response.status).toBe(StatusCodes.BAD_REQUEST);
+};
+
+const deleteNonExistingSchema = async () => {
+  const response = await deleteSchema(NON_EXISTING_ID);
+
+  expect(response.status).toBe(StatusCodes.NOT_FOUND);
+};
+
 
 const deleteAndFindSchema = async () => {
   await deleteSchemaTest()
@@ -141,7 +188,11 @@ describe('CR of Schema API', () => {
 
   it("should be able to update schema", updateSchemaTest)
   it("should be able to integrate update and read (UR) of schema", updateAndFindSchema)
+  it("should return NOT_FOUND for invalid schema id", updateNonExistingSchema)
+  it("should return CONFLICT when updating schema to an existing schema name", updateSchemaToDuplicate);
+  it("should return BAD_REQUEST when updating schema with an invalid request body", updateSchemaWithInvalidBody);
 
   it("should be able to delete schema", deleteSchemaTest)
   it("should be able to integrate delete and read (DR) of schema", deleteAndFindSchema)
+  it("should return NOT_FOUND when deleting a non-existing schema", deleteNonExistingSchema);
 })

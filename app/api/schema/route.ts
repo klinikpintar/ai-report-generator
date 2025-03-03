@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { StatusCodes } from 'http-status-codes';
 import prisma from '@/lib/prisma';
 import { CreateSchemaDto } from '../dtos/schema.dtos';
-import { validateSchemaInput, handlePrismaError } from '../utils/schemaUtils';
+import { validateSchemaInput, handlePrismaError } from '../../utils/schemaUtils';
 
 export async function GET() {
   try {
@@ -27,3 +27,5 @@ export async function POST(req: Request) {
     return handlePrismaError(error);
   }
 }
+
+// note pake next request, supaya bisa mock request
