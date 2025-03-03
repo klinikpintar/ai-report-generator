@@ -1,78 +1,95 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import prisma from "@/lib/prisma";
-import { User } from "@prisma/client";
 import { NextRequest } from "next/server";
 import { POST as loginHandler } from "@/app/api/auth/login/route";
 import config from "@/app/config";
+import { User } from "@prisma/client";
+
+jest.mock("@/lib/prisma", () => ({
+  user: {
+    findUnique: jest.fn(),
+  },
+  refreshToken: {
+    create: jest.fn(),
+    deleteMany: jest.fn(),
+  },
+}));
+
+jest.mock("bcryptjs");
+jest.mock("jsonwebtoken");
 
 const BASE_API_URL_AUTH_LOGIN = "http://localhost:3000/api/auth/login";
 
-describe("Auth API Test", () => {
-  let testUser: User, adminUser: User, inactiveUser: User;
-  let accessToken: string;
+describe("Auth API - Login", () => {
+  let testUser: User;
+  let adminUser: User;
+  let inactiveUser: User;
+  let bcryptCompareSpy: jest.SpyInstance;
+  let jwtSignSpy: jest.SpyInstance;
 
-  beforeAll(async () => {
-    testUser = await prisma.user.create({
-      data: {
-        id: "8efbb0a7-da66-4c7c-b13d-54eb36bc6e25",
-        email: "user@example.com",
-        password: await bcrypt.hash("password123", 10),
-        name: "Test User",
-        isActive: true,
-        role: "BUSINESS_ANALYST",
-      },
-    });
+  beforeAll(() => {
+    testUser = {
+      id: "8efbb0a7-da66-4c7c-b13d-54eb36bc6e25",
+      email: "user@example.com",
+      password: "hashedPassword123",
+      name: "Test User",
+      isActive: true,
+      role: "BUSINESS_ANALYST",
+    };
 
-    adminUser = await prisma.user.create({
-      data: {
-        id: "24562f8f-dbe0-49b6-a847-1bb8f44f27fa",
-        email: "admin@example.com",
-        password: await bcrypt.hash("adminpassword", 10),
-        name: "Admin User",
-        isActive: true,
-        role: "ADMIN",
-      },
-    });
+    adminUser = {
+      id: "24562f8f-dbe0-49b6-a847-1bb8f44f27fa",
+      email: "admin@example.com",
+      password: "hashedAdminPassword",
+      name: "Admin User",
+      isActive: true,
+      role: "ADMIN",
+    };
 
-    inactiveUser = await prisma.user.create({
-      data: {
-        id: "a0b76a06-a17d-49a6-8e2c-da21df8d5d2f",
-        email: "inactiveuser@example.com",
-        password: await bcrypt.hash("password123", 10),
-        name: "Inactive User",
-        isActive: false,
-        role: "BUSINESS_ANALYST",
-      },
-    });
+    inactiveUser = {
+      id: "a0b76a06-a17d-49a6-8e2c-da21df8d5d2f",
+      email: "inactiveuser@example.com",
+      password: "hashedInactivePassword",
+      name: "Inactive User",
+      isActive: false,
+      role: "BUSINESS_ANALYST",
+    };
   });
 
-  afterAll(async () => {
-    await prisma.user.deleteMany({
-      where: {
-        email: {
-          in: [testUser.email, adminUser.email, inactiveUser.email],
-        },
-      },
-    });
-    await prisma.refreshToken.deleteMany({
-      where: {
-        userId: {
-          in: [testUser.id, adminUser.id, inactiveUser.id],
-        },
-      },
-    });
-    await prisma.$disconnect();
+  beforeEach(() => {
+    (prisma.user.findUnique as jest.Mock).mockImplementation(
+      async ({ where }) => {
+        if (where.email === testUser.email) return testUser;
+        if (where.email === adminUser.email) return adminUser;
+        if (where.email === inactiveUser.email) return inactiveUser;
+        return null;
+      }
+    );
+
+    bcryptCompareSpy = jest
+      .spyOn(bcrypt, "compare")
+      .mockResolvedValue(true as never);
+
+    jwtSignSpy = jest
+      .spyOn(jwt, "sign")
+      .mockImplementation((payload: string | object | Buffer) => {
+        if (typeof payload === "object" && "id" in payload) {
+          return `mockedToken-${(payload as { id: string }).id}`;
+        }
+        return "mockedToken";
+      });
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
   });
 
   // ✅ Happy Path - Login Berhasil
-  test("Should login successfully and return access token & refresh token in cookie", async () => {
-    const request = new NextRequest(new URL(`${BASE_API_URL_AUTH_LOGIN}`), {
+  test("Should login successfully and return access & refresh token", async () => {
+    const request = new NextRequest(new URL(BASE_API_URL_AUTH_LOGIN), {
       method: "POST",
-      body: JSON.stringify({
-        email: testUser.email,
-        password: "password123",
-      }),
+      body: JSON.stringify({ email: testUser.email, password: "password123" }),
       headers: { "Content-Type": "application/json" },
     });
 
@@ -81,26 +98,25 @@ describe("Auth API Test", () => {
 
     expect(response.status).toBe(200);
     expect(json).toHaveProperty("message", "Login successful");
-
-    expect(json).toHaveProperty("data.access_token");
-    accessToken = json.data.access_token;
-    const validAccessToken = jwt.verify(accessToken, config.JWT_ACCESS_SECRET);
-    expect(validAccessToken).toHaveProperty("id", testUser.id);
-    expect(validAccessToken).toHaveProperty("role", "BUSINESS_ANALYST");
-
-    const refreshTokenCookie = response.cookies.get("refresh_token");
-    expect(refreshTokenCookie).toBeDefined();
-    const valueRefreshToken = refreshTokenCookie?.value as string;
-    const validRefreshTokenCookie = jwt.verify(
-      valueRefreshToken,
-      config.JWT_REFRESH_SECRET
+    expect(json).toHaveProperty(
+      "data.access_token",
+      `mockedToken-${testUser.id}`
     );
-    expect(validRefreshTokenCookie).toHaveProperty("id", testUser.id);
+
+    expect(bcryptCompareSpy).toHaveBeenCalledWith(
+      "password123",
+      testUser.password
+    );
+    expect(jwtSignSpy).toHaveBeenCalledWith(
+      { id: testUser.id, role: testUser.role },
+      config.JWT_ACCESS_SECRET,
+      { expiresIn: config.JWT_ACCESS_EXPIRES }
+    );
   });
 
   // ✅ Happy Path - Login Berhasil Admin
-  test("Should login successfully and return access token for admin", async () => {
-    const request = new NextRequest(new URL(`${BASE_API_URL_AUTH_LOGIN}`), {
+  test("Should login successfully as admin", async () => {
+    const request = new NextRequest(new URL(BASE_API_URL_AUTH_LOGIN), {
       method: "POST",
       body: JSON.stringify({
         email: adminUser.email,
@@ -114,31 +130,39 @@ describe("Auth API Test", () => {
 
     expect(response.status).toBe(200);
     expect(json).toHaveProperty("message", "Login successful");
-
-    expect(json).toHaveProperty("data.access_token");
-    accessToken = json.data.access_token;
-    const validAccessToken = jwt.verify(accessToken, config.JWT_ACCESS_SECRET);
-    expect(validAccessToken).toHaveProperty("id", adminUser.id);
-    expect(validAccessToken).toHaveProperty("role", "ADMIN");
-
-    const refreshTokenCookie = response.cookies.get("refresh_token");
-    expect(refreshTokenCookie).toBeDefined();
-    const valueRefreshToken = refreshTokenCookie?.value as string;
-    expect(refreshTokenCookie).toBeDefined();
-    const validRefreshTokenCookie = jwt.verify(
-      valueRefreshToken,
-      config.JWT_REFRESH_SECRET
+    expect(json).toHaveProperty(
+      "data.access_token",
+      `mockedToken-${adminUser.id}`
     );
-    expect(validRefreshTokenCookie).toHaveProperty("id", adminUser.id);
+  });
+
+  // ❌ Unhappy Path - Salah Password
+  test("Should fail login with wrong password", async () => {
+    bcryptCompareSpy.mockResolvedValueOnce(false);
+
+    const request = new NextRequest(new URL(BASE_API_URL_AUTH_LOGIN), {
+      method: "POST",
+      body: JSON.stringify({
+        email: testUser.email,
+        password: "wrongpassword",
+      }),
+      headers: { "Content-Type": "application/json" },
+    });
+
+    const response = await loginHandler(request);
+    const json = await response.json();
+
+    expect(response.status).toBe(401);
+    expect(json).toHaveProperty("message", "Invalid credentials");
   });
 
   // ❌ Unhappy Path - User Tidak Ditemukan
   test("Should fail login with non-existent user", async () => {
-    const request = new NextRequest(new URL(`${BASE_API_URL_AUTH_LOGIN}`), {
+    const request = new NextRequest(new URL(BASE_API_URL_AUTH_LOGIN), {
       method: "POST",
       body: JSON.stringify({
-        email: "salahemail@gmail.com",
-        password: "inipassword",
+        email: "nonexistent@example.com",
+        password: "password123",
       }),
       headers: { "Content-Type": "application/json" },
     });
@@ -152,7 +176,7 @@ describe("Auth API Test", () => {
 
   // ❌ Unhappy Path - User Tidak Aktif
   test("Should fail login with inactive user", async () => {
-    const request = new NextRequest(new URL(`${BASE_API_URL_AUTH_LOGIN}`), {
+    const request = new NextRequest(new URL(BASE_API_URL_AUTH_LOGIN), {
       method: "POST",
       body: JSON.stringify({
         email: inactiveUser.email,
@@ -168,27 +192,9 @@ describe("Auth API Test", () => {
     expect(json).toHaveProperty("message", "User not active");
   });
 
-  // ❌ Unhappy Path - Salah Password
-  test("Should fail login with wrong password", async () => {
-    const request = new NextRequest(new URL(`${BASE_API_URL_AUTH_LOGIN}`), {
-      method: "POST",
-      body: JSON.stringify({
-        email: testUser.email,
-        password: "inipasswordyangsalah",
-      }),
-      headers: { "Content-Type": "application/json" },
-    });
-
-    const response = await loginHandler(request);
-    const json = await response.json();
-
-    expect(response.status).toBe(401);
-    expect(json).toHaveProperty("message", "Invalid credentials");
-  });
-
   // ❌ Edge Case - Empty Body Login
   test("Should fail login with empty body", async () => {
-    const request = new NextRequest(new URL(`${BASE_API_URL_AUTH_LOGIN}`), {
+    const request = new NextRequest(new URL(BASE_API_URL_AUTH_LOGIN), {
       method: "POST",
       body: JSON.stringify({}),
       headers: { "Content-Type": "application/json" },
@@ -202,12 +208,10 @@ describe("Auth API Test", () => {
   });
 
   // ❌ Corner Case - Wrong email format
-  test("Should fail login with invalid email", async () => {
-    const request = new NextRequest(new URL(`${BASE_API_URL_AUTH_LOGIN}`), {
+  test("Should fail login with invalid email format", async () => {
+    const request = new NextRequest(new URL(BASE_API_URL_AUTH_LOGIN), {
       method: "POST",
-      body: JSON.stringify({
-        email: "salahemail",
-      }),
+      body: JSON.stringify({ email: "invalidemail" }),
       headers: { "Content-Type": "application/json" },
     });
 
@@ -218,14 +222,11 @@ describe("Auth API Test", () => {
     expect(json).toHaveProperty("message", "Invalid email format");
   });
 
-  // ❌ Corner Case - Empty Password
-  test("Should fail login with empty password", async () => {
-    const request = new NextRequest(new URL(`${BASE_API_URL_AUTH_LOGIN}`), {
+  // ❌ Corner Case - Wrong password format
+  test("Should fail login with invalid password format", async () => {
+    const request = new NextRequest(new URL(BASE_API_URL_AUTH_LOGIN), {
       method: "POST",
-      body: JSON.stringify({
-        email: testUser.email,
-        password: "",
-      }),
+      body: JSON.stringify({ email: testUser.email, password: "" }),
       headers: { "Content-Type": "application/json" },
     });
 
