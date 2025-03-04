@@ -1,5 +1,5 @@
 import { render, screen, fireEvent } from "@testing-library/react";
-import Login from "../app/login/page";
+import Login from "../../app/login/page";
 
 describe("Login Page", () => {
   test("show logo", () => {
@@ -49,6 +49,19 @@ describe("Login Page", () => {
     fireEvent.click(loginButton);
 
     const passwordInput: HTMLInputElement = screen.getByLabelText(/password/i);
+    expect(passwordInput).toBeInvalid();
+  });
+
+  test("validate: can't login if all fields is empty", () => {
+    render(<Login />);
+
+    const loginButton: HTMLButtonElement = screen.getByRole("button", { name: /login/i });
+
+    fireEvent.click(loginButton);
+
+    const emailInput: HTMLInputElement = screen.getByRole("textbox", { name: /email/i });
+    const passwordInput: HTMLInputElement = screen.getByLabelText(/password/i);
+    expect(emailInput).toBeInvalid();
     expect(passwordInput).toBeInvalid();
   });
 
