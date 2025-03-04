@@ -26,3 +26,10 @@ enum Role {
   ADMIN
   BUSINESS_ANALYST
 }
+
+model RefreshToken {
+  userId    String  @db.Uuid
+  token     String  @unique @db.VarChar(255)
+
+  @@id([userId, token])
+}

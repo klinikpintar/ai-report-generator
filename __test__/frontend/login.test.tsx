@@ -4,15 +4,19 @@ import Login from "../../app/login/page";
 describe("Login Page", () => {
   test("show logo", () => {
     render(<Login />);
-    
-    const logo: HTMLImageElement = screen.getByRole("img", { name: /klinik pintar/i });
+
+    const logo: HTMLImageElement = screen.getByRole("img", {
+      name: /klinik pintar/i,
+    });
     expect(logo).toBeInTheDocument();
   });
 
   test("show email and password input", () => {
     render(<Login />);
-    
-    const emailInput: HTMLInputElement = screen.getByRole("textbox", { name: /email/i });
+
+    const emailInput: HTMLInputElement = screen.getByRole("textbox", {
+      name: /email/i,
+    });
     const passwordInput: HTMLInputElement = screen.getByLabelText(/password/i);
 
     expect(emailInput).toBeInTheDocument();
@@ -21,8 +25,10 @@ describe("Login Page", () => {
 
   test("show login button", () => {
     render(<Login />);
-    
-    const loginButton: HTMLButtonElement = screen.getByRole("button", { name: /login/i });
+
+    const loginButton: HTMLButtonElement = screen.getByRole("button", {
+      name: /login/i,
+    });
     expect(loginButton).toBeInTheDocument();
   });
 
@@ -30,20 +36,28 @@ describe("Login Page", () => {
     render(<Login />);
 
     const passwordInput: HTMLInputElement = screen.getByLabelText(/password/i);
-    const loginButton: HTMLButtonElement = screen.getByRole("button", { name: /login/i });
+    const loginButton: HTMLButtonElement = screen.getByRole("button", {
+      name: /login/i,
+    });
 
     fireEvent.change(passwordInput, { target: { value: "password123" } });
     fireEvent.click(loginButton);
 
-    const emailInput: HTMLInputElement = screen.getByRole("textbox", { name: /email/i });
+    const emailInput: HTMLInputElement = screen.getByRole("textbox", {
+      name: /email/i,
+    });
     expect(emailInput).toBeInvalid();
   });
 
   test("validate: can't login if password field is empty", () => {
     render(<Login />);
 
-    const emailInput: HTMLInputElement = screen.getByRole("textbox", { name: /email/i });
-    const loginButton: HTMLButtonElement = screen.getByRole("button", { name: /login/i });
+    const emailInput: HTMLInputElement = screen.getByRole("textbox", {
+      name: /email/i,
+    });
+    const loginButton: HTMLButtonElement = screen.getByRole("button", {
+      name: /login/i,
+    });
 
     fireEvent.change(emailInput, { target: { value: "user@example.com" } });
     fireEvent.click(loginButton);
@@ -68,9 +82,13 @@ describe("Login Page", () => {
   test("validate: can't login if email input is invalid", () => {
     render(<Login />);
 
-    const emailInput: HTMLInputElement = screen.getByRole("textbox", { name: /email/i });
+    const emailInput: HTMLInputElement = screen.getByRole("textbox", {
+      name: /email/i,
+    });
     const passwordInput: HTMLInputElement = screen.getByLabelText(/password/i);
-    const loginButton: HTMLButtonElement = screen.getByRole("button", { name: /login/i });
+    const loginButton: HTMLButtonElement = screen.getByRole("button", {
+      name: /login/i,
+    });
 
     fireEvent.change(emailInput, { target: { value: "invalid-email" } });
     fireEvent.change(passwordInput, { target: { value: "password123" } });
@@ -84,9 +102,13 @@ describe("Login Page", () => {
 
     render(<Login />);
 
-    const emailInput: HTMLInputElement = screen.getByRole("textbox", { name: /email/i });
+    const emailInput: HTMLInputElement = screen.getByRole("textbox", {
+      name: /email/i,
+    });
     const passwordInput: HTMLInputElement = screen.getByLabelText(/password/i);
-    const loginButton: HTMLButtonElement = screen.getByRole("button", { name: /login/i });
+    const loginButton: HTMLButtonElement = screen.getByRole("button", {
+      name: /login/i,
+    });
 
     fireEvent.change(emailInput, { target: { value: "user@example.com" } });
     fireEvent.change(passwordInput, { target: { value: "password123" } });

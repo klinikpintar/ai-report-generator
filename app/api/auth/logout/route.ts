@@ -1,14 +1,18 @@
 import { NextResponse } from "next/server";
-import { verifyToken } from "../../utils/authUtils";
+import { extractToken } from "../../../utils/authUtils";
 import config from "../../../config";
+import prisma from "@/lib/prisma";
+import authService from "@/app/services/authService";
 
 export async function POST(req: Request) {
-  const authHeader = req.headers.get("Authorization");
-  const token = authHeader?.split(" ")[1];
+  const authorization = req.headers.get("Authorization") || "";
+  const token = extractToken(authorization);
 
-  if (!token || !verifyToken(token, config.JWT_ACCESS_SECRET)) {
+  if (!token || !authService.verifyToken(token, config.JWT_ACCESS_SECRET)) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
+
+  await prisma.refreshToken.deleteMany({ where: { token } });
 
   const response = NextResponse.json({ message: "Logged out" });
 
