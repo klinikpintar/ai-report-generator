@@ -111,14 +111,13 @@ describe("Auth API - Refresh Token", () => {
       `mockedToken-${testUser.id}`
     );
   });
-  
+
   // ❌ Unhappy Path - Tanpa Refresh Token
   test("Should fail refresh token if no refresh token is provided", async () => {
     const request = new NextRequest(new URL(BASE_API_URL_AUTH_TOKEN_REFRESH), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Cookie: "",
       },
     });
 
@@ -129,7 +128,7 @@ describe("Auth API - Refresh Token", () => {
     expect(json).toHaveProperty("message", "No refresh token");
   });
 
-   // ❌ Unhappy Path - Refresh Token Expired
+  // ❌ Unhappy Path - Refresh Token Expired
   test("Should fail refresh with expired token", async () => {
     jwtVerifySpy.mockImplementationOnce(() => {
       throw new Error("Token expired");
