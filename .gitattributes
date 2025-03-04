@@ -1,5 +1,0 @@
-# Set default behavior to automatically normalize line endings
-* text=auto
-
-# Declare files that will always have LF line endings on checkout
-pnpm-lock.yaml text eol=lf
