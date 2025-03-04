@@ -1,7 +1,6 @@
 import "@testing-library/jest-dom"
 import { render, screen } from "@testing-library/react"
-import { SchemaTable } from "@/app/admin/sections/SchemaSection/elements";
-
+import { SchemaTable } from "@/modules/schema/module-elements";
 
 
 describe("Schema Table", () => {

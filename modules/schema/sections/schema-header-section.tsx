@@ -1,6 +1,6 @@
 import React from "react";
 
-export const SchemaSectionHeader = () => {
+export const SchemaHeaderSection = () => {
   return (
     <div className="w-1/2">
       <p className="font-semibold text-lg text-[#606060]">Manajemen Skema Database</p>

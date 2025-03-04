@@ -5,16 +5,22 @@ import { v4 as uuidv4 } from "uuid";
 export const dummyPlatforms: Platform[] = [
   {
     id: "POSTGRESQL",
+    createdAt: new Date(),
+    modifiedAt: new Date(),
     name: "PostgreSQL",
     img_url: "https://static-00.iconduck.com/assets.00/postgresql-icon-1987x2048-v2fkmdaw.png",
   },
   {
     id: "MYSQL",
-    name: "MYSQL",
+    createdAt: new Date(),
+    modifiedAt: new Date(),
+    name: "MySQL",
     img_url: "https://www.svgrepo.com/show/303251/mysql-logo.svg",
   },
   {
     id: "MONGODB",
+    createdAt: new Date(),
+    modifiedAt: new Date(),
     name: "MongoDB",
     img_url: "https://www.vectorlogo.zone/logos/mongodb/mongodb-icon.svg",
   }

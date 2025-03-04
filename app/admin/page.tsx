@@ -1,10 +1,10 @@
 import React from "react";
-import SchemaSection from "./sections/SchemaSection";
+import SchemaModule from "@/modules/schema";
 
 const AdminDashboardPage = () => {
   return (
     <>
-      <SchemaSection />
+      <SchemaModule />
     </>
   );
 };
