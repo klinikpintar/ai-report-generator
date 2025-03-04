@@ -1,7 +1,5 @@
-import { UUID } from "crypto";
-
 export interface BaseModel {
-  id: UUID;
+  id: string;
   createdAt: Date;
   modifiedAt: Date;
 }
