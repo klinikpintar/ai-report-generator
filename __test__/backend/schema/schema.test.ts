@@ -52,12 +52,13 @@ const createInvalidSchema = async () => {
 }
 
 const createDuplicateSchema = async () => {
-  const _ = await request(BASE_API_URL)
+  const response = await request(BASE_API_URL)
     .post(BASE_SCHEMA_URL)
     .send(validSchemaData)
   const duplicateResponse = await request(BASE_API_URL)
     .post(BASE_SCHEMA_URL)
     .send(validSchemaData)
+  createdSchemaId = duplicateResponse.body.id;
 
   expect(duplicateResponse.status).toBe(StatusCodes.CONFLICT)
 }
@@ -105,9 +106,10 @@ const deleteSchema = async (schemaId: number) => {
 };
 
 const updateSchemaTest = async () => {
-  const _ = await request(BASE_API_URL)
+  const responseCreate = await request(BASE_API_URL)
     .post(BASE_SCHEMA_URL)
     .send(validSchemaData)
+  createdSchemaId = responseCreate.body.id;
   
   const response = await updateSchema(createdSchemaId, updatedSchemaData)
 
@@ -116,9 +118,10 @@ const updateSchemaTest = async () => {
 }
 
 const deleteSchemaTest = async () => {
-  const _ = await request(BASE_API_URL)
+  const responseCreate = await request(BASE_API_URL)
     .post(BASE_SCHEMA_URL)
     .send(validSchemaData)
+    createdSchemaId = responseCreate.body.id;
   
   const response = await deleteSchema(createdSchemaId)
   expect(response.status).toBe(StatusCodes.OK);
@@ -129,7 +132,7 @@ const updateAndFindSchema = async () => {
 
   const response = await findSchema("products", true)
   
-  expect(response.body.description).toBe("Updated table description")
+  expect(response.description).toBe("Updated table description")
 }
 
 const updateNonExistingSchema = async () => {
