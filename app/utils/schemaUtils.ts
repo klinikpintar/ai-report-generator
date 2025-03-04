@@ -17,10 +17,19 @@ export const handlePrismaError = (error: any) => {
   }
 
   if (error instanceof Prisma.PrismaClientKnownRequestError) {
-    return NextResponse.json(
-      { error: 'Schema with this name already exists' },
-      { status: StatusCodes.CONFLICT }
-    );
+    if (error.code === 'P2002') {
+      return NextResponse.json(
+        { error: 'Schema with this name already exists' },
+        { status: StatusCodes.CONFLICT }
+      );
+    }
+
+    if (error.code === 'P2025') {
+      return NextResponse.json(
+        { error: 'Schema not found' },
+        { status: StatusCodes.NOT_FOUND }
+      );
+    }
   }
 
   return NextResponse.json(
