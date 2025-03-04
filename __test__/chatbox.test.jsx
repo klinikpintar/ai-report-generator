@@ -1,5 +1,5 @@
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import ChatBox from "../app/page";
+import ChatBox from "../app/chatbox";
 import { ServiceProvider, ServiceContext } from "../app/context/serviceContext";
 
 // Helper component agar `ChatBox` selalu mendapatkan `ServiceProvider`
