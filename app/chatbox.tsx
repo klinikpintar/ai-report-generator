@@ -113,8 +113,8 @@ export default function ChatBox() {
 
       {/* Bagian Chat Scrollable */}
       {hasChatted && (
-        <div ref={chatContainerRef} className="flex-1 overflow-y-auto p-4 space-y-2 bg-white pb-24">
-          <div className="ml-2 mt-4 space-y-2 flex flex-col mr-4">
+        <div ref={chatContainerRef} className="flex-1 overflow-y-auto p-4 bg-white pb-24">
+          <div className="ml-2 mt-4 flex flex-col mr-4 gap-y-6"> 
             {messages.map((msg) => (
               <div
                 key={msg.id}
@@ -132,9 +132,10 @@ export default function ChatBox() {
         </div>
       )}
 
+
       {/* Chat Input */}
       <div className="sticky bottom-3 w-full bg-white py-4 px-6">
-        <p className="text-sm text-gray-600 absolute left-6 top-2">Reservasi: {selectedService}</p>
+        <p className="text-sm text-gray-600 absolute left-6 top-2">Service: {selectedService}</p>
 
         <div className="relative w-full flex items-center mx-auto mt-5">
           <input
