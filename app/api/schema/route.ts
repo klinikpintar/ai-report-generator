@@ -3,7 +3,7 @@ import { StatusCodes } from 'http-status-codes';
 import schemaService from '../../services/schemaService';
 import { validateSchemaInput, handlePrismaError } from '../../utils/schemaUtils';
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
     const schemas = await schemaService.findAllSchemas();
     return NextResponse.json(schemas, { status: StatusCodes.OK });

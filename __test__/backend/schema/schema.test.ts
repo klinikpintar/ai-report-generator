@@ -1,195 +1,215 @@
-import dotenv from 'dotenv';
-import request from 'supertest';
-import { StatusCodes } from 'http-status-codes';
-import prisma from '../../../lib/prisma';
+import { NextRequest } from "next/server";
+import { StatusCodes } from "http-status-codes";
+import { POST, GET, PATCH, DELETE } from "@/app/api/schema/route";
+import prisma from "@/lib/prisma";
+import schemaService from "@/app/services/schemaService";
 
-dotenv.config()
-
-const BASE_API_URL = process.env.BASE_API_URL || "http://localhost:3000"
-const BASE_SCHEMA_URL = '/api/schema'
-const NON_EXISTING_ID = 9999
-
-let createdSchemaId: number;
+const NON_EXISTING_ID = 9999;
 
 const validSchemaData = {
-  name: 'products',
-  description: 'Table to store products data',
-  schemaText: 'CREATE TABLE products (id SERIAL PRIMARY KEY, name TEXT);',
+  name: "products",
+  description: "Table to store products data",
+  schemaText: "CREATE TABLE products (id SERIAL PRIMARY KEY, name TEXT);",
 };
 
 const updatedSchemaData = {
-  description: 'Updated table description',
+  description: "Updated table description",
 };
 
 const invalidSchemaData = {
-  name: 'products_invalid',
+  name: "products_invalid",
 };
 
 const nonExistingSchemaReqBody = {
   id: NON_EXISTING_ID,
-  description: 'Trying to update a non-existing schema',
-}
+  description: "Trying to update a non-existing schema",
+};
+
+const sendRequest = (method: string, body?: any) => {
+  return new NextRequest(new URL("http://localhost/api/schema"), {
+    method,
+    body: body ? JSON.stringify(body) : null,
+    headers: { "Content-Type": "application/json" },
+  });
+};
 
 const createValidSchema = async () => {
-  const response = await request(BASE_API_URL)
-    .post(BASE_SCHEMA_URL)
-    .send(validSchemaData)
+  const request = sendRequest("POST", validSchemaData);
+  const response = await POST(request);
+  const json = await response.json();
 
-  expect(response.status).toBe(StatusCodes.CREATED)
-  createdSchemaId = response.body.id;
+  expect(response.status).toBe(StatusCodes.CREATED);
+  return json.id;
+};
 
-  return validSchemaData.name
-}
+const createSchema = async (schemaBody: any) => {
+  const request = sendRequest("POST", schemaBody);
+  const response = await POST(request);
+  const json = await response.json();
+
+  expect(response.status).toBe(StatusCodes.CREATED);
+  return json.id;
+};
 
 const createInvalidSchema = async () => {
-  const response = await request(BASE_API_URL)
-    .post(BASE_SCHEMA_URL)
-    .send(invalidSchemaData)
+  const request = sendRequest("POST", invalidSchemaData);
+  const response = await POST(request);
 
-  expect(response.status).toBe(StatusCodes.BAD_REQUEST)
-
-  return validSchemaData.name
-}
+  expect(response.status).toBe(StatusCodes.BAD_REQUEST);
+};
 
 const createDuplicateSchema = async () => {
-  const response = await request(BASE_API_URL)
-    .post(BASE_SCHEMA_URL)
-    .send(validSchemaData)
-  const duplicateResponse = await request(BASE_API_URL)
-    .post(BASE_SCHEMA_URL)
-    .send(validSchemaData)
-  createdSchemaId = duplicateResponse.body.id;
+  await createValidSchema();
 
-  expect(duplicateResponse.status).toBe(StatusCodes.CONFLICT)
-}
+  const request = sendRequest("POST", validSchemaData);
+  const response = await POST(request);
+
+  expect(response.status).toBe(StatusCodes.CONFLICT);
+};
 
 const readSchema = async () => {
-  const response = await request(BASE_API_URL)
-    .get(BASE_SCHEMA_URL)
+  const request = sendRequest("GET");
+  const response = await GET(request);
+  const json = await response.json();
 
-  expect(response.status).toBe(StatusCodes.OK)
-  expect(Array.isArray(response.body)).toBe(true)
-}
+  expect(response.status).toBe(StatusCodes.OK);
+  expect(Array.isArray(json)).toBe(true);
+};
+
+const getSchemasWithFailure = async () => {
+  jest.spyOn(schemaService, "findAllSchemas").mockRejectedValue(new Error("Database Error"));
+
+  const request = sendRequest("GET");
+  const response = await GET(request);
+  const json = await response.json();
+
+  expect(response.status).toBe(StatusCodes.INTERNAL_SERVER_ERROR);
+  expect(json.error).toBe("Failed to fetch schemas");
+};
 
 const findSchema = async (schemaName: string, shouldExist: boolean) => {
-  const response = await request(BASE_API_URL)
-    .get(BASE_SCHEMA_URL)
+  const request = sendRequest("GET");
+  const response = await GET(request);
+  const json = await response.json();
 
-  expect(response.status).toBe(StatusCodes.OK)
+  expect(response.status).toBe(StatusCodes.OK);
 
-  const schemaFound = response.body.find((schema: any) => schema.name === schemaName)
+  const schemaFound = json.find((schema: any) => schema.name === schemaName);
 
-  if (shouldExist) expect(schemaFound).toBeDefined()
-  else expect(schemaFound).toBeUndefined()
-
-  return schemaFound
-}
+  if (shouldExist) expect(schemaFound).toBeDefined();
+  else expect(schemaFound).toBeUndefined();
+};
 
 const createAndReadSchema = async () => {
-  const schemaName = await createValidSchema()
-  await findSchema(schemaName, true)
-}
+  const schemaId = await createValidSchema();
+  await findSchema(validSchemaData.name, true);
+  return schemaId;
+};
 
 const updateSchema = async (schemaId: number, updateSchemaRequestBody: any) => {
-  const response = await request(BASE_API_URL).patch(BASE_SCHEMA_URL).send({
-    id: schemaId,
-    ...updateSchemaRequestBody,
-  });
-
-  return response
+  const request = sendRequest("PATCH", { id: schemaId, ...updateSchemaRequestBody });
+  return await PATCH(request);
 };
 
 const deleteSchema = async (schemaId: number) => {
-  const response = await request(BASE_API_URL).delete(BASE_SCHEMA_URL).send({ id: schemaId });
-
-  return response
+  const request = sendRequest("DELETE", { id: schemaId });
+  return await DELETE(request);
 };
 
 const updateSchemaTest = async () => {
-  const responseCreate = await request(BASE_API_URL)
-    .post(BASE_SCHEMA_URL)
-    .send(validSchemaData)
-  createdSchemaId = responseCreate.body.id;
-  
-  const response = await updateSchema(createdSchemaId, updatedSchemaData)
+  const schemaId = await createValidSchema();
+  const response = await updateSchema(schemaId, updatedSchemaData);
+  const json = await response.json();
 
   expect(response.status).toBe(StatusCodes.OK);
-  expect(response.body.description).toBe(updatedSchemaData.description);
-}
+  expect(json.description).toBe(updatedSchemaData.description);
+};
 
 const deleteSchemaTest = async () => {
-  const responseCreate = await request(BASE_API_URL)
-    .post(BASE_SCHEMA_URL)
-    .send(validSchemaData)
-    createdSchemaId = responseCreate.body.id;
-  
-  const response = await deleteSchema(createdSchemaId)
+  const schemaId = await createValidSchema();
+  const response = await deleteSchema(schemaId);
+
   expect(response.status).toBe(StatusCodes.OK);
-}
+};
 
 const updateAndFindSchema = async () => {
-  await updateSchemaTest()
-
-  const response = await findSchema("products", true)
-  
-  expect(response.description).toBe("Updated table description")
-}
+  await updateSchemaTest();
+  await findSchema(validSchemaData.name, true);
+};
 
 const updateNonExistingSchema = async () => {
-  const response = await updateSchema(NON_EXISTING_ID, nonExistingSchemaReqBody)
-
+  const response = await updateSchema(NON_EXISTING_ID, nonExistingSchemaReqBody);
   expect(response.status).toBe(StatusCodes.NOT_FOUND);
 };
 
 const updateSchemaToDuplicate = async () => {
-  const schemaA = await request(BASE_API_URL).post(BASE_SCHEMA_URL).send({
-    name: 'schema_A',
-    description: 'Schema A',
-    schemaText: 'CREATE TABLE schema_A (id SERIAL PRIMARY KEY, name TEXT);',
+
+  const schemaA = await createSchema({ 
+    name: "schemaA", 
+    description: "This is SchemaA",
+    schemaText: "SchemaA",
+  });
+  const schemaB = await createSchema({ 
+    name: "schemaB", 
+    description: "This is SchemaB",
+    schemaText: "SchemaB",
   });
 
-  const schemaB = await request(BASE_API_URL).post(BASE_SCHEMA_URL).send({
-    name: 'schema_B',
-    description: 'Schema B',
-    schemaText: 'CREATE TABLE schema_B (id SERIAL PRIMARY KEY, name TEXT);',
-  });
-
-  const response = await updateSchema(schemaA.body.id, { name: schemaB.body.name });
+  const response = await updateSchema(schemaA, { name: "schemaB" });
 
   expect(response.status).toBe(StatusCodes.CONFLICT);
 };
 
 const deleteNonExistingSchema = async () => {
   const response = await deleteSchema(NON_EXISTING_ID);
-
   expect(response.status).toBe(StatusCodes.NOT_FOUND);
 };
 
+const updateSchemaWithoutId = async () => {
+  const request = sendRequest("PATCH", {});
+  const response = await PATCH(request);
+  const json = await response.json();
+
+  expect(response.status).toBe(StatusCodes.BAD_REQUEST);
+  expect(json.error).toBe("Schema ID is required");
+};
+
+const deleteSchemaWithoutId = async () => {
+  const request = sendRequest("DELETE", {});
+  const response = await DELETE(request);
+  const json = await response.json();
+
+  expect(response.status).toBe(StatusCodes.BAD_REQUEST);
+  expect(json.error).toBe("Schema ID is required");
+};
 
 const deleteAndFindSchema = async () => {
-  await deleteSchemaTest()
-
-  await findSchema("products", false)
-}
+  await deleteSchemaTest();
+  await findSchema(validSchemaData.name, false);
+};
 
 beforeEach(async () => {
   await prisma.schema.deleteMany();
 });
 
-describe('CRUD of Schema API', () => {
-  it("should be able to save valid schema", createValidSchema)
-  it("should return BAD REQUEST for invalid schema data", createInvalidSchema)
-  it("should return CONFLICT for duplicate schema", createDuplicateSchema)
+describe("CRUD of Schema API (Using NextRequest)", () => {
+  it("should be able to save valid schema", createValidSchema);
+  it("should return BAD REQUEST for invalid schema data", createInvalidSchema);
+  it("should return CONFLICT for duplicate schema", createDuplicateSchema);
 
-  it("should be able to read schema", readSchema)
-  it("should be able to integrate save and read (CR) of schema", createAndReadSchema)
-
-  it("should be able to update schema", updateSchemaTest)
-  it("should be able to integrate update and read (UR) of schema", updateAndFindSchema)
-  it("should return NOT_FOUND for invalid schema id", updateNonExistingSchema)
+  it("should be able to read schema", readSchema);
+  it("should be able to integrate save and read (CR) of schema", createAndReadSchema);
+  
+  it("should be able to update schema", updateSchemaTest);
+  it("should be able to integrate update and read (UR) of schema", updateAndFindSchema);
+  it("should return NOT_FOUND for invalid schema id", updateNonExistingSchema);
   it("should return CONFLICT when updating schema to an existing schema name", updateSchemaToDuplicate);
-
-  it("should be able to delete schema", deleteSchemaTest)
-  it("should be able to integrate delete and read (DR) of schema", deleteAndFindSchema)
+  it("should return BAD REQUEST when updating schema without ID", updateSchemaWithoutId);
+  
+  it("should be able to delete schema", deleteSchemaTest);
+  it("should be able to integrate delete and read (DR) of schema", deleteAndFindSchema);
   it("should return NOT_FOUND when deleting a non-existing schema", deleteNonExistingSchema);
-})
+  it("should return BAD REQUEST when deleting schema without ID", deleteSchemaWithoutId);
+  
+  it("should return INTERNAL_SERVER_ERROR if fetching schemas fails", getSchemasWithFailure);
+});
