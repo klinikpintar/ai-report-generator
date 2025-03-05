@@ -1,5 +1,5 @@
 import { render, screen, fireEvent } from "@testing-library/react";
-import Navbar from "../app/components/Navbar";
+import Navbar from "../app/components/navbar";
 
 describe("Navbar Component", () => {
   it("should display user email", () => {
