@@ -16,7 +16,18 @@ export interface UpdateSchemaDto {
 /**
  * The ISchemaService interface specifies how we'll create, read, update, and delete schemas.
  */
-export interface ISchemaService {
+export interface ISchemaService extends IReadSchemaService, IWriteSchemaService, IDeleteSchemaService {}
+
+export interface IReadSchemaService {
+  /**
+   * Find all schemas
+   * @returns Promise<Schema[]> Array of schemas
+   */
+  findAllSchemas(): Promise<Schema[]>;
+}
+
+
+export interface IWriteSchemaService {
   /**
    * Create a new schema
    * @param data - Required fields to create a schema
@@ -25,18 +36,15 @@ export interface ISchemaService {
   createSchema(data: CreateSchemaDto): Promise<Schema>;
 
   /**
-   * Find all schemas
-   * @returns Promise<Schema[]> Array of schemas
-   */
-  findAllSchemas(): Promise<Schema[]>;
-
-  /**
    * Update a schema
    * @param data - Contains schema ID and fields to update
    * @returns Promise<Schema> The updated schema
    */
   updateSchema(data: UpdateSchemaDto): Promise<Schema>;
+}
 
+
+export interface IDeleteSchemaService {
   /**
    * Delete a schema by ID
    * @param id - Schema ID
