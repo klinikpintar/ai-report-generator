@@ -100,7 +100,7 @@ export const SchemaTable: React.FC<SchemaTableProps> = ({
         <PaginationContent>
           <PaginationItem>
             <PaginationPrevious
-              href={currentPage > 1 ? `#${currentPage - 1}` : "#"}
+              href={currentPage > 1 ? `?page=${currentPage - 1}` : "#"}
             />
           </PaginationItem>
         </PaginationContent>
@@ -108,7 +108,7 @@ export const SchemaTable: React.FC<SchemaTableProps> = ({
           {pages.map((page, index) => (
             <PaginationItem key={index}>
               {typeof page === "number" ? (
-                <PaginationLink href={`#${page}`} isActive={page === currentPage}>
+                <PaginationLink href={`?page=${page}`} isActive={page === currentPage}>
                   {page}
                 </PaginationLink>
               ) : (
