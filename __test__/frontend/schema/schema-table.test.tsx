@@ -1,11 +1,12 @@
 import "@testing-library/jest-dom"
 import { render, screen } from "@testing-library/react"
 import { SchemaTable } from "@/modules/schema/module-elements";
+import { dummySchemas } from "@/modules/schema/constant";
 
 
 describe("Schema Table", () => {
   beforeEach(() => {
-    render(<SchemaTable />)
+    render(<SchemaTable schemas={dummySchemas} />)
   })
 
   describe("Table Headers", () => {
