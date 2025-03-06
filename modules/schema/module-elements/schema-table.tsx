@@ -19,10 +19,23 @@ import {
 } from "@/components/ui/pagination";
 import { FileIcon } from "lucide-react";
 import React from "react";
-import { dummySchemas } from "../constant";
 import { Chip } from "@/components/ui/chip";
+import { Schema } from "../types";
+import { generatePagination } from "../utils/pagination";
 
-export const SchemaTable = () => {
+type SchemaTableProps = {
+  schemas: Schema[];
+  currentPage?: number;
+  lastPage?: number;
+};
+
+export const SchemaTable: React.FC<SchemaTableProps> = ({
+  schemas,
+  currentPage = 1,
+  lastPage = 1,
+}) => {
+  const pages = generatePagination(currentPage, lastPage);
+
   return (
     <div className="flex flex-col gap-4">
       <Table>
@@ -36,7 +49,14 @@ export const SchemaTable = () => {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {dummySchemas.map((schema) => (
+          {schemas.length === 0 && (
+            <TableRow>
+              <TableCell colSpan={5} className="text-center">
+                Tidak ada skema yang ditemukan
+              </TableCell>
+            </TableRow>
+          )}
+          {schemas.map((schema) => (
             <TableRow key={schema.id}>
               <TableCell>{schema.name}</TableCell>
               <TableCell className="px-2">
@@ -79,31 +99,27 @@ export const SchemaTable = () => {
       <Pagination className="w-full flex justify-between">
         <PaginationContent>
           <PaginationItem>
-            <PaginationPrevious href="#" />
+            <PaginationPrevious
+              href={currentPage > 1 ? `#${currentPage - 1}` : "#"}
+            />
           </PaginationItem>
         </PaginationContent>
         <PaginationContent>
-          <PaginationItem>
-            <PaginationLink href="#" isActive={true}>
-              1
-            </PaginationLink>
-          </PaginationItem>
-          <PaginationItem>
-            <PaginationLink href="#">2</PaginationLink>
-          </PaginationItem>
-          <PaginationItem>
-            <PaginationEllipsis />
-          </PaginationItem>
-          <PaginationItem>
-            <PaginationLink href="#">9</PaginationLink>
-          </PaginationItem>
-          <PaginationItem>
-            <PaginationLink href="#">10</PaginationLink>
-          </PaginationItem>
+          {pages.map((page, index) => (
+            <PaginationItem key={index}>
+              {typeof page === "number" ? (
+                <PaginationLink href={`#${page}`} isActive={page === currentPage}>
+                  {page}
+                </PaginationLink>
+              ) : (
+                <PaginationEllipsis />
+              )}
+            </PaginationItem>
+          ))}
         </PaginationContent>
         <PaginationContent>
           <PaginationItem>
-            <PaginationNext href="#" />
+            <PaginationNext href={currentPage < lastPage ? `#${currentPage + 1}` : "#"} />
           </PaginationItem>
         </PaginationContent>
       </Pagination>
