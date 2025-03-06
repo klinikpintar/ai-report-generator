@@ -1,9 +1,9 @@
 import "@testing-library/jest-dom";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { FilterDropdown, type Filterable } from "@/components/ui/filter-dropdown";
+import { useState } from "react";
+import { Filterable, FilterDropdown } from "@/components/ui/filter-dropdown";
 
-// Mock data for testing
 interface TestItem extends Filterable {
   name: string;
   value: number;
@@ -15,33 +15,37 @@ const testItems: TestItem[] = [
   { id: "3", name: "Item 3", value: 300 },
 ];
 
-describe("FilterDropdown Component", () => {
-  // Helper function to setup the component with default props
-  const setup = (props = {}) => {
-    const defaultProps = {
-      items: testItems,
-      buttonText: "Filter Items",
-      displayProperty: "name" as keyof TestItem,
-      onSelectionChange: jest.fn(), // Mock function
-    };
+const FilterDropdownWrapper = () => {
+  const [selectedItems, setSelectedItems] = useState<TestItem[]>([]);
 
+  return (
+    <FilterDropdown<TestItem>
+      items={testItems}
+      selectedItems={selectedItems}
+      buttonText="Filter Items"
+      displayProperty="name"
+      onSelectionChange={setSelectedItems}
+    />
+  );
+};
+
+describe("FilterDropdown Component", () => {
+  const setup = () => {
     return {
       user: userEvent.setup(),
-      onSelectionChange: defaultProps.onSelectionChange,
-      ...render(<FilterDropdown<TestItem> {...defaultProps} {...props} />),
+      ...render(<FilterDropdownWrapper />),
     };
   };
 
-  it("should renders with button text", () => {
+  it("should render with button text", () => {
     setup();
     expect(screen.getByText("Filter Items")).toBeInTheDocument();
   });
 
-  it("should opens dropdown when button is clicked", async () => {
+  it("should open dropdown when button is clicked", async () => {
     const { user } = setup();
 
     expect(screen.queryByText("Select All")).not.toBeInTheDocument();
-
     await user.click(screen.getByText("Filter Items"));
 
     expect(screen.getByText("Select All")).toBeInTheDocument();
@@ -50,68 +54,63 @@ describe("FilterDropdown Component", () => {
     expect(screen.getByText("Item 3")).toBeInTheDocument();
   });
 
-  it("should selects an item when clicked", async () => {
-    const { user, onSelectionChange } = setup();
+  it("should select an item when clicked", async () => {
+    const { user } = setup();
 
     await user.click(screen.getByText("Filter Items"));
     await user.click(screen.getByText("Item 2"));
 
-    expect(onSelectionChange).toHaveBeenCalledWith(
-      expect.arrayContaining([expect.objectContaining({ id: "2", name: "Item 2" })])
-    );
+    expect(screen.getByText("Item 2")).toHaveAttribute("aria-checked", "true");
   });
 
-  it("shold deselects an item when clicked again", async () => {
-    const { user, onSelectionChange } = setup();
+  it("should deselect an item when clicked again", async () => {
+    const { user } = setup();
 
     await user.click(screen.getByText("Filter Items"));
-
     await user.click(screen.getByText("Item 1"));
     await user.click(screen.getByText("Item 1"));
 
-    // Verify it was deselected
-    expect(onSelectionChange).toHaveBeenLastCalledWith([]);
+    expect(screen.getByText("Item 1")).not.toHaveAttribute("aria-checked", "true");;
   });
 
-  it('should selects all items when "Select All" is clicked', async () => {
-    const { user, onSelectionChange } = setup();
+  it('should select all items when "Select All" is clicked', async () => {
+    const { user } = setup();
 
     await user.click(screen.getByText("Filter Items"));
     await user.click(screen.getByText("Select All"));
 
-    // Verify all items were selected
-    expect(onSelectionChange).toHaveBeenCalledWith(
-      expect.arrayContaining([
-        expect.objectContaining({ id: "1" }),
-        expect.objectContaining({ id: "2" }),
-        expect.objectContaining({ id: "3" }),
-      ])
+    expect(screen.getByText("Item 1")).toHaveAttribute("aria-checked", "true");
+    expect(screen.getByText("Item 2")).toHaveAttribute("aria-checked", "true");
+    expect(screen.getByText("Item 3")).toHaveAttribute("aria-checked", "true");
+  });
+
+  it('should deselect all items when "Select All" is clicked again', async () => {
+    const { user } = setup();
+
+    await user.click(screen.getByText("Filter Items"));
+    await user.click(screen.getByText("Select All"));
+    await user.click(screen.getByText("Select All"));
+
+    expect(screen.getByText("Item 1")).not.toHaveAttribute("aria-checked", "true");;
+    expect(screen.getByText("Item 2")).not.toHaveAttribute("aria-checked", "true");;
+    expect(screen.getByText("Item 3")).not.toHaveAttribute("aria-checked", "true");;
+  });
+
+  it("should handle empty items array", async () => {
+    render(
+      <FilterDropdown<TestItem>
+        items={[]}
+        selectedItems={[]}
+        buttonText="Filter Items"
+        displayProperty="name"
+        onSelectionChange={() => {}}
+      />
     );
-  });
-
-  it('should deselects all items when "Select All" is clicked after all items are selected', async () => {
-    const { user, onSelectionChange } = setup();
+    const user = userEvent.setup();
 
     await user.click(screen.getByText("Filter Items"));
 
-    await user.click(screen.getByText("Select All"));
-    await user.click(screen.getByText("Select All"));
-
-    // Verify all items were deselected
-    expect(onSelectionChange).toHaveBeenLastCalledWith([]);
-  });
-
-  // Test edge case - empty items array
-  it("should handles empty items array", async () => {
-    const { user } = setup({ items: [] });
-
-    // Open dropdown
-    await user.click(screen.getByText("Filter Items"));
-
-    // Only "Select All" should be visible, no items
     expect(screen.getByText("Select All")).toBeInTheDocument();
     expect(screen.queryByText("Item 1")).not.toBeInTheDocument();
   });
-
-
 });

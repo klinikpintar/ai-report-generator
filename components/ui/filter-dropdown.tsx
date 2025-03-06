@@ -1,3 +1,4 @@
+// components/ui/filter-dropdown/index.tsx
 "use client";
 
 import { Button } from "@/components/ui/button";
@@ -9,95 +10,58 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { ChevronDown } from "lucide-react";
-import type React from "react";
-import { useReducer, useEffect, useState } from "react";
+import { useState } from "react";
 
-// Generic type for items that can be filtered
 export interface Filterable {
   id: string;
   [key: string]: any;
 }
 
-type FilterAction<T extends Filterable> =
-  | { type: "TOGGLE_ITEM"; payload: T }
-  | { type: "TOGGLE_ALL" }
-  | { type: "SET_ITEMS"; payload: T[] };
-
-interface FilterState<T extends Filterable> {
+interface FilterDropdownProps<T extends { id: string; [key: string]: any }> {
   items: T[];
   selectedItems: T[];
-}
-
-function filterReducer<T extends Filterable>(
-  state: FilterState<T>,
-  action: FilterAction<T>
-): FilterState<T> {
-  switch (action.type) {
-    case "SET_ITEMS":
-      return { ...state, items: action.payload };
-    case "TOGGLE_ITEM":
-      const isSelected = state.selectedItems.some((item) => item.id === action.payload.id);
-      return {
-        ...state,
-        selectedItems: isSelected
-          ? state.selectedItems.filter((item) => item.id !== action.payload.id)
-          : [...state.selectedItems, action.payload],
-      };
-    case "TOGGLE_ALL":
-      const allSelected = state.selectedItems.length === state.items.length;
-      return {
-        ...state,
-        selectedItems: allSelected ? [] : [...state.items],
-      };
-    default:
-      return state;
-  }
-}
-
-interface FilterDropdownProps<T extends Filterable> {
-  items: T[];
-  buttonText: string; // text to display on the button
-  displayProperty: keyof T; // attribute of T to display
-  onSelectionChange?: (selectedItems: T[]) => void;
+  onSelectionChange: (items: T[]) => void;
+  buttonText: string;
+  displayProperty: keyof T;
   buttonClassName?: string;
   dropdownWidth?: string;
 }
 
 export function FilterDropdown<T extends Filterable>({
   items,
+  selectedItems,
+  onSelectionChange,
   buttonText,
   displayProperty,
-  onSelectionChange,
   buttonClassName = "bg-[#00B0EB] hover:bg-[#00B0EB]/90",
   dropdownWidth = "w-[200px]",
 }: FilterDropdownProps<T>) {
   const [open, setOpen] = useState(false);
-  const [state, dispatch] = useReducer(filterReducer<T>, {
-    items: [],
-    selectedItems: [],
-  });
 
-  useEffect(() => {
-    dispatch({ type: "SET_ITEMS", payload: items });
-  }, [items]);
+  const handleSelectAll = (event: Event) => {
+    onSelectionChange(selectedItems.length === items.length ? [] : [...items]);
+    event.preventDefault();
+  };
 
-  useEffect(() => {
-    if (onSelectionChange) {
-      onSelectionChange(state.selectedItems);
-    }
-  }, [state.selectedItems, onSelectionChange]);
+  const handleSelectItem = (item: T) => (event: Event) => {
+    event.preventDefault();
+    const isSelected = selectedItems.some((selected) => selected.id === item.id);
+    const newSelectedItems = isSelected
+      ? selectedItems.filter((selected) => selected.id !== item.id)
+      : [...selectedItems, item];
+    onSelectionChange(newSelectedItems);
+  };
 
-  const allSelected = state.selectedItems.length === state.items.length && state.items.length > 0;
+  const allSelected = selectedItems.length === items.length && items.length > 0;
 
-  const isItemSelected = (item: T) =>
-    state.selectedItems.some((selected) => selected.id === item.id);
+  const isItemSelected = (item: T) => selectedItems.some((selected) => selected.id === item.id);
 
   return (
     <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger asChild className={dropdownWidth}>
         <Button variant="default" className={cn("flex justify-between", buttonClassName)}>
           <span>
-            {buttonText} {state.selectedItems.length > 0 && `(${state.selectedItems.length})`}
+            {buttonText} {selectedItems.length > 0 && `(${selectedItems.length})`}
           </span>
           <ChevronDown className={cn("text-white", open && "rotate-180")} />
         </Button>
@@ -105,22 +69,16 @@ export function FilterDropdown<T extends Filterable>({
       <DropdownMenuContent className={dropdownWidth}>
         <DropdownMenuCheckboxItem
           checked={allSelected}
-          onSelect={(event) => {
-            event.preventDefault();
-            dispatch({ type: "TOGGLE_ALL" });
-          }}
+          onSelect={handleSelectAll}
         >
           Select All
         </DropdownMenuCheckboxItem>
 
-        {state.items.map((item) => (
+        {items.map((item) => (
           <DropdownMenuCheckboxItem
             key={item.id}
             checked={isItemSelected(item)}
-            onSelect={(event) => {
-              event.preventDefault();
-              dispatch({ type: "TOGGLE_ITEM", payload: item });
-            }}
+            onSelect={handleSelectItem(item)}
           >
             {String(item[displayProperty])}
           </DropdownMenuCheckboxItem>

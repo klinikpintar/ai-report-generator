@@ -1,28 +1,29 @@
-"use client"
+// modules/schema/module-elements/platform-filter.tsx
+"use client";
 
-import { useState, useEffect } from "react"
-import { FilterDropdown } from "@/components/ui/filter-dropdown"
-import type { Platform } from "../types"
-import { dummyPlatforms } from "../constant"
+import { FilterDropdown } from "@/components/ui/filter-dropdown";
+import type { Platform } from "../types";
 
+type PlatformFilterProps = {
+  platforms: Platform[];
+  selectedPlatforms: Platform[];
+  onSelectionChange: (platforms: Platform[]) => void;
+};
 
-export const PlatformFilter = () => {
-  const [platforms, setPlatforms] = useState<Platform[]>([])
-  const [selectedPlatforms, setSelectedPlatforms] = useState<Platform[]>([])
-
-  useEffect(() => {
-    setPlatforms(dummyPlatforms)
-  }, [])
-
+export const PlatformFilter: React.FC<PlatformFilterProps> = ({
+  platforms,
+  selectedPlatforms,
+  onSelectionChange,
+}) => {
   return (
     <div className="flex justify-end">
       <FilterDropdown<Platform>
         items={platforms}
+        selectedItems={selectedPlatforms}
+        onSelectionChange={onSelectionChange}
         buttonText="Filter by Platforms"
         displayProperty="name"
-        onSelectionChange={setSelectedPlatforms}
       />
     </div>
-  )
-}
-
+  );
+};

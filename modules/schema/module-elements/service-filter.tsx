@@ -1,27 +1,24 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { FilterDropdown } from "@/components/ui/filter-dropdown"
-import { dummyServices } from "../constant"
-import type { Service } from "../types"
+import { FilterDropdown } from "@/components/ui/filter-dropdown";
+import type { Service } from "../types";
 
-export const ServiceFilter = () => {
-  const [services, setServices] = useState<Service[]>([])
-  const [selectedServices, setSelectedServices] = useState<Service[]>([])
+type ServiceFilterProps = {
+  services: Service[];
+  selectedServices: Service[];
+  onSelectionChange: (services: Service[]) => void;
+};
 
-  useEffect(() => {
-    setServices(dummyServices)
-  }, [])
-
+export const ServiceFilter: React.FC<ServiceFilterProps> = (props) => {
   return (
     <div className="flex justify-end gap-2">
       <FilterDropdown<Service>
-        items={services}
+        items={props.services}
+        selectedItems={props.selectedServices}
+        onSelectionChange={props.onSelectionChange}
         buttonText="Filter by Services"
         displayProperty="name"
-        onSelectionChange={setSelectedServices}
       />
     </div>
-  )
-}
-
+  );
+};
