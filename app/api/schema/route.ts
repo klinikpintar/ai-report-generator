@@ -1,14 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { StatusCodes } from 'http-status-codes';
 import schemaService from '../../services/schemaService';
-import { validateSchemaInput, handlePrismaError } from '../../utils/schemaUtils';
+import { validateSchemaInput, handlePrismaError, handleInternalServerError } from '../../utils/schemaUtils';
 
 export async function GET(req: NextRequest) {
   try {
     const schemas = await schemaService.findAllSchemas();
     return NextResponse.json(schemas, { status: StatusCodes.OK });
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to fetch schemas' }, { status: StatusCodes.INTERNAL_SERVER_ERROR });
+    return handleInternalServerError();
   }
 }
 

@@ -37,3 +37,10 @@ export const handlePrismaError = (error: any) => {
     { status: StatusCodes.INTERNAL_SERVER_ERROR }
   );
 }
+
+export const handleInternalServerError = () => {
+  return NextResponse.json(
+    { error: 'Failed to fetch schemas' }, 
+    { status: StatusCodes.INTERNAL_SERVER_ERROR }
+  );
+}
