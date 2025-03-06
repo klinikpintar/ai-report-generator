@@ -4,10 +4,9 @@ import { Schema } from '@prisma/client';
 import { CreateSchemaDto as CreateSchemaValidator } from '../api/dtos/schema.dtos';
 
 class SchemaService implements ISchemaService {
-  public async createSchema(data: unknown): Promise<Schema> {
+  async createSchema(data: unknown): Promise<Schema> {
     const parsedData = CreateSchemaValidator.parse(data);
-
-    return await prisma.schema.create({
+    return prisma.schema.create({
       data: {
         name: parsedData.name,
         description: parsedData.description,
@@ -16,20 +15,19 @@ class SchemaService implements ISchemaService {
     });
   }
 
-  public async findAllSchemas(): Promise<Schema[]> {
-    return await prisma.schema.findMany();
+  async findAllSchemas(): Promise<Schema[]> {
+    return prisma.schema.findMany();
   }
 
-  public async updateSchema(data: UpdateSchemaDto): Promise<Schema> {
+  async updateSchema(data: UpdateSchemaDto): Promise<Schema> {
     const { id, ...updateFields } = data;
-
-    return await prisma.schema.update({
+    return prisma.schema.update({
       where: { id },
       data: updateFields,
     });
   }
 
-  public async deleteSchema(id: number): Promise<void> {
+  async deleteSchema(id: number): Promise<void> {
     await prisma.schema.delete({
       where: { id },
     });
