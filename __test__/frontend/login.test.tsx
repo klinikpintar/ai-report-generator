@@ -5,12 +5,6 @@ import MockAdapter from "axios-mock-adapter";
 
 const mockAxios = new MockAdapter(axios);
 
-jest.mock("next/navigation", () => ({
-  useRouter: () => ({
-    push: jest.fn(),
-  }),
-}));
-
 const pushMock = jest.fn();
 jest.mock("next/navigation", () => ({
   useRouter: () => ({
