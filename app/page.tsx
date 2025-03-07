@@ -2,46 +2,28 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import axios from "axios";
+import FeAuthService from "./services/feAuthService"; 
 
 const Home = () => {
   const router = useRouter();
+  const authService = new FeAuthService();
 
   useEffect(() => {
     const checkAuth = async () => {
-      try {
-        const token = localStorage.getItem("access_token");  // Ambil dari localStorage
-
-        if (!token) {
-          router.push("/login");
-          return;
-        }
-        
-        // send token in header for verification
-        await axios.get("/api/auth/me", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-      } catch (error) {
+      const authResponse = await authService.checkAuth();
+      if (!authResponse.isAuthenticated) {
         router.push("/login");
       }
     };
 
     checkAuth();
-  }, [router]);
+  }, [router, authService]);
 
   const handleLogout = async () => {
-    try {
-      const token = localStorage.getItem("access_token");
-      await axios.post('/api/auth/logout', {}, {
-        headers: {
-          Authorization: `Bearer ${token}`  // Send token in header
-        }
-      });
-      localStorage.removeItem("access_token");
+    const logoutResponse = await authService.logout();
+    if (logoutResponse.success) {
       router.push("/login");
-    } catch (error) {
+    } else {
       alert("Logout failed. Please try again.");
     }
   };
@@ -50,7 +32,7 @@ const Home = () => {
     <div className="flex flex-col items-center justify-center min-h-screen">
       <nav className="w-full flex justify-between p-4 bg-blue-600 text-white">
         <h1 className="text-xl font-bold">Landing Page</h1>
-        <button className="bg-red-500 px-4 py-2 rounded" onClick={handleLogout}>
+        <button className="bg-magenta-900 px-4 py-2 rounded" onClick={handleLogout}>
           Logout
         </button>
       </nav>

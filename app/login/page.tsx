@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import FeAuthService from "../services/feAuthService";
 import Image from "next/image";
-import axios from "axios";
 
 const LoginPage = () => {
   const [email, setEmail] = useState("");
@@ -15,19 +15,20 @@ const LoginPage = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setError(""); // Reset error message before starting the login attempt
-    try {
-      const response = await axios.post("/api/auth/login", { email, password });
-      localStorage.setItem("access_token", response.data.data.access_token);
-      setLoading(false);
+    setError("");
+
+    const authService = new FeAuthService();
+    const { success, message } = await authService.login(email, password);
+
+    if (success) {
       router.push("/");
-    } catch (error) {
+    } else {
       setError("Login failed. Please check your credentials.");
-      //clear the fields if error occured
       setEmail("");
       setPassword("");
-      setLoading(false);
     }
+
+    setLoading(false);
   };
 
   return (
@@ -42,15 +43,15 @@ const LoginPage = () => {
         <h2 className="text-2xl font-bold text-center text-blue-600 text-4xl">
           Sign in to your account
         </h2>
-        <p className="mt-4 text-center text-black text-lg">
+        <p className="mt-4 text-center text-lg">
           Selamat Datang di AI Report Generator by
         </p>
-        <p className="text-center text-black text-lg mb-4">Klinik Pintar</p>
+        <p className="text-center text-lg mb-4">Klinik Pintar</p>
 
         {/* Form */}
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
-            <label htmlFor="email" className="block text-black font-semibold">
+            <label htmlFor="email" className="block font-semibold">
               Email
             </label>
             <input
@@ -64,7 +65,7 @@ const LoginPage = () => {
           </div>
 
           <div className="mb-4">
-            <label htmlFor="password" className="block text-black font-semibold">
+            <label htmlFor="password" className="block font-semibold">
               Password
             </label>
             <input
@@ -77,7 +78,7 @@ const LoginPage = () => {
             />
           </div>
 
-          {error && <p className="text-magenta-900 text-sm mb-4">{error}</p>}
+          {error && <p className="text-magenta-900 text-sm mb-2">{error}</p>}
 
           <button
             type="submit"
