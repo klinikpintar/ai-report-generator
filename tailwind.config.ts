@@ -29,6 +29,18 @@ const config: Config = {
       black: "#2D3648",
       white: "#ffffff",
       gray: "#CBD2E0",
+      magenta: {
+        50: "#fbe0ec",
+        100: "#f4b3d0",
+        200: "#ed80b1",
+        300: "#e64d91",
+        400: "#e0267a",
+        500: "#db0062",
+        600: "#d7005a",
+        700: "#d20050",
+        800: "#cd0046",
+        900: "#c40034",
+      },
     },
     extend: {
       spacing: {
