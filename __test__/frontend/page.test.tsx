@@ -1,5 +1,5 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import Home from '../../app/page'; // Sesuaikan dengan path ke komponen Anda
+import Home from '../../app/page'; 
 import axios from 'axios';
 import MockAdapter from 'axios-mock-adapter';
 
@@ -119,5 +119,18 @@ describe('Home Component', () => {
             expect(mockPush).not.toHaveBeenCalledWith('/login');
             expect(mockAlert).toHaveBeenCalledWith('Logout failed. Please try again.');
         }, { timeout: 3000 });
+    });
+
+    test('should not call logout API if no token is found', async () => {
+        render(<Home />);
+    
+        fireEvent.click(screen.getByText('Logout'));
+    
+        await waitFor(() => {
+            // Make sure no API request is created
+            expect(mockAxios.history.post.length).toBe(0);
+            // Make sure user still in the same page
+            expect(mockPush).not.toHaveBeenCalled();
+        });
     });
 });
