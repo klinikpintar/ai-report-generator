@@ -5,8 +5,8 @@ import authService from "./services/authService";
 import appConfig from "./config";
 
 export function middleware(req: NextRequest) {
-  const authHeader = req.headers.get("Authorization");
-  const token = extractToken(authHeader ?? "");
+  const authHeader = req.headers.get("Authorization") ?? "";
+  const token = extractToken(authHeader);
   if (!token) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }

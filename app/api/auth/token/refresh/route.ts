@@ -7,7 +7,6 @@ import authService from "@/app/services/authService";
 
 export async function POST(req: Request) {
   const cookie = req.headers.get("Cookie") ?? "";
-
   const refreshToken = extractRefreshToken(cookie);
 
   if (!refreshToken) {

@@ -27,8 +27,8 @@ const units = {
 };
 
 export const timeConvertMs = (time: string): number => {
-  const match = time.match(/^(\d+)([smhdwmoy])$/);
-  const [, value, unit] = match as [string, string, keyof typeof units];
+  const match = /^(\d+)([smhdwoy])$/.exec(time);
+  const [, value, unit] = match as unknown as [string, string, keyof typeof units];
 
   return parseInt(value) * units[unit];
 };
