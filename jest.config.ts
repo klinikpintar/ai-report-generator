@@ -8,10 +8,18 @@ const config: Config = {
   collectCoverage: true,
   coverageDirectory: "coverage",
   coverageReporters: ["json", "lcov", "text", "clover"],
-  coveragePathIgnorePatterns: [
-    "/app/config.ts",
-    "/app/services/authService.ts",
+  collectCoverageFrom: [
+    "**/*.{ts,tsx, js, jsx}",    
+    "!app/config.ts",    
   ],
+  coverageThreshold: {
+    global: {
+      branches: 100,
+      functions: 100,
+      lines: 100,
+      statements: 100,
+    },
+  },
 };
 
 export default config;

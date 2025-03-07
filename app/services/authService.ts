@@ -49,8 +49,6 @@ class AuthService implements IAuthService {
 class AuthServiceSingleton {
   private static instance: AuthService;
 
-  private constructor() {}
-
   public static getInstance(): AuthService {
     if (!AuthServiceSingleton.instance) {
       AuthServiceSingleton.instance = new AuthService();

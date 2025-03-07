@@ -20,6 +20,8 @@ model User {
   name      String  @db.VarChar(255)
   isActive  Boolean @default(true)
   role      Role    @default(BUSINESS_ANALYST)
+
+  refreshToken RefreshToken?
 }
 
 enum Role {
@@ -28,8 +30,9 @@ enum Role {
 }
 
 model RefreshToken {
-  userId    String  @db.Uuid
+  userId    String  @db.Uuid @unique
   token     String  @unique @db.VarChar(255)
 
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade) 
   @@id([userId, token])
 }

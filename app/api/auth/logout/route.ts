@@ -5,7 +5,7 @@ import prisma from "@/lib/prisma";
 import authService from "@/app/services/authService";
 
 export async function POST(req: Request) {
-  const authorization = req.headers.get("Authorization") || "";
+  const authorization = req.headers.get("Authorization") ?? "";
   const token = extractToken(authorization);
 
   if (!token || !authService.verifyToken(token, config.JWT_ACCESS_SECRET)) {
