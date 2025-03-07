@@ -18,7 +18,7 @@ const LoginPage = () => {
     setError("");
 
     const authService = new FeAuthService();
-    const { success, message } = await authService.login(email, password);
+    const { success } = await authService.login(email, password);
 
     if (success) {
       router.push("/");

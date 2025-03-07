@@ -5,7 +5,7 @@ import authService from "../../../services/authService";
 import prisma from "../../../../lib/prisma";
 
 export async function GET(req: Request) {
-  const authorization = req.headers.get("Authorization") || "";
+  const authorization = req.headers.get("Authorization") ?? "";
   const token = extractToken(authorization);  
 
   if (!token) {
