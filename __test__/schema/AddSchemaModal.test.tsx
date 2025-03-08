@@ -2,24 +2,28 @@ import { render, screen, fireEvent } from "@testing-library/react";
 import AddSchemaModal from "@/app/components/AddSchemaModal";
 import Schema from "@/app/schema/page";
 
-describe("Modal Component", () => {
-  test("modal tidak muncul saat pertama kali dirender", () => {
+describe("Add Schema Modal Test", () => {
+  it("Should not appear when first rendered", () => {
     render(<AddSchemaModal isVisible={false} onClose={() => {}} />);
 
-    expect(
-      screen.queryByText("Form Upload Skema Database")
-    ).not.toBeInTheDocument();
+    expect(screen.getByText("Form Upload Skema Database")).toHaveAttribute(
+      "aria-hidden",
+      "true"
+    );
   });
 
-  test("modal muncul saat klik 'Tambah Skema'", () => {
+  it("Should appear when user click 'Tambah Skema'", () => {
     render(<Schema />);
 
     fireEvent.click(screen.getByText("Tambah Skema"));
 
-    expect(screen.getByText("Form Upload Skema Database")).toBeInTheDocument();
+    expect(screen.getByText("Form Upload Skema Database")).toHaveAttribute(
+      "aria-hidden",
+      "false"
+    );
   });
 
-  test("memanggil fungsi onClose saat tombol 'Batal' diklik", () => {
+  it("Should call the 'handleClose' function when 'Batal' button is clicked", () => {
     const handleClose = jest.fn();
     render(<AddSchemaModal isVisible={true} onClose={handleClose} />);
 

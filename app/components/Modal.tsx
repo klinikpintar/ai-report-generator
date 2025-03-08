@@ -49,7 +49,12 @@ const Modal: React.FC<ModalProps> = (props) => {
           }`}
         >
           <div className="flex items-center justify-center p-7 pb-1 rounded-t border-gray-200 ">
-            <p className="text-[32px] font-bold text-[#00B0EB]">{title}</p>
+            <p
+              className="text-[32px] font-bold text-[#00B0EB]"
+              aria-hidden={isVisible ? "false" : "true"}
+            >
+              {title}
+            </p>
           </div>
           <div className="flex items-center justify-center md:pl-5 md:pr-5">
             <p className="text-center text-[18px]">{subtitle}</p>
