@@ -1,4 +1,5 @@
 import React, { FormEvent } from "react";
+import Image from "next/image";
 
 interface SchemaFormProps {
   showFileInput?: boolean;
@@ -67,21 +68,32 @@ const SchemaForm: React.FC<SchemaFormProps> = ({
           </label>
           <select
             id="platform"
+            defaultValue=""
             className="bg-[#00B0EB] text-white text-[16.44px] font-bold rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-3 cursor-pointer"
           >
-            <option value="" className="bg-white" disabled selected>
+            <option
+              value=""
+              className="bg-white text-[16.44px] font-bold"
+              disabled
+            >
               Pilih Platform
             </option>
-            <option value="PostgreSQL" className="bg-white text-[#00B0EB]">
+            <option
+              value="PostgreSQL"
+              className="bg-white text-[#00B0EB] text-[16.44px] font-bold"
+            >
               PostgreSQL
             </option>
             <option
               value="MySQL"
-              className="bg-white text-[#00B0EB] hover:bg-gray-50"
+              className="bg-white text-[#00B0EB] text-[16.44px] font-bold"
             >
               MySQL
             </option>
-            <option value="MongoDB" className="bg-white text-[#00B0EB]">
+            <option
+              value="MongoDB"
+              className="bg-white text-[#00B0EB] text-[16.44px] font-bold"
+            >
               MongoDB
             </option>
           </select>
@@ -92,21 +104,38 @@ const SchemaForm: React.FC<SchemaFormProps> = ({
           </label>
           <select
             id="service"
+            defaultValue=""
             className="bg-[#00B0EB] text-white text-[16.44px] font-bold rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-3 cursor-pointer"
           >
-            <option value="" className="bg-white" disabled selected>
+            <option
+              value=""
+              className="bg-white text-[16.44px] font-bold"
+              disabled
+            >
               Pilih Service
             </option>
-            <option value="Reservasi" className="bg-white text-[#00B0EB]">
+            <option
+              value="Reservasi"
+              className="bg-white text-[#00B0EB] text-[16.44px] font-bold"
+            >
               Reservasi
             </option>
-            <option value="Kesehatan" className="bg-white text-[#00B0EB]">
+            <option
+              value="Kesehatan"
+              className="bg-white text-[#00B0EB] text-[16.44px] font-bold"
+            >
               Kesehatan
             </option>
-            <option value="Keuangan" className="bg-white text-[#00B0EB]">
+            <option
+              value="Keuangan"
+              className="bg-white text-[#00B0EB] text-[16.44px] font-bold"
+            >
               Keuangan
             </option>
-            <option value="Inventaris" className="bg-white text-[#00B0EB]">
+            <option
+              value="Inventaris"
+              className="bg-white text-[#00B0EB] text-[16.44px] font-bold"
+            >
               Inventaris
             </option>
           </select>
@@ -118,27 +147,20 @@ const SchemaForm: React.FC<SchemaFormProps> = ({
             </label>
             <label className="flex items-center p-2 justify-center border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-white hover:bg-gray-100">
               <div className="flex items-center justify-center">
-                <svg
-                  className="pr-1 w-8 h-8 text-gray-500"
-                  aria-hidden="true"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 20 16"
-                >
-                  <path
-                    stroke="currentColor"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"
-                  />
-                </svg>
+                <Image
+                  aria-hidden
+                  src="/add-file.svg"
+                  alt="File icon"
+                  width={16}
+                  height={16}
+                  className="pr-1 w-8 h-8"
+                />
                 <p className="text-[16px]">Upload File Skema di sini</p>
               </div>
               <input
                 id="dropzone-file"
                 type="file"
-                accept=".sql"
+                accept=".sql, .json, .bson"
                 onChange={handleFileChange}
                 ref={fileInputRef}
                 className="hidden"
@@ -147,13 +169,14 @@ const SchemaForm: React.FC<SchemaFormProps> = ({
             {formData.fileName && (
               <div className="mt-4 flex items-center justify-between bg-gray-100 p-2 rounded-lg border border-gray-300">
                 <div className="flex items-center space-x-2">
-                  <svg
-                    className="w-8 h-8 text-blue-500"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 00-.293-.707l-2.5-2.5A1 1 0 0012 2H6zM5 4a1 1 0 011-1h5v2a1 1 0 001 1h2v10a1 1 0 01-1 1H6a1 1 0 01-1-1V4z" />
-                  </svg>
+                  <Image
+                    aria-hidden
+                    src="/database.svg"
+                    alt="File icon"
+                    width={16}
+                    height={16}
+                    className="w-8 h-8"
+                  />
                   <span className="text-sm font-medium text-gray-700">
                     {formData.fileName}
                   </span>
