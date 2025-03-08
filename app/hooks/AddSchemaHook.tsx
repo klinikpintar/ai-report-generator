@@ -21,14 +21,15 @@ export const AddSchemaHook = (onClose: () => void) => {
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
+    const allowedFormat = [".sql", ".json", ".bson"];
 
-    if (file && !file.name.endsWith(".sql")) {
-      alert("Only SQL files are allowed!");
+    if (!file) return;
+
+    if (!allowedFormat.includes(file.name.slice(file.name.lastIndexOf(".")))) {
+      alert("File format not allowed!");
       e.target.value = "";
       return;
     }
-
-    if (!file) return;
 
     const reader = new FileReader();
     reader.onload = (event) => {
@@ -59,7 +60,7 @@ export const AddSchemaHook = (onClose: () => void) => {
     event.preventDefault();
 
     if (!formData.schemaText) {
-      alert("Please upload file");
+      alert("Please upload schema");
       return;
     }
 
@@ -81,18 +82,7 @@ export const AddSchemaHook = (onClose: () => void) => {
       if (!response.ok) throw new Error(responseData.error);
 
       alert("Schema successfully added");
-      setFormData((prev) => ({
-        ...prev,
-        name: "",
-        description: "",
-        schemaText: "",
-        fileName: "",
-      }));
-
-      if (fileInputRef.current) {
-        fileInputRef.current.value = "";
-      }
-
+      clearForm();
       onClose();
     } catch (error) {
       const errorMessage = (error as Error).message;
