@@ -23,7 +23,7 @@ const EditSchemaModal = ({ isVisible, onClose, schema }: Props) => {
     handleFileChange,
     handleSubmit,
     clearForm,
-  } = AddSchemaHook(onClose, schema ?? undefined);
+  } = AddSchemaHook(onClose, false, schema ?? undefined);
 
   return (
     <Modal

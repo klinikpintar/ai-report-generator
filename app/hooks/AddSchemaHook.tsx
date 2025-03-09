@@ -10,6 +10,7 @@ interface SchemaData {
 
 export const AddSchemaHook = (
   onClose: () => void,
+  isAddSchema: boolean,
   initialData?: SchemaData
 ) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -77,34 +78,36 @@ export const AddSchemaHook = (
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    if (!formData.schemaText) {
-      alert("Please upload schema");
-      return;
-    }
+    if (isAddSchema) {
+      if (!formData.schemaText) {
+        alert("Please upload schema");
+        return;
+      }
 
-    try {
-      const response = await fetch("/api/schema", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          name: formData.name,
-          description: formData.description,
-          schemaText: formData.schemaText,
-        }),
-      });
+      try {
+        const response = await fetch("/api/schema", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            name: formData.name,
+            description: formData.description,
+            schemaText: formData.schemaText,
+          }),
+        });
 
-      const responseData = await response.json();
+        const responseData = await response.json();
 
-      if (!response.ok) throw new Error(responseData.error);
+        if (!response.ok) throw new Error(responseData.error);
 
-      alert("Schema successfully added");
-      clearForm();
-      onClose();
-    } catch (error) {
-      const errorMessage = (error as Error).message;
-      alert(errorMessage);
+        alert("Schema successfully added");
+        clearForm();
+        onClose();
+      } catch (error) {
+        const errorMessage = (error as Error).message;
+        alert(errorMessage);
+      }
     }
   }
 

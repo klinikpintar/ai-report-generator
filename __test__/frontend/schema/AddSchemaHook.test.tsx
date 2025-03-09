@@ -12,7 +12,7 @@ describe("AddSchemaHook Test", () => {
   });
 
   it("Should initialize empty formData", () => {
-    const { result } = renderHook(() => AddSchemaHook(onCloseMock));
+    const { result } = renderHook(() => AddSchemaHook(onCloseMock, true));
     expect(result.current.formData).toEqual({
       name: "",
       description: "",
@@ -22,7 +22,7 @@ describe("AddSchemaHook Test", () => {
   });
 
   it("Should update state when 'handleChange' is called", () => {
-    const { result } = renderHook(() => AddSchemaHook(onCloseMock));
+    const { result } = renderHook(() => AddSchemaHook(onCloseMock, true));
 
     act(() => {
       result.current.handleChange({
@@ -34,7 +34,7 @@ describe("AddSchemaHook Test", () => {
   });
 
   it("Should reject disallowed files when 'handleFileChange' is called", () => {
-    const { result } = renderHook(() => AddSchemaHook(onCloseMock));
+    const { result } = renderHook(() => AddSchemaHook(onCloseMock, true));
     const mockEvent = { target: { files: [{ name: "invalid.txt" }] } } as any;
 
     act(() => {
@@ -45,7 +45,7 @@ describe("AddSchemaHook Test", () => {
   });
 
   it("Should read input file", async () => {
-    const { result } = renderHook(() => AddSchemaHook(onCloseMock));
+    const { result } = renderHook(() => AddSchemaHook(onCloseMock, true));
     const mockFile = new File(["CREATE TABLE users;"], "schema.sql", {
       type: "text/plain",
     });
@@ -65,7 +65,7 @@ describe("AddSchemaHook Test", () => {
   });
 
   it("Should clear form when 'clearForm' is called", () => {
-    const { result } = renderHook(() => AddSchemaHook(onCloseMock));
+    const { result } = renderHook(() => AddSchemaHook(onCloseMock, true));
 
     act(() => {
       result.current.clearForm();
@@ -80,7 +80,7 @@ describe("AddSchemaHook Test", () => {
   });
 
   it("Should display an alert if 'handleSubmit' is called without a file", async () => {
-    const { result } = renderHook(() => AddSchemaHook(onCloseMock));
+    const { result } = renderHook(() => AddSchemaHook(onCloseMock, true));
 
     await act(async () => {
       await result.current.handleSubmit({ preventDefault: jest.fn() } as any);
@@ -95,7 +95,7 @@ describe("AddSchemaHook Test", () => {
       json: async () => ({}),
     });
 
-    const { result } = renderHook(() => AddSchemaHook(onCloseMock));
+    const { result } = renderHook(() => AddSchemaHook(onCloseMock, true));
 
     act(() => {
       result.current.formData.schemaText = "CREATE TABLE users;";
@@ -119,7 +119,7 @@ describe("AddSchemaHook Test", () => {
       json: async () => ({ error: "Server error" }),
     });
 
-    const { result } = renderHook(() => AddSchemaHook(onCloseMock));
+    const { result } = renderHook(() => AddSchemaHook(onCloseMock, true));
 
     act(() => {
       result.current.formData.schemaText = "CREATE TABLE users;";
@@ -133,7 +133,7 @@ describe("AddSchemaHook Test", () => {
   });
 
   it("Should do nothing if the file does not exist", () => {
-    const { result } = renderHook(() => AddSchemaHook(onCloseMock));
+    const { result } = renderHook(() => AddSchemaHook(onCloseMock, true));
 
     const mockEvent = { target: { files: null } } as any;
 
@@ -143,5 +143,77 @@ describe("AddSchemaHook Test", () => {
 
     expect(result.current.formData.schemaText).toBe("");
     expect(result.current.formData.fileName).toBe("");
+  });
+
+  it("Should not call API if initialData does not exist", async () => {
+    const { result } = renderHook(() => AddSchemaHook(onCloseMock, false));
+
+    await act(async () => {
+      await result.current.handleSubmit({ preventDefault: jest.fn() } as any);
+    });
+
+    expect(fetch).not.toHaveBeenCalled();
+  });
+
+  it("Should call PATCH API with the correct data when submit", async () => {
+    const initialData = {
+      id: 1,
+      name: "users-2",
+      description: "auth-2 purpose",
+      schemaText: "create",
+      fileName: "skema.sql",
+    };
+
+    (fetch as jest.Mock).mockResolvedValue({
+      ok: true,
+      json: jest.fn().mockResolvedValue(initialData),
+    });
+
+    const { result } = renderHook(() =>
+      AddSchemaHook(onCloseMock, false, initialData)
+    );
+
+    await act(async () => {
+      await result.current.handleSubmit({ preventDefault: jest.fn() } as any);
+    });
+
+    expect(fetch).toHaveBeenCalledWith("/api/schema", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        id: 1,
+        name: "users-2",
+        description: "auth-2 purpose",
+      }),
+    });
+
+    expect(onCloseMock).toHaveBeenCalled();
+  });
+
+  it("Should display error alert if API fails", async () => {
+    const initialData = {
+      id: 1,
+      name: "users-2",
+      description: "auth-2 purpose",
+      schemaText: "create",
+      fileName: "skema.sql",
+    };
+
+    (fetch as jest.Mock).mockResolvedValue({
+      ok: false,
+      json: jest.fn().mockResolvedValue({ error: "Failed to update schema" }),
+    });
+
+    jest.spyOn(window, "alert").mockImplementation(() => {});
+
+    const { result } = renderHook(() =>
+      AddSchemaHook(onCloseMock, false, initialData)
+    );
+
+    await act(async () => {
+      await result.current.handleSubmit({ preventDefault: jest.fn() } as any);
+    });
+
+    expect(alert).toHaveBeenCalledWith("Failed to update schema");
   });
 });

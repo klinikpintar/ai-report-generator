@@ -16,7 +16,7 @@ const AddSchemaModal = ({ isVisible, onClose }: Props) => {
     handleFileChange,
     handleSubmit,
     clearForm,
-  } = AddSchemaHook(onClose);
+  } = AddSchemaHook(onClose, true);
 
   return (
     <Modal
