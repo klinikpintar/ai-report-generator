@@ -1,16 +1,39 @@
 import type { Config } from "tailwindcss";
 
-export default {
-    darkMode: ["class"],
-    content: [
+const config: Config = {
+  content: [
+    "./app/**/*.{js,ts,jsx,tsx,mdx}",
     "./pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./components/**/*.{js,ts,jsx,tsx,mdx}",
     "./app/**/*.{js,ts,jsx,tsx,mdx}",
     "./modules/**/*.{js,ts,jsx,tsx,mdx}",
   ],
   theme: {
-  	extend: {
-  		colors: {
+    screens: {
+      sm: "480px",
+      md: "768px",
+      lg: "976px",
+      xl: "1440px",
+    },
+    colors: {
+      blue: {
+        50: "#e4f6fc",
+        100: "#bae8f7",
+        200: "#8dd8f2",
+        300: "#5fc8ed",
+        400: "#3cbde9",
+        500: "#1ab1e5",
+        600: "#17aae2",
+        700: "#13a1de",
+        800: "#0f98da",
+        900: "#088ad3",
+      },
+      black: "#2D3648",
+      white: "#ffffff",
+      gray: "#CBD2E0",
+    },
+    extend: {
+      colors: {
   			background: 'hsl(var(--background))',
   			foreground: 'hsl(var(--foreground))',
   			card: {
@@ -52,12 +75,21 @@ export default {
   				'5': 'hsl(var(--chart-5))'
   			}
   		},
-  		borderRadius: {
-  			lg: 'var(--radius)',
+      spacing: {
+        128: "32rem",
+        144: "36rem",
+        "25": "100px",
+      },
+      borderRadius: {
+        lg: 'var(--radius)',
   			md: 'calc(var(--radius) - 2px)',
-  			sm: 'calc(var(--radius) - 4px)'
-  		}
-  	}
+  			sm: 'calc(var(--radius) - 4px)',
+        "50px": "50px",
+        "4xl": "2rem",
+      },
+    },
   },
   plugins: [require("tailwindcss-animate")],
-} satisfies Config;
+};
+
+export default config;
