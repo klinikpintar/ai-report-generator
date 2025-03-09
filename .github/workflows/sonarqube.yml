@@ -50,6 +50,10 @@ jobs:
         run: pnpm run test:coverage
         env:
           DATABASE_URL: "postgresql://postgres:drz0mbos1@localhost:5432/ai_report_generator"
+          JWT_ACCESS_SECRET: "test_secret"
+          JWT_ACCESS_EXPIRES: "1h"
+          JWT_REFRESH_SECRET: "test_refresh_secret"
+          JWT_REFRESH_EXPIRES: "7d"
 
       - name: Verify Coverage File
         run: ls -l coverage/lcov.info
