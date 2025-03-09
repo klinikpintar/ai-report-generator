@@ -1,6 +1,17 @@
-import { useState, useRef, FormEvent } from "react";
+import { useState, useRef, FormEvent, useEffect } from "react";
 
-export const AddSchemaHook = (onClose: () => void) => {
+interface SchemaData {
+  id: number;
+  name: string;
+  description: string;
+  schemaText: string;
+  fileName: string;
+}
+
+export const AddSchemaHook = (
+  onClose: () => void,
+  initialData?: SchemaData
+) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [formData, setFormData] = useState({
@@ -8,7 +19,14 @@ export const AddSchemaHook = (onClose: () => void) => {
     description: "",
     schemaText: "",
     fileName: "",
+    ...initialData,
   });
+
+  useEffect(() => {
+    if (initialData) {
+      setFormData(initialData);
+    }
+  }, [initialData]);
 
   const handleChange = (
     e: React.ChangeEvent<

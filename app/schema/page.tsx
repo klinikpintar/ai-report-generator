@@ -19,6 +19,7 @@ const Schema = () => {
   const [schemas, setSchemas] = useState<Schema[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedSchema, setSelectedSchema] = useState<Schema | null>(null);
 
   useEffect(() => {
     const fetchSchemas = async () => {
@@ -62,6 +63,18 @@ const Schema = () => {
                 <td className="border border-gray-300 px-4 py-2">
                   {schema.description}
                 </td>
+                <td className="border border-gray-300 px-4 py-2 text-center">
+                  <button
+                    className="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600"
+                    aria-label={`Edit`}
+                    onClick={() => {
+                      setSelectedSchema(schema);
+                      setShowEditModal(true);
+                    }}
+                  >
+                    Edit
+                  </button>
+                </td>
               </tr>
             ))}
           </tbody>
@@ -77,6 +90,7 @@ const Schema = () => {
       <EditSchemaModal
         isVisible={showEditModal}
         onClose={() => setShowEditModal(false)}
+        schema={selectedSchema}
       />
     </Fragment>
   );
