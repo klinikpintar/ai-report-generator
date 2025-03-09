@@ -66,13 +66,15 @@ export const AddSchemaHook = (
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
-    setFormData((prev) => ({
-      ...prev,
-      name: "",
-      description: "",
-      schemaText: "",
-      fileName: "",
-    }));
+    if (!initialData) {
+      setFormData((prev) => ({
+        ...prev,
+        name: "",
+        description: "",
+        schemaText: "",
+        fileName: "",
+      }));
+    }
   };
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -102,6 +104,33 @@ export const AddSchemaHook = (
         if (!response.ok) throw new Error(responseData.error);
 
         alert("Schema successfully added");
+        clearForm();
+        onClose();
+      } catch (error) {
+        const errorMessage = (error as Error).message;
+        alert(errorMessage);
+      }
+    } else {
+      if (!initialData) return;
+
+      try {
+        const response = await fetch("/api/schema", {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            id: initialData.id,
+            name: formData.name,
+            description: formData.description,
+          }),
+        });
+
+        const responseData = await response.json();
+
+        if (!response.ok) throw new Error(responseData.error);
+
+        alert("Schema successfully updated");
         clearForm();
         onClose();
       } catch (error) {

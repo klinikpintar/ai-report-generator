@@ -188,6 +188,7 @@ const SchemaForm: React.FC<SchemaFormProps> = ({
       </div>
       <div className="flex justify-center items-center">
         <button
+          type="button"
           className="flex-1 text-[#00B0EB] text-[18px] font-bold inline-flex items-center mr-2 ml-5 bg-white hover:text-[#13A1DE] focus:ring-4 focus:outline-none focus:ring-blue-300 rounded-full px-5 py-2.5 text-center justify-center border-2 border-[#00B0EB]"
           onClick={() => {
             onClose();
