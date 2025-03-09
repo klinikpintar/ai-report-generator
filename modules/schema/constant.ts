@@ -39,7 +39,7 @@ export const dummyServices: Service[] = [
     id: uuidv4(),
     createdAt: new Date(),
     modifiedAt: new Date(),
-    name: "Reservasi Pasien",
+    name: "Pemesanan Online",
     platform: dummyPlatforms[1],
   },
   {
@@ -53,7 +53,7 @@ export const dummyServices: Service[] = [
     id: uuidv4(),
     createdAt: new Date(),
     modifiedAt: new Date(),
-    name: "Manajemen Inventaris Lorem Ipsum",
+    name: "Manajemen Inventaris",
     platform: dummyPlatforms[1],
   },
 ]

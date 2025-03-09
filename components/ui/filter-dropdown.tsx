@@ -25,6 +25,7 @@ interface FilterDropdownProps<T extends { id: string; [key: string]: any }> {
   displayProperty: keyof T;
   buttonClassName?: string;
   dropdownWidth?: string;
+  contentTestid?: string;
 }
 
 export function FilterDropdown<T extends Filterable>({
@@ -35,6 +36,7 @@ export function FilterDropdown<T extends Filterable>({
   displayProperty,
   buttonClassName = "bg-[#00B0EB] hover:bg-[#00B0EB]/90",
   dropdownWidth = "w-[200px]",
+  contentTestid,
 }: FilterDropdownProps<T>) {
   const [open, setOpen] = useState(false);
 
@@ -66,7 +68,7 @@ export function FilterDropdown<T extends Filterable>({
           <ChevronDown className={cn("text-white", open && "rotate-180")} />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className={dropdownWidth}>
+      <DropdownMenuContent data-testid={contentTestid} className={dropdownWidth}>
         <DropdownMenuCheckboxItem
           checked={allSelected}
           onSelect={handleSelectAll}

@@ -3,7 +3,7 @@ import { dummySchemas } from "../constant"
 export interface FetchSchemasParams {
   serviceIds?: string[]
   platformCodes?: string[]
-  [key: string]: any
+  [key: string]: unknown
 }
 
 export async function fetchSchemas(params: FetchSchemasParams = {}) {

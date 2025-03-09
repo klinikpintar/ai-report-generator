@@ -18,6 +18,7 @@ export const ServiceFilter: React.FC<ServiceFilterProps> = (props) => {
         onSelectionChange={props.onSelectionChange}
         buttonText="Filter by Services"
         displayProperty="name"
+        contentTestid="service-filter-dropdown"
       />
     </div>
   );

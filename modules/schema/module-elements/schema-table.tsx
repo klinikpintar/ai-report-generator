@@ -37,7 +37,7 @@ export const SchemaTable: React.FC<SchemaTableProps> = ({
   const pages = generatePagination(currentPage, lastPage);
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4" data-testid="schema-table">
       <Table>
         <TableHeader>
           <TableRow>

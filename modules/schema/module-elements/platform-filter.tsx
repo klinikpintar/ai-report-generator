@@ -23,6 +23,7 @@ export const PlatformFilter: React.FC<PlatformFilterProps> = ({
         onSelectionChange={onSelectionChange}
         buttonText="Filter by Platforms"
         displayProperty="name"
+        contentTestid="platform-filter-dropdown"
       />
     </div>
   );

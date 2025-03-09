@@ -26,7 +26,7 @@ export const SchemaTableSection = () => {
         setSchemas(allSchemas);
         setServices(allServices);
         setPlatforms(allPlatforms);
-      } catch (err) {
+      } catch {
         setError("Failed to load initial data");
       } finally {
         setLoading(false);
@@ -45,7 +45,7 @@ export const SchemaTableSection = () => {
         };
         const filteredSchemas = await fetchSchemas(params);
         setSchemas(filteredSchemas);
-      } catch (err) {
+      } catch {
         setError("Failed to fetch filtered schemas");
       } finally {
         setLoading(false);
