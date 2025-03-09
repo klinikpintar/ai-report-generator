@@ -1,14 +1,16 @@
 import { renderHook, act, waitFor } from "@testing-library/react";
 import { AddSchemaHook } from "@/app/hooks/AddSchemaHook";
+import axios from "axios";
 
+jest.mock("axios");
 global.alert = jest.fn();
-global.fetch = jest.fn();
 
 describe("AddSchemaHook Test", () => {
   const onCloseMock = jest.fn();
 
   beforeEach(() => {
     jest.clearAllMocks();
+    jest.spyOn(window, "alert").mockImplementation(() => {});
   });
 
   it("Should initialize empty formData", () => {
@@ -90,10 +92,7 @@ describe("AddSchemaHook Test", () => {
   });
 
   it("Should call API and 'onClose' when 'handleSubmit' succeeds", async () => {
-    (global.fetch as jest.Mock).mockResolvedValue({
-      ok: true,
-      json: async () => ({}),
-    });
+    (axios.post as jest.Mock).mockResolvedValue({ data: {} });
 
     const { result } = renderHook(() => AddSchemaHook(onCloseMock, true));
 
@@ -105,19 +104,21 @@ describe("AddSchemaHook Test", () => {
       await result.current.handleSubmit({ preventDefault: jest.fn() } as any);
     });
 
-    expect(global.fetch).toHaveBeenCalledWith(
-      "/api/schema",
-      expect.any(Object)
-    );
+    expect(axios.post).toHaveBeenCalledWith("/api/schema", {
+      name: result.current.formData.name,
+      description: result.current.formData.description,
+      schemaText: "CREATE TABLE users;",
+    });
     expect(global.alert).toHaveBeenCalledWith("Schema successfully added");
     expect(onCloseMock).toHaveBeenCalled();
   });
 
   it("Should handle errors if API fails", async () => {
-    (global.fetch as jest.Mock).mockResolvedValue({
-      ok: false,
-      json: async () => ({ error: "Server error" }),
+    (axios.post as jest.Mock).mockRejectedValue({
+      response: { data: { error: "Server error" } },
     });
+
+    jest.spyOn(window, "alert").mockImplementation(() => {});
 
     const { result } = renderHook(() => AddSchemaHook(onCloseMock, true));
 
@@ -152,7 +153,7 @@ describe("AddSchemaHook Test", () => {
       await result.current.handleSubmit({ preventDefault: jest.fn() } as any);
     });
 
-    expect(fetch).not.toHaveBeenCalled();
+    expect(axios.patch).not.toHaveBeenCalled();
   });
 
   it("Should call PATCH API with the correct data when submit", async () => {
@@ -164,10 +165,7 @@ describe("AddSchemaHook Test", () => {
       fileName: "skema.sql",
     };
 
-    (fetch as jest.Mock).mockResolvedValue({
-      ok: true,
-      json: jest.fn().mockResolvedValue(initialData),
-    });
+    (axios.patch as jest.Mock).mockResolvedValue({ data: initialData });
 
     const { result } = renderHook(() =>
       AddSchemaHook(onCloseMock, false, initialData)
@@ -177,14 +175,10 @@ describe("AddSchemaHook Test", () => {
       await result.current.handleSubmit({ preventDefault: jest.fn() } as any);
     });
 
-    expect(fetch).toHaveBeenCalledWith("/api/schema", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        id: 1,
-        name: "users-2",
-        description: "auth-2 purpose",
-      }),
+    expect(axios.patch).toHaveBeenCalledWith("/api/schema", {
+      id: 1,
+      name: "users-2",
+      description: "auth-2 purpose",
     });
 
     expect(onCloseMock).toHaveBeenCalled();
@@ -199,9 +193,8 @@ describe("AddSchemaHook Test", () => {
       fileName: "skema.sql",
     };
 
-    (fetch as jest.Mock).mockResolvedValue({
-      ok: false,
-      json: jest.fn().mockResolvedValue({ error: "Failed to update schema" }),
+    (axios.patch as jest.Mock).mockRejectedValue({
+      response: { data: { error: "Failed to update schema" } },
     });
 
     jest.spyOn(window, "alert").mockImplementation(() => {});

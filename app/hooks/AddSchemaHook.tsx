@@ -1,3 +1,4 @@
+import axios, { AxiosError } from "axios";
 import { useState, useRef, FormEvent, useEffect } from "react";
 
 interface SchemaData {
@@ -87,54 +88,38 @@ export const AddSchemaHook = (
       }
 
       try {
-        const response = await fetch("/api/schema", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            name: formData.name,
-            description: formData.description,
-            schemaText: formData.schemaText,
-          }),
+        const response = await axios.post("/api/schema", {
+          name: formData.name,
+          description: formData.description,
+          schemaText: formData.schemaText,
         });
-
-        const responseData = await response.json();
-
-        if (!response.ok) throw new Error(responseData.error);
 
         alert("Schema successfully added");
         clearForm();
         onClose();
       } catch (error) {
-        const errorMessage = (error as Error).message;
+        const axiosError = error as AxiosError<{ error: string }>;
+        const errorMessage = axiosError.response?.data?.error;
+
         alert(errorMessage);
       }
     } else {
       if (!initialData) return;
 
       try {
-        const response = await fetch("/api/schema", {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            id: initialData.id,
-            name: formData.name,
-            description: formData.description,
-          }),
+        const response = await axios.patch("/api/schema", {
+          id: initialData.id,
+          name: formData.name,
+          description: formData.description,
         });
-
-        const responseData = await response.json();
-
-        if (!response.ok) throw new Error(responseData.error);
 
         alert("Schema successfully updated");
         clearForm();
         onClose();
       } catch (error) {
-        const errorMessage = (error as Error).message;
+        const axiosError = error as AxiosError<{ error: string }>;
+        const errorMessage = axiosError.response?.data?.error;
+
         alert(errorMessage);
       }
     }
