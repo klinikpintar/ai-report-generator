@@ -16,6 +16,7 @@
   "dependencies": {
     "@next/font": "^14.2.15",
     "@prisma/client": "6.4.1",
+    "axios": "^1.8.2",
     "dotenv": "^16.4.7",
     "http-status-codes": "^2.3.0",
     "next": "15.1.7",
@@ -38,8 +39,8 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/supertest": "^6.0.2",
-    "babel-jest": "^29.7.0",
     "@types/uuid": "^10.0.0",
+    "babel-jest": "^29.7.0",
     "dotenv": "^16.4.7",
     "eslint": "^9",
     "eslint-config-next": "15.1.7",
