@@ -1,4 +1,4 @@
-import axios from "axios";
+import axios, {AxiosError} from "axios";
 import {
   ILoginService,
   LoginResponse,
@@ -9,6 +9,18 @@ import {
 } from "../interfaces/IAuthServiceFE";
 
 class FeAuthService implements ILoginService, ILogoutService, ICheckAuthService {
+  private static instance: FeAuthService;
+
+  private constructor() { }
+
+  static getInstance(): FeAuthService {
+    if (!FeAuthService.instance) {
+      FeAuthService.instance = new FeAuthService();
+    }
+
+    return FeAuthService.instance
+  }
+
   async login(email: string, password: string): Promise<LoginResponse> {
     try {
       const response = await axios.post("/api/auth/login", { email, password });
@@ -16,7 +28,8 @@ class FeAuthService implements ILoginService, ILogoutService, ICheckAuthService 
       localStorage.setItem("access_token", accessToken);
       return { success: true, message: "Login successful", accessToken };
     } catch (error) {
-      const errorMessage = (error as any).response?.data?.message || "Login failed";
+      const axiosError = error as AxiosError<{message?: string}>;
+      const errorMessage = axiosError.response?.data?.message ?? "Login failed";
       return { success: false, message: errorMessage };
     }
   }
@@ -36,7 +49,8 @@ class FeAuthService implements ILoginService, ILogoutService, ICheckAuthService 
       localStorage.removeItem("access_token");
       return { success: true, message: "Logout successful" };
     } catch (error) {
-      const errorMessage = (error as any).response?.data?.message || "Logout failed";
+      const axiosError = error as AxiosError<{ message?: string }>;
+      const errorMessage = axiosError.response?.data?.message ?? "Logout failed";
       return { success: false, message: errorMessage };
     }
   }
@@ -53,12 +67,13 @@ class FeAuthService implements ILoginService, ILogoutService, ICheckAuthService 
           Authorization: `Bearer ${token}`,
         },
       });
-      return { isAuthenticated: true };
+      return { isAuthenticated: true, message: "User is authenticated" };
     } catch (error) {
-      const errorMessage = (error as any).response?.data?.message || "Check auth failed";
+      const axiosError = error as AxiosError<{ message?: string }>;
+      const errorMessage = axiosError.response?.data?.message ?? "Check auth failed";
       return { isAuthenticated: false, message: errorMessage };
     }
   }
 }
 
-export default FeAuthService;
+export default FeAuthService.getInstance();
