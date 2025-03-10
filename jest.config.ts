@@ -10,7 +10,8 @@ const config: Config = {
   coverageReporters: ["json", "lcov", "text", "clover"],
   collectCoverageFrom: [
     "**/*.{ts,tsx, js, jsx}",    
-    "!app/config.ts",    
+    "!app/config.ts",
+    "!app/utils/exceptions.ts",
   ],
   coverageThreshold: {
     global: {

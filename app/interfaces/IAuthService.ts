@@ -7,6 +7,14 @@ export interface Payload {
 }
 
 export interface IAuthService {
+  login(email: string, password: string): Promise<{ accessToken: string }>;
+
+  logout(token: string): Promise<void>;
+
+  refreshToken(
+    token: string
+  ): Promise<{ newAccessToken: string; newRefreshToken: string }>;
+
   /**
    * Generate Access Token
    * @param payload - Data payload (id, role)

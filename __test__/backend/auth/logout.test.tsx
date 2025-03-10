@@ -5,6 +5,7 @@ import prisma from "@/lib/prisma";
 import { NextRequest } from "next/server";
 import { POST as logoutHandler } from "@/app/api/auth/logout/route";
 import { User } from "@prisma/client";
+import config from "@/app/config";
 
 jest.mock("@/lib/prisma", () => ({
   user: {
@@ -25,7 +26,6 @@ describe("Auth API - Logout", () => {
   let testUser: User;
   let accessToken: string;
   let refreshToken: string;
-  let bcryptHashSpy: jest.SpyInstance;
   let jwtSignSpy: jest.SpyInstance;
   let jwtVerifySpy: jest.SpyInstance;
 
@@ -42,10 +42,6 @@ describe("Auth API - Logout", () => {
 
   beforeEach(() => {
     (prisma.user.findUnique as jest.Mock).mockResolvedValue(testUser);
-
-    bcryptHashSpy = jest
-      .spyOn(bcrypt, "hash")
-      .mockResolvedValue("hashedRefreshToken" as never);
 
     jwtSignSpy = jest
       .spyOn(jwt, "sign")
@@ -87,11 +83,16 @@ describe("Auth API - Logout", () => {
     expect(response.status).toBe(200);
     expect(json).toHaveProperty("message", "Logged out");
 
-    const refreshTokenCookie = response.cookies.get("refresh_token");
+    const refreshTokenCookie = response!.cookies.get("refresh_token");
     expect(refreshTokenCookie?.value).toBe("");
+
+    expect(jwtVerifySpy).toHaveBeenCalledWith(
+      accessToken,
+      config.JWT_ACCESS_SECRET
+    );
   });
 
-   // ❌ Unhappy Path - Logout Token Invalid
+  // ❌ Unhappy Path - Logout Token Invalid
   test("Should fail logout if token is invalid", async () => {
     const request = new NextRequest(new URL(`${BASE_API_URL_AUTH_LOGOUT}`), {
       method: "POST",
@@ -106,7 +107,11 @@ describe("Auth API - Logout", () => {
     const json = await response.json();
 
     expect(response.status).toBe(401);
-    expect(json).toHaveProperty("message", "Unauthorized");
+    expect(json).toHaveProperty("message", "Invalid token");
+    expect(jwtVerifySpy).toHaveBeenCalledWith(
+      `${accessToken}invalid`,
+      config.JWT_ACCESS_SECRET
+    );
   });
 
   // ❌ Unhappy Path - Logout Token Expired
@@ -126,7 +131,11 @@ describe("Auth API - Logout", () => {
     const json = await response.json();
 
     expect(response.status).toBe(401);
-    expect(json).toHaveProperty("message", "Unauthorized");
+    expect(json).toHaveProperty("message", "Invalid token");
+    expect(jwtVerifySpy).toHaveBeenCalledWith(
+      expiredToken,
+      config.JWT_ACCESS_SECRET
+    );
   });
 
   // ❌ Corner Case - Logout Tanpa Token

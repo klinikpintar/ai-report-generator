@@ -26,7 +26,6 @@ const BASE_API_URL_AUTH_TOKEN_REFRESH =
 describe("Auth API - Refresh Token", () => {
   let testUser: User, anotherUser: User;
   let accessToken: string, refreshToken: string;
-  let bcryptCompareSpy: jest.SpyInstance;
   let jwtSignSpy: jest.SpyInstance;
   let jwtVerifySpy: jest.SpyInstance;
 
@@ -60,13 +59,9 @@ describe("Auth API - Refresh Token", () => {
     );
 
     (prisma.refreshToken.findFirst as jest.Mock).mockResolvedValue({
-      token: "hashedRefreshToken",
+      token: "mockedRefreshToken-e618eb3e-6248-4f0f-b9fa-6cf7a14f73bb",
       userId: testUser.id,
     });
-
-    bcryptCompareSpy = jest
-      .spyOn(bcrypt, "compare")
-      .mockResolvedValue(true as never);
 
     jwtSignSpy = jest
       .spyOn(jwt, "sign")
@@ -100,7 +95,6 @@ describe("Auth API - Refresh Token", () => {
         Cookie: `refresh_token=${refreshToken}`,
       },
     });
-
     const response = await refreshHandler(request);
     const json = await response.json();
 
@@ -124,7 +118,7 @@ describe("Auth API - Refresh Token", () => {
     const response = await refreshHandler(request);
     const json = await response.json();
 
-    expect(response.status).toBe(403);
+    expect(response.status).toBe(401);
     expect(json).toHaveProperty("message", "No refresh token");
   });
 
