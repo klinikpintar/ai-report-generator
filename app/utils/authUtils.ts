@@ -1,10 +1,16 @@
+import { UnauthenticatedResponse } from "./exceptions";
+
 /**
  * Extract JWT Token from Authorization Header
  * @param authHeader - Authorization header
  * @returns JWT token or null if not found
  */
 export const extractToken = (authHeader: string) => {
-  return authHeader?.split(" ")[1] || null;
+  const token = authHeader?.split(" ")[1] || null;
+  if (!token) {
+    throw new UnauthenticatedResponse("Unauthorized");
+  }
+  return token;
 };
 
 /**
@@ -13,7 +19,12 @@ export const extractToken = (authHeader: string) => {
  * @returns Refresh token or null if not found
  */
 export const extractRefreshToken = (cookie: string) => {
-  return cookie?.split("refresh_token=")[1]?.split(";")[0] || null;
+  const refreshToken =
+    cookie?.split("refresh_token=")[1]?.split(";")[0] || null;
+  if (!refreshToken) {
+    throw new UnauthenticatedResponse("No refresh token");
+  }
+  return refreshToken;
 };
 
 const units = {
@@ -28,7 +39,11 @@ const units = {
 
 export const timeConvertMs = (time: string): number => {
   const match = /^(\d+)([smhdwoy])$/.exec(time);
-  const [, value, unit] = match as unknown as [string, string, keyof typeof units];
+  const [, value, unit] = match as unknown as [
+    string,
+    string,
+    keyof typeof units
+  ];
 
   return parseInt(value) * units[unit];
 };

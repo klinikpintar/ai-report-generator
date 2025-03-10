@@ -62,7 +62,7 @@ describe('Home Component', () => {
 
     test('should redirect to login if token is invalid', async () => {
         localStorage.setItem('access_token', 'invalid-token');
-        mockAxios.onGet('/api/auth/me').reply(401);
+        mockAxios.onGet('/api/auth/token/verify').reply(401);
 
         render(<Home />);
 
@@ -73,7 +73,7 @@ describe('Home Component', () => {
 
     test('should stay on the page if token is valid', async () => {
         localStorage.setItem('access_token', 'valid-token');
-        mockAxios.onGet('/api/auth/me').reply(200);
+        mockAxios.onGet('/api/auth/token/verify').reply(200);
 
         render(<Home />);
 
@@ -84,7 +84,7 @@ describe('Home Component', () => {
 
     test('should logout and redirect to login when logout button is clicked', async () => {
         localStorage.setItem('access_token', 'valid-token');
-        mockAxios.onGet('/api/auth/me').reply(200);
+        mockAxios.onGet('/api/auth/token/verify').reply(200);
         mockAxios.onPost('/api/auth/logout').reply(200);
     
         render(<Home />);
@@ -107,7 +107,7 @@ describe('Home Component', () => {
     test('should handle logout failure and show error', async () => {
         // Mock already login condition
         localStorage.setItem('access_token', 'valid-token');
-        mockAxios.onGet('/api/auth/me').reply(200);
+        mockAxios.onGet('/api/auth/token/verify').reply(200);
         mockAxios.onPost('/api/auth/logout').reply(500);
     
         render(<Home />);
