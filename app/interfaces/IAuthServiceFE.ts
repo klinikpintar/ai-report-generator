@@ -48,7 +48,7 @@ export type LogoutResponse = {
 export interface ICheckAuthService {
   /**
    * Check if the user is authenticated
-   * @returns {Promise<CheckAuthResponse>} Response object containing authentication status and optional message
+   * @returns {Promise<CheckAuthResponse>} Response object containing authentication status and message
    */
   checkAuth(): Promise<CheckAuthResponse>;
 }
@@ -60,7 +60,7 @@ export type CheckAuthResponse = {
   isAuthenticated: boolean;
 
   /**
-   * Optional message describing the authentication status (e.g., error message)
+   * Message describing the authentication status (e.g., error message)
    */
-  message?: string;
+  message: string;
 };
