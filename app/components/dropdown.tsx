@@ -25,34 +25,32 @@ export default function Dropdown() {
       if (selectedOptions.length === options.length - 1) {
         setSelectedOptions([]);
         setSelectedService("Pilih Service");
-      } else {
-        setSelectedOptions(options.slice(1));
-        setSelectedService("Select All");
-      }
-    } else {
-      let newSelection = selectedOptions.includes(option)
-        ? selectedOptions.filter((item) => item !== option)
-        : [...selectedOptions, option];
-  
-      // Jika semua layanan dipilih satu per satu, aktifkan "Select All"
-      if (newSelection.length === options.length - 1) {
-        setSelectedOptions(options.slice(1));
-        setSelectedService("Select All");
         return;
       }
-  
-      setSelectedOptions(newSelection);
-  
-      // **Menampilkan Service yang Dipilih dengan logika yang lebih jelas**
-      if (newSelection.length === 0) {
-        setSelectedService("Pilih Service");
-      } else if (newSelection.length === 1) {
-        setSelectedService(`${newSelection[0]}`);
-      } else {
-        setSelectedService(`${newSelection[0]} dan ${newSelection.length - 1} more`);
-      }
+      setSelectedOptions(options.slice(1));
+      setSelectedService("Select All");
+      return;
     }
-  };  
+  
+    let newSelection = selectedOptions.includes(option)
+      ? selectedOptions.filter((item) => item !== option)
+      : [...selectedOptions, option];
+  
+    // Jika semua layanan dipilih satu per satu, langsung set ke "Select All"
+    if (newSelection.length === options.length - 1) {
+      setSelectedOptions(options.slice(1));
+      setSelectedService("Select All");
+      return;
+    }
+  
+    setSelectedOptions(newSelection);
+  
+    // Menampilkan Service yang Dipilih dengan logika lebih sederhana
+    if (newSelection.length === 0) return setSelectedService("Pilih Service");
+    if (newSelection.length === 1) return setSelectedService(newSelection[0]);
+    
+    setSelectedService(`${newSelection[0]} dan ${newSelection.length - 1} more`);
+  };    
 
   return (
     <div className="relative w-72 pt-3 pl-5">
@@ -64,7 +62,7 @@ export default function Dropdown() {
         Select a Service
         <Image
           src="/icon-dropdown.svg"
-          width={14} // Ukuran icon kecil agar proporsional
+          width={14} 
           height={14}
           alt="Toggle Dropdown"
           className={`transform transition ${
