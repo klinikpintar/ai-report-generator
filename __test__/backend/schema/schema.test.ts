@@ -69,6 +69,20 @@ describe("CRUD of Schema API (Using NextRequest)", () => {
     jest.clearAllMocks();
   });
 
+  it("should return INTERNAL_SERVER_ERROR when GET fails", async () => {
+  
+    (prisma.schema.findMany as jest.Mock).mockRejectedValue(new Error("Database error"));
+  
+    const request = sendRequest("GET");
+    const response = await GET(request);
+    const json = await response.json();
+  
+  
+    expect(response.status).toBe(StatusCodes.INTERNAL_SERVER_ERROR);
+    expect(json.error).toBe("Failed to fetch schemas");
+  });
+  
+
   it("should create a schema", async () => {
     const request = sendRequest("POST", validSchemaData);
     const response = await POST(request);
@@ -110,15 +124,30 @@ describe("CRUD of Schema API (Using NextRequest)", () => {
     const response = await DELETE(sendRequest("DELETE", { id: NON_EXISTING_ID }));
     const json = await response.json();
   
-    console.log("Response Status:", response.status);
-    console.log("Response Body:", json);
   
     expect(response.status).toBe(StatusCodes.NOT_FOUND);
     expect(json.error).toBe("Schema not found");
   });
   
+  it("should update a schema successfully", async () => {
   
+    (prisma.schema.update as jest.Mock).mockResolvedValue({
+      id: 1,
+      name: "products",
+      description: "Updated table description",
+      schemaText: "CREATE TABLE products (id SERIAL PRIMARY KEY, name TEXT);",
+    });
+  
+    const request = sendRequest("PATCH", { id: 1, description: "Updated table description" });
+    const response = await PATCH(request);
+    const json = await response.json();
+  
+  
+    expect(response.status).toBe(StatusCodes.OK);
+    expect(json.description).toBe("Updated table description");
+  });
 
+  
   it("should return CONFLICT when updating schema to an existing schema name", async () => {
     (prisma.schema.update as jest.Mock).mockRejectedValue(
       new Prisma.PrismaClientKnownRequestError("Unique constraint failed", {
@@ -167,8 +196,6 @@ describe("CRUD of Schema API (Using NextRequest)", () => {
     const response = await DELETE(request);
     const json = await response.json();
   
-    console.log("Response Status:", response.status);
-    console.log("Response Body:", json);
   
     expect(response.status).toBe(StatusCodes.OK);
     expect(json.message).toBe("Schema deleted successfully");
