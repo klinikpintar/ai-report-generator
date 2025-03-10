@@ -6,21 +6,20 @@ import FeAuthService from "./services/feAuthService";
 
 const Home = () => {
   const router = useRouter();
-  const authService = new FeAuthService();
 
   useEffect(() => {
     const checkAuth = async () => {
-      const authResponse = await authService.checkAuth();
+      const authResponse = await FeAuthService.checkAuth();
       if (!authResponse.isAuthenticated) {
         router.push("/login");
       }
     };
 
     checkAuth();
-  }, [router, authService]);
+  }, [router]);
 
   const handleLogout = async () => {
-    const logoutResponse = await authService.logout();
+    const logoutResponse = await FeAuthService.logout();
     if (logoutResponse.success) {
       router.push("/login");
     } else {
