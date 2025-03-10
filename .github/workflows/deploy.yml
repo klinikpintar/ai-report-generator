@@ -5,6 +5,13 @@ on:
     branches:
       - main
       - staging
+      - development
+      - pbi/*
+  pull_request:
+    branches:
+      - main
+      - staging
+      - development
 
 jobs:
   build:
@@ -53,8 +60,11 @@ jobs:
       - name: Install Dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Run Tests
-        run: pnpm test
+      - name: Run Tests for Backend
+        run: pnpm test:backend
+      
+      - name: Run Tests for Frontend
+        run: pnpm test:frontend
 
   deploy-main:
     name: Deploy to Production (Main)
