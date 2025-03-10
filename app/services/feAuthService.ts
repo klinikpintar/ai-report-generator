@@ -48,7 +48,7 @@ class FeAuthService implements ILoginService, ILogoutService, ICheckAuthService 
         return { isAuthenticated: false, message: "No token found" };
       }
 
-      await axios.get("/api/auth/me", {
+      await axios.get("/api/auth/token/verify", {
         headers: {
           Authorization: `Bearer ${token}`,
         },

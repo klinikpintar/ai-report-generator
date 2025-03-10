@@ -4,8 +4,8 @@ import { BadRequestResponse, ErrorResponse } from "@/app/utils/exceptions";
 import { LoginSchemaDto } from "../../dtos/auth.dto";
 
 export async function POST(req: Request) {
+  const body = await req.json();
   try {
-    const body = await req.json();
     const parseData = LoginSchemaDto.safeParse(body);
     if (!parseData.success) {
       throw new BadRequestResponse(parseData.error.errors[0].message);

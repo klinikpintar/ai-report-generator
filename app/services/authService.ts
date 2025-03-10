@@ -42,10 +42,28 @@ class AuthService implements IAuthService {
 
   async logout(token: string): Promise<void> {
     if (!token || !this.verifyToken(token, config.JWT_ACCESS_SECRET)) {
-      throw new UnauthenticatedResponse("Invalid token");
+      throw new UnauthenticatedResponse("Invalid or expired access token");
     }
 
     await prisma.refreshToken.deleteMany({ where: { token } });
+  }
+
+  async verify(token: string): Promise<Payload> {
+    const decoded = this.verifyToken(token, config.JWT_ACCESS_SECRET);
+    if (!decoded) {
+      throw new UnauthorizedResponse("Invalid or expired access token");
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: decoded.id },
+      select: { id: true, email: true, role: true },
+    });
+
+    if (!user) {
+      throw new NotFoundResponse("User not found");
+    }
+
+    return user;
   }
 
   async refreshToken(
@@ -56,7 +74,7 @@ class AuthService implements IAuthService {
       config.JWT_REFRESH_SECRET
     );
     if (!decoded) {
-      throw new UnauthorizedResponse("Invalid refresh token or expired");
+      throw new UnauthorizedResponse("Invalid or expired access token");
     }
 
     const storedToken = await prisma.refreshToken.findFirst({
