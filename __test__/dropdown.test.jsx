@@ -9,6 +9,15 @@ const TestComponent = () => {
 };
 
 describe("Dropdown Component with Context", () => {
+  const layananList = [
+    "Reservasi Keuangan",
+    "Reservasi Pasien",
+    "Laporan Keuangan",
+    "Rekam Media",
+    "Manajemen Inventaris",
+    "Pemesanan Online",
+  ];
+
   it("should render the dropdown button with correct text", () => {
     render(
       <ServiceProvider>
@@ -42,10 +51,10 @@ describe("Dropdown Component with Context", () => {
     );
 
     fireEvent.click(screen.getByText("Select a Service"));
-    fireEvent.click(screen.getByLabelText("Reservasi Keuangan"));
+    fireEvent.click(screen.getByLabelText(layananList[0]));
     fireEvent.click(screen.getByText("Select a Service"));
 
-    expect(screen.getByTestId("selected-service")).toHaveTextContent("Reservasi Keuangan");
+    expect(screen.getByTestId("selected-service")).toHaveTextContent(layananList[0]);
   });
 
   it("should unselect a service when clicked again", () => {
@@ -57,12 +66,14 @@ describe("Dropdown Component with Context", () => {
     );
 
     fireEvent.click(screen.getByText("Select a Service"));
-    fireEvent.click(screen.getByLabelText("Reservasi Keuangan"));
+    fireEvent.click(screen.getByLabelText(layananList[0]));
     fireEvent.click(screen.getByText("Select a Service"));
-    expect(screen.getByTestId("selected-service")).toHaveTextContent("Reservasi Keuangan");
+
+    expect(screen.getByTestId("selected-service")).toHaveTextContent(layananList[0]);
 
     fireEvent.click(screen.getByText("Select a Service"));
-    fireEvent.click(screen.getByLabelText("Reservasi Keuangan"));
+    fireEvent.click(screen.getByLabelText(layananList[0]));
+
     expect(screen.getByTestId("selected-service")).toHaveTextContent("Pilih Service");
   });
 
@@ -75,13 +86,12 @@ describe("Dropdown Component with Context", () => {
     );
 
     fireEvent.click(screen.getByText("Select a Service"));
-    fireEvent.click(screen.getByLabelText("Reservasi Keuangan"));
-    fireEvent.click(screen.getByLabelText("Laporan Keuangan"));
+    layananList.slice(0, 2).forEach((layanan) => fireEvent.click(screen.getByLabelText(layanan)));
 
-    expect(screen.getByTestId("selected-service")).toHaveTextContent("Reservasi Keuangan dan 1 more");
+    expect(screen.getByTestId("selected-service")).toHaveTextContent(`${layananList[0]} dan 1 more`);
   });
 
-  it("should activate 'Select All' when all services are selected one by one", () => {
+  it("should activate 'Select All' when all services are selected", () => {
     render(
       <ServiceProvider>
         <Dropdown />
@@ -90,12 +100,7 @@ describe("Dropdown Component with Context", () => {
     );
 
     fireEvent.click(screen.getByText("Select a Service"));
-    fireEvent.click(screen.getByLabelText("Reservasi Keuangan"));
-    fireEvent.click(screen.getByLabelText("Reservasi Pasien"));
-    fireEvent.click(screen.getByLabelText("Laporan Keuangan"));
-    fireEvent.click(screen.getByLabelText("Rekam Media"));
-    fireEvent.click(screen.getByLabelText("Manajemen Inventaris"));
-    fireEvent.click(screen.getByLabelText("Pemesanan Online"));
+    layananList.forEach((layanan) => fireEvent.click(screen.getByLabelText(layanan)));
 
     expect(screen.getByTestId("selected-service")).toHaveTextContent("Select All");
   });
@@ -111,10 +116,12 @@ describe("Dropdown Component with Context", () => {
     fireEvent.click(screen.getByText("Select a Service"));
     fireEvent.click(screen.getByLabelText("Select All"));
     fireEvent.click(screen.getByText("Select a Service"));
+
     expect(screen.getByTestId("selected-service")).toHaveTextContent("Select All");
 
     fireEvent.click(screen.getByText("Select a Service"));
     fireEvent.click(screen.getByLabelText("Select All"));
+
     expect(screen.getByTestId("selected-service")).toHaveTextContent("Pilih Service");
   });
 
@@ -139,8 +146,8 @@ describe("Dropdown Component with Context", () => {
         <Dropdown />
       </ServiceProvider>
     );
-    fireEvent.click(screen.getByText("Select a Service"));
 
+    fireEvent.click(screen.getByText("Select a Service"));
     expect(screen.queryByText("Invalid Option")).not.toBeInTheDocument();
   });
 
@@ -154,21 +161,6 @@ describe("Dropdown Component with Context", () => {
     expect(screen.getByTestId("selected-service")).toHaveTextContent("Pilih Service");
   });
 
-  it("should not allow multiple 'Select All' selections", () => {
-    render(
-      <ServiceProvider>
-        <Dropdown />
-        <TestComponent />
-      </ServiceProvider>
-    );
-
-    fireEvent.click(screen.getByText("Select a Service"));
-    fireEvent.click(screen.getByLabelText("Select All"));
-    fireEvent.click(screen.getByLabelText("Select All"));
-
-    expect(screen.getByTestId("selected-service")).toHaveTextContent("Pilih Service");
-  });
-
   it("should display 'Select All' when all services except 'Select All' are selected", () => {
     render(
       <ServiceProvider>
@@ -178,13 +170,8 @@ describe("Dropdown Component with Context", () => {
     );
 
     fireEvent.click(screen.getByText("Select a Service"));
-    fireEvent.click(screen.getByLabelText("Reservasi Keuangan"));
-    fireEvent.click(screen.getByLabelText("Reservasi Pasien"));
-    fireEvent.click(screen.getByLabelText("Laporan Keuangan"));
-    fireEvent.click(screen.getByLabelText("Rekam Media"));
-    fireEvent.click(screen.getByLabelText("Manajemen Inventaris"));
-    fireEvent.click(screen.getByLabelText("Pemesanan Online"));
-    
+    layananList.forEach((layanan) => fireEvent.click(screen.getByLabelText(layanan)));
+
     expect(screen.getByTestId("selected-service")).toHaveTextContent("Select All");
   });
 
@@ -197,11 +184,8 @@ describe("Dropdown Component with Context", () => {
     );
 
     fireEvent.click(screen.getByText("Select a Service"));
-    fireEvent.click(screen.getByLabelText("Reservasi Keuangan"));
-    fireEvent.click(screen.getByLabelText("Laporan Keuangan"));
-    fireEvent.click(screen.getByLabelText("Rekam Media"));
-    
-    expect(screen.getByTestId("selected-service")).toHaveTextContent("Reservasi Keuangan dan 2 more");
+    layananList.slice(0, 3).forEach((layanan) => fireEvent.click(screen.getByLabelText(layanan)));
+
+    expect(screen.getByTestId("selected-service")).toHaveTextContent(`${layananList[0]} dan 2 more`);
   });
-  
 });
