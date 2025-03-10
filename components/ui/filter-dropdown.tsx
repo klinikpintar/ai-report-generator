@@ -14,10 +14,10 @@ import { useState } from "react";
 
 export interface Filterable {
   id: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
-interface FilterDropdownProps<T extends { id: string; [key: string]: any }> {
+interface FilterDropdownProps<T extends Filterable> {
   items: T[];
   selectedItems: T[];
   onSelectionChange: (items: T[]) => void;
