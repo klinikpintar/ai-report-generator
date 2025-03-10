@@ -1,17 +1,10 @@
-name: CI/CD for Next.js with Railway
+name: Deploy to Railway
 
 on:
   push:
     branches:
       - main
       - staging
-      - development
-      - pbi/*
-  pull_request:
-    branches:
-      - main
-      - staging
-      - development
 
 jobs:
   build:
@@ -40,14 +33,14 @@ jobs:
 
   test:
     name: Run Tests
-    needs: build
     runs-on: ubuntu-latest
+    needs: build
 
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Setup Node.js and pnpm
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 18
@@ -60,15 +53,12 @@ jobs:
       - name: Install Dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Run Tests for Backend
-        run: pnpm test:backend
-      
-      - name: Run Tests for Frontend
-        run: pnpm test:frontend
+      - name: Run Tests
+        run: pnpm test
 
-  deploy:
-    name: Deploy to Railway
-    needs: test
+  deploy-main:
+    name: Deploy to Production (Main)
+    needs: [build, test]
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
 
@@ -79,7 +69,25 @@ jobs:
       - name: Install Railway CLI
         run: curl -fsSL https://railway.app/install.sh | sh
 
-      - name: Deploy to Railway Staging
+      - name: Deploy to Production
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        run: railway up --service ai-report-generator
+
+  deploy-staging:
+    name: Deploy to Staging
+    needs: [build, test]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/staging'
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Install Railway CLI
+        run: curl -fsSL https://railway.app/install.sh | sh
+
+      - name: Deploy to Staging
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN_STAGING }}
         run: railway up --service ai-report-generator
