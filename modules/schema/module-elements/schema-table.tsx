@@ -95,12 +95,12 @@ export const SchemaTable: React.FC<SchemaTableProps> = ({
               <TableCell>{schema.name}</TableCell>
               <TableCell className="px-2">
                 <Chip variant="orange" className="w-full cursor-default">
-                  {schema.service ? schema.service.platform.name : "Unknown"}
+                  {schema.service!.platform.name}
                 </Chip>
               </TableCell>
               <TableCell className="px-2">
                 <Chip variant="pink" className="w-full cursor-default">
-                  {schema.service ? schema.service.name : "Unknown"}
+                  {schema.service!.name}
                 </Chip>
               </TableCell>
               <TableCell>
@@ -165,17 +165,13 @@ export const SchemaTable: React.FC<SchemaTableProps> = ({
         <EditSchemaModal
           isVisible={showEditModal}
           onClose={() => setShowEditModal(false)}
-          schema={
-            selectedSchema
-              ? {
-                  id: selectedSchema.id,
-                  name: selectedSchema.name,
-                  description: selectedSchema.description ?? "",
-                  schemaText: selectedSchema.schemaText,
-                  fileName: selectedSchema.name,
-                }
-              : null
-          }
+          schema={{
+            id: selectedSchema!.id,
+            name: selectedSchema!.name,
+            description: selectedSchema!.description || "",
+            schemaText: selectedSchema!.schemaText,
+            fileName: selectedSchema!.name,
+          }}
         />
       )}
 

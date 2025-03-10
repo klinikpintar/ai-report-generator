@@ -155,4 +155,17 @@ describe("Schema Table Section", () => {
 
     await screen.findByText(/form upload skema database/i);
   });
+
+  // should close upload schema modal when click button Batal
+  it("should close upload schema modal when click button Batal", async () => {
+    render(<SchemaTableSection />);
+
+    const addSchemaButton = screen.getByText(/tambah skema/i);
+    await userEvent.click(addSchemaButton);
+
+    const cancelButton = screen.getByText(/batal/i);
+    await userEvent.click(cancelButton);
+
+    expect(screen.queryByText(/form upload skema database/i)).not.toBeInTheDocument();
+  });
 });
