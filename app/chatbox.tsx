@@ -2,6 +2,9 @@
 
 import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
+import ReactMarkdown from "react-markdown"; // Import Markdown Renderer
+import remarkGfm from "remark-gfm";
+import rehypeRaw from "rehype-raw";
 import Dropdown from "../app/components/dropdown";
 import { useService } from "../app/context/serviceContext"; // Import context
 
@@ -10,7 +13,7 @@ interface Message {
   id: string;
   sender: "user" | "assistant";
   content: string;
-  modelUsed?: string; // Add this field
+  modelUsed?: string; // Tambahkan informasi model
 }
 
 interface ApiResponse {
@@ -24,7 +27,7 @@ interface ApiResponse {
       promptTokens: number;
       completionTokens: number;
     };
-    modelUsed: string; // Add this field
+    modelUsed: string;
   };
 }
 
@@ -39,103 +42,116 @@ export default function ChatBox() {
   // Auto-scroll ke pesan terbaru setiap kali messages diperbarui
   useEffect(() => {
     if (chatContainerRef.current) {
-      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+      chatContainerRef.current.scrollTop =
+        chatContainerRef.current.scrollHeight;
     }
   }, [messages]);
 
   const sendMessage = async () => {
-  
     const userMessage: Message = {
       id: Date.now().toString(),
       sender: "user",
       content: input.trim(),
     };
-  
+
     setMessages((prevMessages) => [...prevMessages, userMessage]);
     setInput("");
     setHasChatted(true);
     setIsLoading(true);
-  
+
     try {
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          messages: [
-            { role: 'user', content: input.trim() },
-          ],
+          messages: [{ role: "user", content: input.trim() }],
         }),
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to get response');
-      }
+      if (!response.ok) throw new Error("Failed to get response");
 
       const data: ApiResponse = await response.json();
 
       const assistantMessage: Message = {
         id: data.messageId,
-        sender: 'assistant',
-        content: data.aiResponse,
-        modelUsed: data.metadata.modelUsed, // Include the model information
+        sender: "assistant",
+        content: data.aiResponse, // Respon AI sudah siap dirender
+        modelUsed: data.metadata.modelUsed,
       };
 
       setMessages((prevMessages) => [...prevMessages, assistantMessage]);
     } catch (error) {
-      console.error('Error:', error);
-      
-      // Show error in chat
+      console.error("Error:", error);
+
       setMessages((prevMessages) => [
         ...prevMessages,
         {
           id: Date.now().toString(),
-          sender: 'assistant',
-          content: 'Sorry, there was an error processing your request.',
+          sender: "assistant",
+          content: "Sorry, there was an error processing your request.",
         },
       ]);
     } finally {
       setIsLoading(false);
     }
   };
-  
 
   return (
     <div className="ml-64 flex flex-col h-screen">
       <Dropdown />
 
       {!hasChatted && (
-        <h1 className="text-3xl font-bold text-center flex items-center justify-center h-full pb-24" style={{ color: "#00B0EB" }}>
+        <h1
+          className="text-3xl font-bold text-center flex items-center justify-center h-full pb-24"
+          style={{ color: "#00B0EB" }}
+        >
           Hello, Virgillia Yeala !!
         </h1>
       )}
 
       {/* Bagian Chat Scrollable */}
       {hasChatted && (
-        <div ref={chatContainerRef} className="flex-1 overflow-y-auto p-4 bg-white pb-24">
-          <div className="ml-2 mt-4 flex flex-col mr-4 gap-y-6"> 
+        <div
+          ref={chatContainerRef}
+          className="flex-1 overflow-y-auto p-4 bg-white pb-24"
+        >
+          <div className="ml-2 mt-4 flex flex-col mr-4 gap-y-6">
             {messages.map((msg) => (
               <div
                 key={msg.id}
                 className={`p-3 rounded-lg max-w-[90%] ${
-                  msg.sender === "user" ? "bg-[#E4F6FC] text-[#00B0EB] self-end" : "bg-gray-200 text-black self-start"
+                  msg.sender === "user"
+                    ? "bg-[#E4F6FC] text-[#00B0EB] self-end"
+                    : "bg-gray-200 text-black self-start"
                 }`}
               >
-                {msg.content}
+                {/* Gunakan ReactMarkdown agar AI Response bisa dirender dengan format Markdown */}
+                {msg.sender === "assistant" ? (
+                  <ReactMarkdown
+                    remarkPlugins={[remarkGfm]}
+                    rehypePlugins={[rehypeRaw]}
+                  >
+                    {msg.content}
+                  </ReactMarkdown>
+                ) : (
+                  msg.content
+                )}
               </div>
             ))}
             {isLoading && (
-              <div className="p-3 rounded-lg max-w-[90%] bg-gray-200 text-black self-start">AI is typing...</div>
+              <div className="p-3 rounded-lg max-w-[90%] bg-gray-200 text-black self-start">
+                AI is typing...
+              </div>
             )}
           </div>
         </div>
       )}
 
-
       {/* Chat Input */}
       <div className="sticky bottom-3 w-full bg-white py-4 px-6">
-        <p className="text-sm text-gray-600 absolute left-6 top-2">Service: {selectedService}</p>
+        <p className="text-sm text-gray-600 absolute left-6 top-2">
+          Service: {selectedService}
+        </p>
 
         <div className="relative w-full flex items-center mx-auto mt-5">
           <input
@@ -144,7 +160,13 @@ export default function ChatBox() {
             placeholder="Type a message..."
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && sendMessage()}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && input.trim() === "") {
+                e.preventDefault();
+                return;
+              }
+              if (e.key === "Enter") sendMessage();
+            }}
             disabled={isLoading}
           />
           <button
@@ -152,11 +174,18 @@ export default function ChatBox() {
             onClick={sendMessage}
             disabled={isLoading || !input.trim()}
           >
-            <Image src="/icon-send.svg" width={40} height={40} alt="Send Icon" />
+            <Image
+              src="/icon-send.svg"
+              width={40}
+              height={40}
+              alt="Send Icon"
+            />
           </button>
         </div>
 
-        <p className="text-xs text-gray-600 mt-2 text-center">This AI Report Generator can make mistakes. Check important info.</p>
+        <p className="text-xs text-gray-600 mt-2 text-center">
+          This AI Report Generator can make mistakes. Check important info.
+        </p>
       </div>
     </div>
   );

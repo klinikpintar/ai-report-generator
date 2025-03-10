@@ -2,7 +2,10 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import ChatBox from "../app/chatbox";
 import { ServiceProvider } from "../app/context/serviceContext";
 
-// Helper function to render ChatBox with ServiceProvider
+// **Mock react-markdown agar tidak memicu error ESM**
+jest.mock("react-markdown", () => (props) => <div>{props.children}</div>);
+
+// Helper function untuk render dengan ServiceProvider
 const renderWithServiceProvider = (ui) => {
   return render(<ServiceProvider>{ui}</ServiceProvider>);
 };
@@ -35,13 +38,52 @@ describe("ChatBox Component", () => {
     });
   });
 
+  it("should not add a message when Enter is pressed with empty input", async () => {
+    renderWithServiceProvider(<ChatBox />);
+    const input = screen.getByPlaceholderText("Type a message...");
+  
+    // Pastikan tidak ada pesan sebelum pengujian dimulai
+    expect(screen.queryByTestId("chat-message")).not.toBeInTheDocument();
+  
+    // Simulasikan menekan Enter saat input kosong
+    fireEvent.keyDown(input, { key: "Enter", code: "Enter" });
+  
+    // Tunggu sebentar dan pastikan tidak ada pesan yang ditambahkan
+    await waitFor(() => {
+      expect(screen.queryByTestId("chat-message")).not.toBeInTheDocument();
+    });
+  });
+  
   it("should receive a bot response after user sends a message", async () => {
+    global.fetch = jest.fn().mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        messageId: "1234",
+        userPrompt: "Hello!",
+        aiResponse: "Sure, I can help you!",
+        createdAt: new Date().toISOString(),
+        metadata: {
+          finishReason: "stop",
+          usage: { promptTokens: 5, completionTokens: 10 },
+          modelUsed: "gemini",
+        },
+      }),
+    });
+
     renderWithServiceProvider(<ChatBox />);
     const input = screen.getByPlaceholderText("Type a message...");
     fireEvent.change(input, { target: { value: "Halo bisa bantu saya?" } });
     fireEvent.keyDown(input, { key: "Enter", code: "Enter" });
 
-    const botResponse = await screen.findByText(/membantu|bantu|hello|tentu/i, {}, { timeout: 5000 });
+    await waitFor(() => {
+      expect(fetch).toHaveBeenCalledTimes(1);
+      expect(fetch).toHaveBeenCalledWith("/api/chat", expect.objectContaining({
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      }));
+    });
+
+    const botResponse = await screen.findByText(/Sure, I can help you!/i);
     expect(botResponse).toBeInTheDocument();
   });
 });
@@ -80,7 +122,7 @@ describe("ChatBox API Integration", () => {
       }));
     });
 
-    const botResponse = await screen.findByText(/membantu|bantu|hello|tentu/i, {}, { timeout: 5000 });
+    const botResponse = await screen.findByText(/How can I assist you?/i);
     expect(botResponse).toBeInTheDocument();
   });
 
