@@ -1,4 +1,5 @@
-import { dummySchemas } from "../constant"
+import { dummySchemas, dummyServices } from "../constant"
+import { Schema } from "../types"
 
 export interface FetchSchemasParams {
   serviceIds?: string[]
@@ -7,7 +8,15 @@ export interface FetchSchemasParams {
 }
 
 export async function fetchSchemas(params: FetchSchemasParams = {}) {
-  return Promise.resolve(dummySchemas)
+  const response = await fetch(`${window.location.origin}/api/schema`);
+  const data = await response.json() as any[];
+
+  const schemas = data.map((schema, index) => ({
+    ...schema,
+    service: dummyServices[index % dummyServices.length],
+  })) as Schema[];
+
+  return schemas;
 }
 
 export async function fetchServices() {
