@@ -4,6 +4,7 @@ import { SchemaTableSection } from "@/modules/schema/sections";
 import { fetchPlatforms, fetchServices, fetchSchemas } from "@/modules/schema/utils/api";
 import { dummyPlatforms, dummySchemas, dummyServices } from "@/modules/schema/constant";
 import userEvent from "@testing-library/user-event";
+import { ToastContainer } from "react-toastify";
 
 jest.mock("@/modules/schema/utils/api", () => ({
   fetchPlatforms: jest.fn(),
@@ -53,9 +54,16 @@ describe("Schema Table Section", () => {
     (fetchServices as jest.Mock).mockResolvedValue([]);
     (fetchPlatforms as jest.Mock).mockResolvedValue([]);
 
-    render(<SchemaTableSection />);
+    render(
+      <>
+        <SchemaTableSection />
+        <ToastContainer />
+      </>
+    );
 
-    await screen.findByText(/failed to load schema data/i);
+    await waitFor(() => {
+      expect(screen.getByText(/failed to load initial data/i)).toBeInTheDocument();
+    });
   });
 
   it("should render the schema table with the selected service", async () => {
@@ -78,7 +86,6 @@ describe("Schema Table Section", () => {
     expect(fetchSchemas).toHaveBeenCalledWith(
       expect.objectContaining({ serviceIds: [dummyServices[0].id] })
     );
-
   });
 
   it("should render the schema table with the selected platform", async () => {
@@ -109,7 +116,12 @@ describe("Schema Table Section", () => {
     (fetchServices as jest.Mock).mockResolvedValue(dummyServices);
     (fetchSchemas as jest.Mock).mockResolvedValue(dummySchemas);
 
-    render(<SchemaTableSection />);
+    render(
+      <>
+        <SchemaTableSection />
+        <ToastContainer />
+      </>
+    );
     await screen.findByTestId("schema-table");
 
     const serviceDropdownTrigger = screen.getByText(/filter by services/i);
@@ -143,5 +155,4 @@ describe("Schema Table Section", () => {
 
     await screen.findByText(/form upload skema database/i);
   });
-
 });

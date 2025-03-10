@@ -1,7 +1,13 @@
 import { SchemaTable } from "@/modules/schema/module-elements";
 import { Schema } from "@/modules/schema/types";
-import { render, screen, within } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { ToastContainer } from "react-toastify";
+import { deleteSchema } from "@/modules/schema/utils/api";
+
+jest.mock("@/modules/schema/utils/api", () => ({
+  deleteSchema: jest.fn(),
+}));
 
 // Mock data for testing
 const mockSchemas: Schema[] = [
@@ -160,33 +166,50 @@ describe("SchemaTable Component", () => {
   // it should open confirmation dialog when delete button is clicked
   it("should open confirmation dialog when delete button is clicked", async () => {
     render(<SchemaTable schemas={mockSchemas} />);
-    const deleteButton = screen.getAllByText(/Delete/i)[0];
+    const deleteButton = screen.getAllByText(/Hapus/i)[0];
 
     await userEvent.click(deleteButton);
-    expect(screen.getByText(/Hapus Skema/i)).toBeInTheDocument();
+    expect(screen.getByText(/Apakah Anda yakin ingin menghapus skema ini?/i)).toBeInTheDocument();
   });
 
   // it should render success message when schema is deleted
   it("should render success message when schema is deleted", async () => {
-    render(<SchemaTable schemas={mockSchemas} />);
-    const deleteButton = screen.getAllByText(/Delete/i)[0];
+    (deleteSchema as jest.Mock).mockResolvedValueOnce({ ok: true });
+
+    render(
+      <>
+        <SchemaTable schemas={mockSchemas} />
+        <ToastContainer />
+      </>
+    );
+    const deleteButton = screen.getAllByText(/Hapus/i)[0];
 
     await userEvent.click(deleteButton);
-    const confirmButton = screen.getByText(/Hapus/i);
+    const confirmButton = screen.getByText(/Konfirmasi/i);
 
     await userEvent.click(confirmButton);
-    expect(screen.getByText(/Skema berhasil dihapus/i)).toBeInTheDocument();
+    // mock delete schema response
+
+    await waitFor(() => {
+      expect(screen.getByText(/Skema berhasil dihapus/i)).toBeInTheDocument();
+    });
   });
 
   // it should render error message when schema deletion fails
   it("should render error message when schema deletion fails", async () => {
-    render(<SchemaTable schemas={mockSchemas} />);
-    const deleteButton = screen.getAllByText(/Delete/i)[0];
+    (deleteSchema as jest.Mock).mockRejectedValue(new Error("Failed to delete schema"));
+
+    render(
+      <>
+        <SchemaTable schemas={mockSchemas} />
+        <ToastContainer />
+      </>
+    );
+    const deleteButton = screen.getAllByText(/Hapus/i)[0];
 
     await userEvent.click(deleteButton);
-    const confirmButton = screen.getByText(/Hapus/i);
+    const confirmButton = screen.getByText(/Konfirmasi/i);
 
-    (global.fetch as jest.Mock).mockRejectedValueOnce(new Error("Failed to delete schema"));
     await userEvent.click(confirmButton);
 
     expect(screen.getByText(/Gagal menghapus skema/i)).toBeInTheDocument();
