@@ -1,24 +1,23 @@
 import { Platform, Schema, Service } from "./types"
-import { v4 as uuidv4 } from "uuid";
 
 
 export const dummyPlatforms: Platform[] = [
   {
-    id: "POSTGRESQL",
+    id: 1,
     createdAt: new Date(),
     modifiedAt: new Date(),
     name: "PostgreSQL",
     img_url: "https://static-00.iconduck.com/assets.00/postgresql-icon-1987x2048-v2fkmdaw.png",
   },
   {
-    id: "MYSQL",
+    id: 2,
     createdAt: new Date(),
     modifiedAt: new Date(),
     name: "MySQL",
     img_url: "https://www.svgrepo.com/show/303251/mysql-logo.svg",
   },
   {
-    id: "MONGODB",
+    id: 3,
     createdAt: new Date(),
     modifiedAt: new Date(),
     name: "MongoDB",
@@ -29,28 +28,28 @@ export const dummyPlatforms: Platform[] = [
 
 export const dummyServices: Service[] = [
   {
-    id: uuidv4(),
+    id: 1,
     createdAt: new Date(),
     modifiedAt: new Date(),
     name: "Reservasi Pasien",
     platform: dummyPlatforms[0],
   },
   {
-    id: uuidv4(),
+    id: 2,
     createdAt: new Date(),
     modifiedAt: new Date(),
     name: "Pemesanan Online",
     platform: dummyPlatforms[1],
   },
   {
-    id: uuidv4(),
+    id: 3,
     createdAt: new Date(),
     modifiedAt: new Date(),
     name: "Laporan Keuangan",
     platform: dummyPlatforms[2],
   },
   {
-    id: uuidv4(),
+    id: 4,
     createdAt: new Date(),
     modifiedAt: new Date(),
     name: "Manajemen Inventaris",
@@ -61,7 +60,7 @@ export const dummyServices: Service[] = [
 
 export const dummySchemas: Schema[] = [
   {
-    id: uuidv4(),
+    id: 1,
     createdAt: new Date(),
     modifiedAt: new Date(),
     name: "reservasi_pelanggan",
@@ -79,7 +78,7 @@ export const dummySchemas: Schema[] = [
     )`,
   },
   {
-    id: uuidv4(),
+    id: 2,
     createdAt: new Date(),
     modifiedAt: new Date(),
     name: "rekam_medis",
@@ -96,7 +95,7 @@ export const dummySchemas: Schema[] = [
     )`,
   },
   {
-    id: uuidv4(),
+    id: 3,
     createdAt: new Date(),
     modifiedAt: new Date(),
     name: "laporan_keuangan",
@@ -110,7 +109,7 @@ export const dummySchemas: Schema[] = [
     )`,
   },
   {
-    id: uuidv4(),
+    id: 4,
     createdAt: new Date(),
     modifiedAt: new Date(),
     name: "manajemen_stok",
