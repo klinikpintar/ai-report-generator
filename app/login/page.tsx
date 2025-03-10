@@ -17,8 +17,7 @@ const LoginPage = () => {
     setLoading(true);
     setError("");
 
-    const authService = new FeAuthService();
-    const { success } = await authService.login(email, password);
+    const { success } = await FeAuthService.login(email, password);
 
     if (success) {
       router.push("/");
@@ -35,29 +34,29 @@ const LoginPage = () => {
     <div className="flex items-center justify-center min-h-screen">
       {/* Logo */}
       <div className="absolute top-[38px] left-[104px] h-auto">
-        <Image src="/images/logo.png" alt="Klinik Pintar" width={175} height={52} />
+        <Image src="/images/logo.png" alt="Klinik Pintar" width={135} height={50} />
       </div>
 
-      <div className="w-full max-w-lg bg-white p-8">
+      <div className="max-w-2xl bg-white p-8">
         {/* Judul */}
-        <h2 className="text-2xl font-bold text-center text-blue-600 text-4xl">
+        <h2 className="font-bold text-center text-blue-600 text-32">
           Sign in to your account
         </h2>
-        <p className="mt-4 text-center text-lg">
+        <p className="mt-2 text-center text-base text-18">
           Selamat Datang di AI Report Generator by
         </p>
-        <p className="text-center text-lg mb-4">Klinik Pintar</p>
+        <p className="text-center text-base mb-5 text-18">Klinik Pintar</p>
 
         {/* Form */}
         <form onSubmit={handleSubmit}>
-          <div className="mb-4">
-            <label htmlFor="email" className="block font-semibold">
+          <div className="mb-5">
+            <label htmlFor="email" className="block font-semibold text-16">
               Email
             </label>
             <input
               id="email"
               type="email"
-              className="w-full p-2 border-2 border-gray rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
+              className="w-full p-2 border-2 text-sm border-gray rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -65,13 +64,13 @@ const LoginPage = () => {
           </div>
 
           <div className="mb-4">
-            <label htmlFor="password" className="block font-semibold">
+            <label htmlFor="password" className="block font-semibold text-16">
               Password
             </label>
             <input
               id="password"
               type="password"
-              className="w-full p-2 border-2 border-gray rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
+              className="w-full p-2 border-2 text-sm border-gray rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
@@ -82,7 +81,7 @@ const LoginPage = () => {
 
           <button
             type="submit"
-            className={`w-full mt-6 font-semibold text-lg py-3 px-6 rounded-50px ${loading ? 'bg-blue-400' : 'bg-blue-600'} text-white`}
+            className={`w-full mt-6 font-semibold text-18 py-3 px-6 rounded-50px ${loading ? 'bg-blue-400' : 'bg-blue-600'} text-white`}
             disabled={loading}
           >
             {loading ? "Logging in..." : "Login"}

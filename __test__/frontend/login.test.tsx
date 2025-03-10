@@ -13,6 +13,10 @@ jest.mock("next/navigation", () => ({
 }));
 
 describe("Login Page", () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
   afterEach(() => {
     mockAxios.reset();
     jest.restoreAllMocks();
@@ -49,35 +53,30 @@ describe("Login Page", () => {
     expect(loginButton).toBeInTheDocument();
   });
 
-
   test("should submit form successfully and redirect when login is successful", async () => {
     // Mock localStorage
-    const setItemMock = jest.spyOn(Storage.prototype, 'setItem');
-
+    const setItemMock = jest.spyOn(Storage.prototype, "setItem");
+  
     render(<Login />);
-
+  
     // Mock API success
     mockAxios.onPost("/api/auth/login").reply(200, { data: { access_token: "test-token" } });
-
+  
     // Simulate user input
     await act(async () => {
       fireEvent.change(screen.getByLabelText(/email/i), { target: { value: "user@example.com" } });
       fireEvent.change(screen.getByLabelText(/password/i), { target: { value: "password123" } });
       fireEvent.click(screen.getByRole("button", { name: /login/i }));
     });
-
-    // Wait for the API call to complete and check localStorage and redirect
+  
+    // Wait for the API call to complete and check localStorage
     await waitFor(() => {
-      // Verify localStorage token set
       expect(setItemMock).toHaveBeenCalledWith("access_token", "test-token");
-
-      // Verify router.push() was called to redirect
-      expect(pushMock).toHaveBeenCalledWith("/");  // Expecting redirect to homepage after successful login
     });
-
-    setItemMock.mockRestore(); // Restore original functionality of setItem
+  
+    // Verify router.push() was called to redirect
+    expect(pushMock).toHaveBeenCalledWith("/"); // Expecting redirect to homepage after successful login
   });
-
 
   test("should display loading state when submitting the form", async () => {
     render(<Login />);
@@ -94,8 +93,8 @@ describe("Login Page", () => {
     await waitFor(() => {
       // Expect to see the loading state
       fireEvent.click(screen.getByRole("button", { name: /login/i }));
-      expect(screen.getByRole("button", { name: /logging in/i })).toBeInTheDocument();
     });
+    expect(screen.getByRole("button", { name: /logging in/i })).toBeInTheDocument();
   });
 
   //negative cases

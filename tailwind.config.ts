@@ -52,6 +52,11 @@ const config: Config = {
         "50px": "50px",
         "4xl": "2rem",
       },
+      fontSize: {
+        '32': '2rem',      // 32px
+        '18': '1.125rem',  // 18px
+        '16': '1rem',      // 16px
+      },
     },
   },
 };
