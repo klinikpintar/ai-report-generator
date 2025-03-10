@@ -2,9 +2,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { ServiceFilter, PlatformFilter, SchemaTable } from "@/modules/schema/module-elements";
 import { fetchPlatforms, fetchSchemas, fetchServices } from "@/modules/schema/utils/api";
 import { Platform, Schema, Service } from "@/modules/schema/types";
+import { Button } from "@/components/ui/button";
 
 export const SchemaTableSection = () => {
   const [schemas, setSchemas] = useState<Schema[]>([]);
@@ -14,6 +16,10 @@ export const SchemaTableSection = () => {
   const [selectedPlatforms, setSelectedPlatforms] = useState<Platform[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>("");
+
+  // get current page from query params (page=1)
+  const searchParam = useSearchParams();
+  const currentPage = parseInt(searchParam.get("page") || "1", 10);
 
   useEffect(() => {
     const loadInitialData = async () => {
@@ -79,7 +85,13 @@ export const SchemaTableSection = () => {
           onSelectionChange={setSelectedPlatforms}
         />
       </div>
-      <SchemaTable schemas={schemas} currentPage={1} lastPage={10} />
+      <SchemaTable schemas={schemas} currentPage={currentPage} lastPage={10} />
+
+      <div className="flex justify-center">
+        <Button size="lg" className="mr-2 bg-[#00B0EB] hover:bg-[#00B0EB]/90">
+          Tambah Skema
+        </Button>
+      </div>
     </>
   );
 };
