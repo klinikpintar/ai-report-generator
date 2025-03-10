@@ -17,6 +17,10 @@ const frontendConfig: Config = {
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/$1',
   },
+  coveragePathIgnorePatterns: [
+    '/node_modules/',
+    '/components/ui/'
+  ],
 };
 
 export default createJestConfig(frontendConfig);

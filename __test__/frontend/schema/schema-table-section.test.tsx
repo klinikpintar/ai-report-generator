@@ -11,6 +11,15 @@ jest.mock("@/modules/schema/utils/api", () => ({
   fetchSchemas: jest.fn(),
 }));
 
+jest.mock('next/navigation', () => ({
+  ...jest.requireActual('next/navigation'),
+  useSearchParams: jest.fn(() => ({
+    get: jest.fn().mockReturnValue('1'),
+  })),
+}));
+
+const useSearchParams = jest.requireMock('next/navigation').useSearchParams;
+
 describe("Schema Table Section", () => {
   it("should render loading state", () => {
     render(<SchemaTableSection />);
@@ -120,5 +129,15 @@ describe("Schema Table Section", () => {
     await waitFor(() => {
       expect(screen.getByText(/failed to fetch filtered schemas/i)).toBeInTheDocument();
     });
+  });
+
+
+  it("should handle missing or invalid page query param", async () => {
+    jest.mocked(useSearchParams).mockReturnValue({
+      get: jest.fn().mockReturnValue(undefined),
+    } as any);
+  
+    render(<SchemaTableSection />);
+    expect(screen.getByText(/loading/i)).toBeInTheDocument();
   });
 });
