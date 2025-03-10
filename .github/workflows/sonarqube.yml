@@ -49,7 +49,7 @@ jobs:
       - name: Run Tests and Generate Coverage Report
         run: pnpm run test:coverage
         env:
-          DATABASE_URL: "postgresql://test_user:$test_user@localhost:5432/test_db"
+          DATABASE_URL: "postgresql://postgres:drz0mbos1@localhost:5432/ai_report_generator"
           JWT_ACCESS_SECRET: "test_secret"
           JWT_ACCESS_EXPIRES: "1h"
           JWT_REFRESH_SECRET: "test_refresh_secret"
