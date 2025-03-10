@@ -5,9 +5,6 @@ settings:
   excludeLinksFromLockfile: false
 
 dependencies:
-  '@next/font':
-    specifier: ^14.2.15
-    version: 14.2.15(next@15.1.7)
   '@prisma/client':
     specifier: 6.4.1
     version: 6.4.1(prisma@6.4.1)(typescript@5.8.2)
@@ -1236,14 +1233,6 @@ packages:
     dependencies:
       fast-glob: 3.3.1
     dev: true
-
-  /@next/font@14.2.15(next@15.1.7):
-    resolution: {integrity: sha512-QopYhBmCDDrNDynbi+ZD1hDZXmQXVFo7TmAFp4DQgO/kogz1OLbQ92hPigJbj572eZ3GaaVxNIyYVn3/eAsehg==}
-    peerDependencies:
-      next: '*'
-    dependencies:
-      next: 15.1.7(@babel/core@7.26.9)(react-dom@19.0.0)(react@19.0.0)
-    dev: false
 
   /@next/swc-darwin-arm64@15.1.7:
     resolution: {integrity: sha512-hPFwzPJDpA8FGj7IKV3Yf1web3oz2YsR8du4amKw8d+jAOHfYHYFpMkoF6vgSY4W6vB29RtZEklK9ayinGiCmQ==}
