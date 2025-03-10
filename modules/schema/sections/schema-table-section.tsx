@@ -8,6 +8,7 @@ import { fetchPlatforms, fetchSchemas, fetchServices } from "@/modules/schema/ut
 import { Platform, Schema, Service } from "@/modules/schema/types";
 import { Button } from "@/components/ui/button";
 import AddSchemaModal from "@/app/components/AddSchemaModal";
+import { toast } from "react-toastify";
 
 export const SchemaTableSection = () => {
   const [schemas, setSchemas] = useState<Schema[]>([]);
@@ -35,7 +36,7 @@ export const SchemaTableSection = () => {
         setServices(allServices);
         setPlatforms(allPlatforms);
       } catch {
-        alert("Failed to load initial data");
+        toast.error("Failed to load initial data");
       } finally {
         setLoading(false);
       }
@@ -54,7 +55,7 @@ export const SchemaTableSection = () => {
         const filteredSchemas = await fetchSchemas(params);
         setSchemas(filteredSchemas);
       } catch {
-        alert("Failed to fetch filtered schemas");
+        toast.error("Failed to fetch filtered schemas");
       } finally {
         setLoading(false);
       }

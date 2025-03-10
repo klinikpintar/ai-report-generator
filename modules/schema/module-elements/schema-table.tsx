@@ -24,6 +24,8 @@ import { Schema } from "../types";
 import { generatePagination } from "../utils/pagination";
 import EditSchemaModal from "@/app/components/EditSchemaModal";
 import { deleteSchema } from "../utils/api";
+import { ConfirmationDialog } from "./confirmation-dialog";
+import { toast } from "react-toastify";
 
 type SchemaTableProps = {
   schemas: Schema[];
@@ -39,6 +41,7 @@ export const SchemaTable: React.FC<SchemaTableProps> = ({
   isLoading = false,
 }) => {
   const [showEditModal, setShowEditModal] = React.useState(false);
+  const [showConfirmationDialog, setShowConfirmationDialog] = React.useState(false);
   const [selectedSchema, setSelectedSchema] = React.useState<Schema | null>(null);
   const pages = generatePagination(currentPage, lastPage);
 
@@ -47,13 +50,24 @@ export const SchemaTable: React.FC<SchemaTableProps> = ({
     setShowEditModal(true);
   };
 
-  const handleDelete = async (schema: Schema) => {
-    const response = await deleteSchema(schema.id);
-    if (response.ok) {
-      alert("Skema berhasil dihapus");
-    } else {
-      alert("Gagal menghapus skema");
+  const handleDelete = (schema: Schema) => {
+    setSelectedSchema(schema);
+    setShowConfirmationDialog(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    try {
+      if (!selectedSchema) return;
+      const response = await deleteSchema(selectedSchema.id);
+      if (response.ok) {
+        toast.success("Skema berhasil dihapus");
+      } else {
+        throw new Error("Failed to delete schema");
+      }
+    } catch {
+      toast.error("Gagal menghapus skema");
     }
+    setShowConfirmationDialog(false);
   };
 
   return (
@@ -113,7 +127,7 @@ export const SchemaTable: React.FC<SchemaTableProps> = ({
                   onClick={() => handleDelete(schema)}
                   className="text-red-500 hover:text-red-700 border-red-500 border-2"
                 >
-                  Delete
+                  Hapus
                 </Button>
               </TableCell>
             </TableRow>
@@ -164,6 +178,14 @@ export const SchemaTable: React.FC<SchemaTableProps> = ({
           }
         />
       )}
+
+      <ConfirmationDialog
+        isOpen={showConfirmationDialog}
+        onClose={() => setShowConfirmationDialog(false)}
+        onConfirm={handleConfirmDelete}
+        title="Hapus Skema"
+        description="Apakah Anda yakin ingin menghapus skema ini?"
+      />
     </div>
   );
 };
