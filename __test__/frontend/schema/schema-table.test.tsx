@@ -1,23 +1,24 @@
 import { SchemaTable } from "@/modules/schema/module-elements";
 import { Schema } from "@/modules/schema/types";
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 
 // Mock data for testing
 const mockSchemas: Schema[] = [
   {
-    id: "1",
+    id: 1,
     name: "Schema A",
     description: "Schema A description",
     schemaText: "Schema A text",
     createdAt: new Date(),
     modifiedAt: new Date(),
     service: {
-      id: "1",
+      id: 1,
       name: "Service A",
       createdAt: new Date(),
       modifiedAt: new Date(),
       platform: {
-        id: "1",
+        id: 1,
         name: "Platform A",
         img_url: "https://via.placeholder.com/150",
         createdAt: new Date(),
@@ -26,19 +27,19 @@ const mockSchemas: Schema[] = [
     },
   },
   {
-    id: "2",
+    id: 2,
     name: "Schema B",
     description: "Schema B description",
     schemaText: "Schema B text",
     createdAt: new Date(),
     modifiedAt: new Date(),
     service: {
-      id: "2",
+      id: 2,
       name: "Service B",
       createdAt: new Date(),
       modifiedAt: new Date(),
       platform: {
-        id: "2",
+        id: 2,
         name: "Platform B",
         img_url: "https://via.placeholder.com/150",
         createdAt: new Date(),
@@ -51,13 +52,14 @@ const mockSchemas: Schema[] = [
 describe("SchemaTable Component", () => {
   it("should render the table columns correctly", () => {
     render(<SchemaTable schemas={mockSchemas} />);
+    const schemaTable = screen.getByTestId("schema-table");
 
     // Check if the table headers are rendered
-    expect(screen.getByText("Nama Skema")).toBeInTheDocument();
-    expect(screen.getByText("Platform")).toBeInTheDocument();
-    expect(screen.getByText("Service")).toBeInTheDocument();
-    expect(screen.getAllByText("File")[0]).toBeInTheDocument();
-    expect(screen.getByText("Aksi")).toBeInTheDocument();
+    expect(within(schemaTable).getByText("Nama Skema")).toBeInTheDocument();
+    expect(within(schemaTable).getByText("Platform")).toBeInTheDocument();
+    expect(within(schemaTable).getByText("Service")).toBeInTheDocument();
+    expect(within(schemaTable).getAllByText("File")[0]).toBeInTheDocument();
+    expect(within(schemaTable).getByText("Aksi")).toBeInTheDocument();
   });
 
   it("should render the table data correctly", () => {
@@ -144,5 +146,49 @@ describe("SchemaTable Component", () => {
     // Check if next and previous buttons are rendered
     expect(screen.getByText(/sebelumnya/i)).toBeInTheDocument();
     expect(screen.getByText(/selanjutnya/i)).toBeInTheDocument();
+  });
+
+  // it should open edit schema modal when edit button is clicked
+  it("should open edit schema modal when edit button is clicked", async () => {
+    render(<SchemaTable schemas={mockSchemas} />);
+    const editButton = screen.getAllByText(/Edit/i)[0];
+
+    await userEvent.click(editButton);
+    expect(screen.getByText(/Edit Skema/i)).toBeInTheDocument();
+  });
+
+  // it should open confirmation dialog when delete button is clicked
+  it("should open confirmation dialog when delete button is clicked", async () => {
+    render(<SchemaTable schemas={mockSchemas} />);
+    const deleteButton = screen.getAllByText(/Delete/i)[0];
+
+    await userEvent.click(deleteButton);
+    expect(screen.getByText(/Hapus Skema/i)).toBeInTheDocument();
+  });
+
+  // it should render success message when schema is deleted
+  it("should render success message when schema is deleted", async () => {
+    render(<SchemaTable schemas={mockSchemas} />);
+    const deleteButton = screen.getAllByText(/Delete/i)[0];
+
+    await userEvent.click(deleteButton);
+    const confirmButton = screen.getByText(/Hapus/i);
+
+    await userEvent.click(confirmButton);
+    expect(screen.getByText(/Skema berhasil dihapus/i)).toBeInTheDocument();
+  });
+
+  // it should render error message when schema deletion fails
+  it("should render error message when schema deletion fails", async () => {
+    render(<SchemaTable schemas={mockSchemas} />);
+    const deleteButton = screen.getAllByText(/Delete/i)[0];
+
+    await userEvent.click(deleteButton);
+    const confirmButton = screen.getByText(/Hapus/i);
+
+    (global.fetch as jest.Mock).mockRejectedValueOnce(new Error("Failed to delete schema"));
+    await userEvent.click(confirmButton);
+
+    expect(screen.getByText(/Gagal menghapus skema/i)).toBeInTheDocument();
   });
 });
