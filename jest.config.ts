@@ -12,6 +12,9 @@ const config: Config = {
     "/app/config.ts",
     "/app/services/authService.ts",
   ],
+  moduleNameMapper: {
+    '^@/(.*)$': '<rootDir>/$1',
+  },
 };
 
 export default config;

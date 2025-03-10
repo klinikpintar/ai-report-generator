@@ -60,11 +60,8 @@ jobs:
       - name: Install Dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Run Tests for Backend
-        run: pnpm test:backend
-      
-      - name: Run Tests for Frontend
-        run: pnpm test:frontend
+      - name: Run Tests
+        run: pnpm test
 
   deploy-main:
     name: Deploy to Production (Main)
