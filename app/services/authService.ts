@@ -130,7 +130,7 @@ class AuthService implements IAuthService {
   }
 
   putRefreshTokenInCookie(response: NextResponse, token: string): NextResponse {
-    response.cookies.set("refresh_token", token ? token : "", {
+    response.cookies.set("refresh_token", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       path: "/",
