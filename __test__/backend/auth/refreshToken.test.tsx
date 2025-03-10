@@ -17,7 +17,6 @@ jest.mock("@/lib/prisma", () => ({
   },
 }));
 
-jest.mock("bcryptjs");
 jest.mock("jsonwebtoken");
 
 const BASE_API_URL_AUTH_TOKEN_REFRESH =
@@ -142,7 +141,7 @@ describe("Auth API - Refresh Token", () => {
     const json = await response.json();
 
     expect(response.status).toBe(403);
-    expect(json).toHaveProperty("message", "Invalid refresh token or expired");
+    expect(json).toHaveProperty("message", "Invalid or expired access token");
   });
 
   // ❌ Corner Case - Refresh Token Invalid
@@ -165,7 +164,7 @@ describe("Auth API - Refresh Token", () => {
     const json = await response.json();
 
     expect(response.status).toBe(403);
-    expect(json).toHaveProperty("message", "Invalid refresh token or expired");
+    expect(json).toHaveProperty("message", "Invalid or expired access token");
   });
 
   // ❌ Corner Case - Refresh Token Valid Tapi Tidak Ada di Database

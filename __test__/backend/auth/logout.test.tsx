@@ -107,7 +107,7 @@ describe("Auth API - Logout", () => {
     const json = await response.json();
 
     expect(response.status).toBe(401);
-    expect(json).toHaveProperty("message", "Invalid token");
+    expect(json).toHaveProperty("message", "Invalid or expired access token");
     expect(jwtVerifySpy).toHaveBeenCalledWith(
       `${accessToken}invalid`,
       config.JWT_ACCESS_SECRET
@@ -131,7 +131,7 @@ describe("Auth API - Logout", () => {
     const json = await response.json();
 
     expect(response.status).toBe(401);
-    expect(json).toHaveProperty("message", "Invalid token");
+    expect(json).toHaveProperty("message", "Invalid or expired access token");
     expect(jwtVerifySpy).toHaveBeenCalledWith(
       expiredToken,
       config.JWT_ACCESS_SECRET
