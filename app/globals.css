@@ -6,8 +6,8 @@
   --background: #ffffff;
   --foreground: #171717;
 
-  --font-sans: var(--font-inter), var(--font-geist-sans), sans-serif;
-  --font-mono: var(--font-geist-mono), monospace;
+  /* --font-sans: var(--font-inter), var(--font-geist-sans), sans-serif;
+  --font-mono: var(--font-geist-mono), monospace; */
 }
 
 @media (prefers-color-scheme: light) {
@@ -85,7 +85,6 @@
 body {
   color: var(--foreground);
   background: var(--background);
-  font-family: var(--font-sans);
 }
 
 .markdown-content {

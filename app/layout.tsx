@@ -1,6 +1,4 @@
 import React from "react";
-import Navbar from "./components/navbar";
-import { ServiceProvider } from "./context/serviceContext";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { ToastContainer } from "react-toastify";
@@ -24,12 +22,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={inter.className}>
         <ToastContainer />
-        <ServiceProvider>
-          <div className="h-screen overflow-hidden flex flex-col bg-white">
-            <Navbar />
-            {children}
-          </div>
-        </ServiceProvider>
+        {children}
       </body>
     </html>
   );
