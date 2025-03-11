@@ -1,6 +1,5 @@
 import React from "react";
 import Navbar from "./components/navbar";
-import Sidebar from "./components/sidebar";
 import { ServiceProvider } from "./context/serviceContext";
 import { Inter } from "next/font/google";
 import "./globals.css";
@@ -28,12 +27,7 @@ export default function RootLayout({
         <ServiceProvider>
           <div className="h-screen overflow-hidden flex flex-col bg-white">
             <Navbar />
-            <div className="flex flex-1">
-              <Sidebar />
-              <main className="flex-1">
-                <div className="max-w-[1200px] w-full mx-auto px-6">{children}</div>
-              </main>
-            </div>
+            {children}
           </div>
         </ServiceProvider>
       </body>
