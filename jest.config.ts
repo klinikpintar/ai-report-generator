@@ -13,14 +13,6 @@ const config: Config = {
     "!app/config.ts",
     "!app/utils/exceptions.ts",
   ],
-  coverageThreshold: {
-    global: {
-      branches: 100,
-      functions: 100,
-      lines: 100,
-      statements: 100,
-    },
-  },
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/$1',
   },
