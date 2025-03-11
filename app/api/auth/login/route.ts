@@ -1,48 +1,27 @@
 import { NextResponse } from "next/server";
-import prisma from "@/lib/prisma";
-import bcrypt from "bcryptjs";
-import { loginSchema } from "../../dtos/auth.dto";
 import authService from "@/app/services/authService";
+import { BadRequestResponse, ErrorResponse } from "@/app/utils/exceptions";
+import { LoginSchemaDto } from "../../dtos/auth.dto";
 
 export async function POST(req: Request) {
   const body = await req.json();
-  const validated = loginSchema.safeParse(body);
+  try {
+    const parseData = LoginSchemaDto.safeParse(body);
+    if (!parseData.success) {
+      throw new BadRequestResponse(parseData.error.errors[0].message);
+    }
+    const { email, password } = parseData.data;
 
-  if (!validated.success) {
-    return NextResponse.json(
-      { message: validated.error.errors[0].message },
-      { status: 400 }
+    const { accessToken, refreshToken } = await authService.login(
+      email,
+      password
     );
+    const response = NextResponse.json({
+      message: "Login successful",
+      data: { access_token: accessToken },
+    });
+    return authService.putRefreshTokenInCookie(response, refreshToken);
+  } catch (error) {
+    return (error as ErrorResponse).generate();
   }
-
-  const { email, password } = validated.data;
-  const user = await prisma.user.findUnique({ where: { email } });
-
-  if (!user)
-    return NextResponse.json({ message: "User not found" }, { status: 401 });
-  if (!user.isActive)
-    return NextResponse.json({ message: "User not active" }, { status: 400 });
-
-  if (!(await bcrypt.compare(password, user.password))) {
-    return NextResponse.json(
-      { message: "Invalid credentials" },
-      { status: 401 }
-    );
-  }
-
-  await prisma.refreshToken.deleteMany({ where: { userId: user.id } });
-  const accessToken = authService.generateAccessToken({
-    id: user.id,
-    role: user.role,
-  });
-  const refreshToken = await authService.generateRefreshToken({
-    id: user.id,
-  });
-
-  const response = NextResponse.json({
-    data: { access_token: accessToken },
-    message: "Login successful",
-  });
-
-  return authService.putRefreshTokenInCookie(response, refreshToken);
 }

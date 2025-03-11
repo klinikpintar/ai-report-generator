@@ -3,6 +3,8 @@
 # dependencies
 /node_modules
 /.pnp
+pnpm-lock.yaml
+yarn.lock
 .pnp.*
 .yarn/*
 !.yarn/patches
@@ -31,8 +33,8 @@ yarn-error.log*
 .pnpm-debug.log*
 
 # env files (can opt-in for committing if needed)
-.env*
 .env.local
+.env
 
 # vercel
 .vercel

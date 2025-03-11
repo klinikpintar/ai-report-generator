@@ -152,7 +152,7 @@ describe("Auth API - Login", () => {
     const response = await loginHandler(request);
     const json = await response.json();
 
-    expect(response.status).toBe(401);
+    expect(response.status).toBe(400);
     expect(json).toHaveProperty("message", "Invalid credentials");
   });
 
@@ -170,7 +170,7 @@ describe("Auth API - Login", () => {
     const response = await loginHandler(request);
     const json = await response.json();
 
-    expect(response.status).toBe(401);
+    expect(response.status).toBe(404);
     expect(json).toHaveProperty("message", "User not found");
   });
 
@@ -189,7 +189,7 @@ describe("Auth API - Login", () => {
     const json = await response.json();
 
     expect(response.status).toBe(400);
-    expect(json).toHaveProperty("message", "User not active");
+    expect(json).toHaveProperty("message", "User is not active");
   });
 
   // ❌ Edge Case - Empty Body Login

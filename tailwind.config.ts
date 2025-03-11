@@ -9,6 +9,41 @@ const config: Config = {
     "./modules/**/*.{js,ts,jsx,tsx,mdx}",
   ],
   theme: {
+    screens: {
+      sm: "480px",
+      md: "768px",
+      lg: "976px",
+      xl: "1440px",
+    },
+    colors: {
+      blue: {
+        50: "#e4f6fc",
+        100: "#bae8f7",
+        200: "#8dd8f2",
+        300: "#5fc8ed",
+        400: "#3cbde9",
+        500: "#1ab1e5",
+        600: "#17aae2",
+        700: "#13a1de",
+        800: "#0f98da",
+        900: "#088ad3",
+      },
+      black: "#2D3648",
+      white: "#ffffff",
+      gray: "#CBD2E0",
+      magenta: {
+        50: "#fbe0ec",
+        100: "#f4b3d0",
+        200: "#ed80b1",
+        300: "#e64d91",
+        400: "#e0267a",
+        500: "#db0062",
+        600: "#d7005a",
+        700: "#d20050",
+        800: "#cd0046",
+        900: "#c40034",
+      },
+    },
     extend: {
       colors: {
   			background: 'hsl(var(--background))',
@@ -63,6 +98,11 @@ const config: Config = {
   			sm: 'calc(var(--radius) - 4px)',
         "50px": "50px",
         "4xl": "2rem",
+      },
+      fontSize: {
+        '32': '2rem',      // 32px
+        '18': '1.125rem',  // 18px
+        '16': '1rem',      // 16px
       },
     },
   },

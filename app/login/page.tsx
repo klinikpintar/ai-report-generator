@@ -1,74 +1,95 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+import FeAuthService from "../services/feAuthService";
 import Image from "next/image";
 
 const LoginPage = () => {
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const router = useRouter();
 
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        console.log("Email:", email);
-        console.log("Password:", password);
-    };
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
 
-    return (
-        <div className = "flex items-center justify-center min-h-screen">
-            {/* Logo */}
-            <div className="absolute top-[38px] left-[104px] h-auto">
-                <Image src="/images/logo.png" alt="Klinik Pintar" width={175} height={52} />
-            </div>
-            <div className="flex items-center justify-center min-h-screen">
-                <div className="w-full max-w-lg bg-white p-8">
-                    {/* Judul */}
-                    <h2 className="text-2xl font-bold text-center text-blue-600 text-4xl">Sign in to your account</h2>
-                    <p className="mt-4 text-center text-black text-lg">
-                        Selamat Datang di AI Report Generator by
-                    </p>
-                    <p className="text-center text-black text-lg mb-4">
-                        Klinik Pintar
-                    </p>
+    const { success } = await FeAuthService.login(email, password);
 
+    if (success) {
+      router.push("/");
+    } else {
+      setError("Login failed. Please check your credentials.");
+      setEmail("");
+      setPassword("");
+    }
 
-                    {/* Form */}
-                    <form onSubmit={handleSubmit}>
-                        <div className="mb-4">
-                            <label htmlFor="email" className="block text-black font-semibold">Email</label>
-                            <input
-                                id = "email"
-                                type="email"
-                                className="w-full p-2 border-2 border-gray rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                                required
-                            />
-                        </div>
+    setLoading(false);
+  };
 
-                        <div className="mb-4">
-                            <label htmlFor="password" className="block text-black font-semibold">Password</label>
-                            <input
-                                id = "password"
-                                type="password"
-                                className="w-full p-2 border-2 border-gray rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                required
-                            />
-                        </div>
+  return (
+    <div className="flex items-center justify-center min-h-screen">
+      {/* Logo */}
+      <div className="absolute top-[38px] left-[104px] h-auto">
+        <Image src="/images/logo.png" alt="Klinik Pintar" width={135} height={50} />
+      </div>
 
-                        <button
-                            type="submit"
-                            className="w-full mt-6 font-semibold text-lg bg-blue-600 text-white py-3 px-6 rounded-50px"
-                        >
-                            Login
-                        </button>
-                    </form>
+      <div className="max-w-2xl bg-white p-8">
+        {/* Judul */}
+        <h2 className="font-bold text-center text-blue-600 text-32">
+          Sign in to your account
+        </h2>
+        <p className="mt-2 text-center text-base text-18">
+          Selamat Datang di AI Report Generator by
+        </p>
+        <p className="text-center text-base mb-5 text-18">Klinik Pintar</p>
 
-                </div>
-            </div>
-        </div>
-    );
+        {/* Form */}
+        <form onSubmit={handleSubmit}>
+          <div className="mb-5">
+            <label htmlFor="email" className="block font-semibold text-16">
+              Email
+            </label>
+            <input
+              id="email"
+              type="email"
+              className="w-full p-2 border-2 text-sm border-gray rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+          </div>
+
+          <div className="mb-4">
+            <label htmlFor="password" className="block font-semibold text-16">
+              Password
+            </label>
+            <input
+              id="password"
+              type="password"
+              className="w-full p-2 border-2 text-sm border-gray rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+          </div>
+
+          {error && <p className="text-magenta-900 text-sm mb-2">{error}</p>}
+
+          <button
+            type="submit"
+            className={`w-full mt-6 font-semibold text-18 py-3 px-6 rounded-50px ${loading ? 'bg-blue-400' : 'bg-blue-600'} text-white`}
+            disabled={loading}
+          >
+            {loading ? "Logging in..." : "Login"}
+          </button>
+        </form>
+      </div>
+    </div>
+  );
 };
 
 export default LoginPage;

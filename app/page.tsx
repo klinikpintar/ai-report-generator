@@ -1,7 +1,7 @@
 import ChatBox from "./chatbox";
 import Sidebar from "./components/sidebar";
 
-export default function Home() {
+const Home = () => {
   return (
     <div className="flex flex-1">
       <Sidebar />
@@ -12,4 +12,6 @@ export default function Home() {
       </main>
     </div>
   );
-}
+};
+
+export default Home;
