@@ -1,4 +1,5 @@
-import { POST } from '../../../api/chat/route';
+import { NextRequest } from 'next/server';
+import { POST } from '../../../app/api/chat/route';
 import { generateText } from 'ai';
 
 // Mock the ai module
@@ -29,7 +30,7 @@ describe('POST /api/chat', () => {
   });
 
   it('checks if the API works with normal input', async () => {
-    const req = new Request('http://localhost/api/chat', {
+    const req = new NextRequest('http://localhost/api/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -47,7 +48,7 @@ describe('POST /api/chat', () => {
   });
 
   it('handles empty messages array', async () => {
-    const req = new Request('http://localhost/api/chat', {
+    const req = new NextRequest('http://localhost/api/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -63,7 +64,7 @@ describe('POST /api/chat', () => {
   });
 
   it('handles invalid message format', async () => {
-    const req = new Request('http://localhost/api/chat', {
+    const req = new NextRequest('http://localhost/api/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -81,7 +82,7 @@ describe('POST /api/chat', () => {
   it('handles API errors gracefully', async () => {
     (generateText as jest.Mock).mockRejectedValueOnce(new Error('API Error'));
 
-    const req = new Request('http://localhost/api/chat', {
+    const req = new NextRequest('http://localhost/api/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -97,7 +98,7 @@ describe('POST /api/chat', () => {
   });
 
   it('selects the correct model based on request parameter', async () => {
-    const req = new Request('http://localhost/api/chat', {
+    const req = new NextRequest('http://localhost/api/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -116,7 +117,7 @@ describe('POST /api/chat', () => {
   it('handles very large messages', async () => {
     const largeContent = 'A'.repeat(10000);
     
-    const req = new Request('http://localhost/api/chat', {
+    const req = new NextRequest('http://localhost/api/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -135,7 +136,7 @@ describe('POST /api/chat', () => {
   it('handles messages with special characters', async () => {
     const specialContent = '!@#$%^&*()_+-=[]{}|;\':",./<>?`~\n\t\r';
     
-    const req = new Request('http://localhost/api/chat', {
+    const req = new NextRequest('http://localhost/api/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -155,7 +156,7 @@ describe('POST /api/chat', () => {
       text: 'Mocked response with missing metadata',
     });
 
-    const req = new Request('http://localhost/api/chat', {
+    const req = new NextRequest('http://localhost/api/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
