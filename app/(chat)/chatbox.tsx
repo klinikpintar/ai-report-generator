@@ -5,8 +5,8 @@ import Image from "next/image";
 import ReactMarkdown from "react-markdown"; // Import Markdown Renderer
 import remarkGfm from "remark-gfm";
 import rehypeRaw from "rehype-raw";
-import Dropdown from "../app/components/dropdown";
-import { useService } from "../app/context/serviceContext"; // Import context
+import Dropdown from "../components/dropdown";
+import { useService } from "../context/serviceContext"; // Import context
 
 // Definisikan tipe data pesan
 interface Message {

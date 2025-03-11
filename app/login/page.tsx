@@ -39,18 +39,18 @@ const LoginPage = () => {
 
       <div className="max-w-2xl bg-white p-8">
         {/* Judul */}
-        <h2 className="font-bold text-center text-blue-600 text-32">
+        <h2 className="font-bold text-center text-[#00B0EB] text-[32px]">
           Sign in to your account
         </h2>
-        <p className="mt-2 text-center text-base text-18">
+        <p className="mt-2 text-center text-base text-[18px]">
           Selamat Datang di AI Report Generator by
         </p>
-        <p className="text-center text-base mb-5 text-18">Klinik Pintar</p>
+        <p className="text-center text-base mb-5 text-[18px]">Klinik Pintar</p>
 
         {/* Form */}
         <form onSubmit={handleSubmit}>
           <div className="mb-5">
-            <label htmlFor="email" className="block font-semibold text-16">
+            <label htmlFor="email" className="block font-semibold">
               Email
             </label>
             <input
@@ -64,13 +64,13 @@ const LoginPage = () => {
           </div>
 
           <div className="mb-4">
-            <label htmlFor="password" className="block font-semibold text-16">
+            <label htmlFor="password" className="block font-semibold">
               Password
             </label>
             <input
               id="password"
               type="password"
-              className="w-full p-2 border-2 text-sm border-gray rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm"
+              className="w-full p-2 border-2 text-sm border-gray rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
@@ -81,7 +81,7 @@ const LoginPage = () => {
 
           <button
             type="submit"
-            className={`w-full mt-6 font-semibold text-18 py-3 px-6 rounded-50px ${loading ? 'bg-blue-400' : 'bg-blue-600'} text-white`}
+            className={`w-full mt-6 font-semibold text-18 py-3 px-6 rounded-[50px] ${loading ? 'bg-[#00B0EB]/80' : 'bg-[#00B0EB]'} text-white`}
             disabled={loading}
           >
             {loading ? "Logging in..." : "Login"}

@@ -1,5 +1,5 @@
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
-import Home from '../../app/page'; 
+import Home from '../../app/(chat)/page'; 
 import axios from 'axios';
 import MockAdapter from 'axios-mock-adapter';
 
