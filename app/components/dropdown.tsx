@@ -32,7 +32,7 @@ export default function Dropdown() {
       return;
     }
   
-    let newSelection = selectedOptions.includes(option)
+    const newSelection = selectedOptions.includes(option)
       ? selectedOptions.filter((item) => item !== option)
       : [...selectedOptions, option];
   

@@ -1,12 +1,9 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { usePathname } from "next/navigation";
 import Image from "next/image";
 
 export default function Navbar() {
-  const pathname = usePathname();
-
   const [isAuthenticated, setIsAuthenticated] = useState(true);
   const email = "virgillia.yeala@ui.ac.id";
 
@@ -14,7 +11,6 @@ export default function Navbar() {
   useEffect(() => {
     setIsLoaded(true);
   }, []);
-
 
   function handleLogout() {
     setIsAuthenticated(false);
@@ -37,12 +33,7 @@ export default function Navbar() {
                 className="mx-8"
               />
               <div className="flex items-center space-x-4">
-                <Image
-                  src="/Profile.svg"
-                  width={50}
-                  height={50}
-                  alt="Profile Icon"
-                />
+                <Image src="/Profile.svg" width={50} height={50} alt="Profile Icon" />
                 <h1 className="text-sm font-regular text-black">{email}</h1>
                 <button
                   className="bg-red-700 hover:bg-red-800 text-white text-sm font-semibold py-2 px-6 rounded-lg"
@@ -57,5 +48,4 @@ export default function Navbar() {
       )}
     </>
   );
-  
 }
