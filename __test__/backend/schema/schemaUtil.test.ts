@@ -1,4 +1,4 @@
-import { validateSchemaInput, handlePrismaError } from '@/app/utils/schemaUtils';
+import { validateSchemaInput, handlePrismaError } from '@backend/utils/schemaUtils';
 import { ZodError } from 'zod';
 import { StatusCodes } from 'http-status-codes';
 import { Prisma } from '@prisma/client';
