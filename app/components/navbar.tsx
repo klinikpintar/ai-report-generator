@@ -1,18 +1,27 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
+import FeAuthService from "@/app/services/feAuthService"; 
 
 export default function Navbar() {
   const [isAuthenticated, setIsAuthenticated] = useState(true);
   const email = "virgillia.yeala@ui.ac.id";
+  const router = useRouter();
 
   const [isLoaded, setIsLoaded] = useState(false);
   useEffect(() => {
     setIsLoaded(true);
   }, []);
 
-  function handleLogout() {
+  async function handleLogout() {
+    const logoutResponse = await FeAuthService.logout();
+    if (logoutResponse.success) {
+      router.push("/login");
+    } else {
+      alert("Logout failed. Please try again.");
+    }
     setIsAuthenticated(false);
   }
 
