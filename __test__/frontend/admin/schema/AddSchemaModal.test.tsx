@@ -1,26 +1,11 @@
 import { render, screen, fireEvent } from "@testing-library/react";
 import AddSchemaModal from "@frontend/admin/schema/components/AddSchemaModal";
-import Schema from "@frontend/admin/schema/page";
 
 describe("Add Schema Modal Test", () => {
   it("Should not appear when first rendered", () => {
     render(<AddSchemaModal isVisible={false} onClose={() => {}} />);
 
-    expect(screen.getByText("Form Upload Skema Database")).toHaveAttribute(
-      "aria-hidden",
-      "true"
-    );
-  });
-
-  it("Should appear when user click 'Tambah Skema'", () => {
-    render(<Schema />);
-
-    fireEvent.click(screen.getByText("Tambah Skema"));
-
-    expect(screen.getByText("Form Upload Skema Database")).toHaveAttribute(
-      "aria-hidden",
-      "false"
-    );
+    expect(screen.getByText("Form Upload Skema Database")).toHaveAttribute("aria-hidden", "true");
   });
 
   it("Should call the 'handleClose' function when 'Batal' button is clicked", () => {

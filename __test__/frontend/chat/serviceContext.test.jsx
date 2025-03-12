@@ -1,5 +1,5 @@
 import { render, screen } from "@testing-library/react";
-import { ServiceProvider, useService } from "../app/context/serviceContext";
+import { ServiceProvider, useService } from "@frontend/(chat)/context/serviceContext";
 import { createContext, useContext } from "react";
 
 describe("ServiceContext", () => {

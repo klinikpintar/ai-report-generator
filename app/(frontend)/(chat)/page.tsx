@@ -1,6 +1,6 @@
 "use client";
 import ChatBox from "./chatbox";
-import Sidebar from "../components/sidebar";
+import Sidebar from "./components/sidebar";
 
 export default function Home() {
   return (

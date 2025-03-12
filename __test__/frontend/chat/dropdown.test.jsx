@@ -1,6 +1,6 @@
 import { render, screen, fireEvent } from "@testing-library/react";
-import Dropdown from "../app/components/dropdown";
-import { ServiceProvider, useService } from "../app/context/serviceContext";
+import Dropdown from "@frontend/(chat)/components/dropdown";
+import { ServiceProvider, useService } from "@frontend/(chat)/context/serviceContext";
 
 // Helper component untuk mengakses context di dalam test
 const TestComponent = () => {

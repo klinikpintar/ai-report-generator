@@ -3,11 +3,11 @@
 
 import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
-import { ServiceFilter, PlatformFilter, SchemaTable } from "@/app/(frontend)/admin/schema/components";
-import { fetchPlatforms, fetchSchemas, fetchServices } from "@/app/(frontend)/admin/schema/utils/api";
-import { Platform, Schema, Service } from "@/app/(frontend)/admin/schema/types";
+import { ServiceFilter, PlatformFilter, SchemaTable } from "@frontend/admin/schema/components";
+import { fetchPlatforms, fetchSchemas, fetchServices } from "@frontend/admin/schema/utils/api";
+import { Platform, Schema, Service } from "@frontend/admin/schema/types";
 import { Button } from "@/components/ui/button";
-import AddSchemaModal from "@/app/components/AddSchemaModal";
+import AddSchemaModal from "@frontend/admin/schema/components/AddSchemaModal";
 import { toast } from "react-toastify";
 
 export const SchemaTableSection = () => {

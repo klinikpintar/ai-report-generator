@@ -16,8 +16,8 @@ jest.mock("@/lib/prisma", () => ({
   },
 }));
 
-jest.mock("../../../app/utils/schemaUtils", () => {
-  const actual = jest.requireActual("../../../app/utils/schemaUtils");
+jest.mock("@backend/utils/schemaUtils", () => {
+  const actual = jest.requireActual("@backend/utils/schemaUtils");
 
   return {
     ...actual,

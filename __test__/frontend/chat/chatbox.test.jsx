@@ -4,6 +4,8 @@ import { ServiceProvider } from "@frontend/(chat)/context/serviceContext";
 
 // **Mock react-markdown agar tidak memicu error ESM**
 jest.mock("react-markdown", () => (props) => <div>{props.children}</div>);
+jest.mock("remark-gfm", () => jest.fn());
+jest.mock("rehype-raw", () => jest.fn());
 
 // Helper function untuk render dengan ServiceProvider
 const renderWithServiceProvider = (ui) => {

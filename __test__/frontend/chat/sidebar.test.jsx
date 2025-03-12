@@ -1,5 +1,5 @@
 import { render, screen } from "@testing-library/react";
-import Sidebar from "../app/components/sidebar";
+import Sidebar from "@frontend/(chat)/components/sidebar";
 
 describe("Sidebar Component", () => {
   it("should render menu items", () => {

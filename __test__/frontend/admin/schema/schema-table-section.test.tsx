@@ -6,7 +6,7 @@ import { dummyPlatforms, dummySchemas, dummyServices } from "@frontend/admin/sch
 import userEvent from "@testing-library/user-event";
 import { ToastContainer } from "react-toastify";
 
-jest.mock("@/modules/schema/utils/api", () => ({
+jest.mock("@frontend/admin/schema/utils/api", () => ({
   fetchPlatforms: jest.fn(),
   fetchServices: jest.fn(),
   fetchSchemas: jest.fn(),

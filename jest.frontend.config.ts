@@ -16,6 +16,7 @@ const frontendConfig: Config = {
   setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/$1',
+    '^@frontend/(.*)$': '<rootDir>/app/(frontend)/$1',
   },
   coveragePathIgnorePatterns: [
     '/node_modules/',
