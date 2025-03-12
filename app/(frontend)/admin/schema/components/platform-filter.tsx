@@ -1,7 +1,7 @@
 // modules/schema/module-elements/platform-filter.tsx
 "use client";
 
-import { FilterDropdown } from "@/components/ui/filter-dropdown";
+import { FilterDropdown } from "@frontend/components/filter-dropdown";
 import type { Platform } from "../types";
 
 type PlatformFilterProps = {

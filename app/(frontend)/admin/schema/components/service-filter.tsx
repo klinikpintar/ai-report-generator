@@ -1,6 +1,6 @@
 "use client";
 
-import { FilterDropdown } from "@/components/ui/filter-dropdown";
+import { FilterDropdown } from "@frontend/components/filter-dropdown";
 import type { Service } from "../types";
 
 type ServiceFilterProps = {

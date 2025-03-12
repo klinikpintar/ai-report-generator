@@ -2,7 +2,7 @@ import "@testing-library/jest-dom";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useState } from "react";
-import { Filterable, FilterDropdown } from "@/components/ui/filter-dropdown";
+import { Filterable, FilterDropdown } from "@frontend/components/filter-dropdown";
 
 interface TestItem extends Filterable {
   name: string;
