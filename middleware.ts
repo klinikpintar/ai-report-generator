@@ -11,5 +11,5 @@ export function middleware(req: NextRequest) {
 
 // **Apply middleware to protected routes**
 export const config = {
-  matcher: ["/", "/dashboard/:path*", "/api/admin/:path*"], // Protect home, dashboard, and admin API routes
+  matcher: ["/", "/admin/:path*"],
 };
