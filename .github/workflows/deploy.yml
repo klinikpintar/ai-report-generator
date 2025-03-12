@@ -5,13 +5,10 @@ on:
     branches:
       - main
       - staging
-      - development
-      - pbi/*
   pull_request:
     branches:
       - main
       - staging
-      - development
 
 jobs:
   build:
