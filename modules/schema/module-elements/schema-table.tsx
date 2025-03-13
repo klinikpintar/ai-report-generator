@@ -32,7 +32,7 @@ type SchemaTableProps = {
   currentPage?: number;
   lastPage?: number;
   isLoading?: boolean;
-  onFinishedAction: () => void;
+  onFinishedAction?: () => void;
 };
 
 export const SchemaTable: React.FC<SchemaTableProps> = ({
@@ -40,7 +40,7 @@ export const SchemaTable: React.FC<SchemaTableProps> = ({
   currentPage = 1,
   lastPage = 1,
   isLoading = false,
-  onFinishedAction,
+  onFinishedAction = () => {},
 }) => {
   const [showEditModal, setShowEditModal] = React.useState(false);
   const [showConfirmationDialog, setShowConfirmationDialog] = React.useState(false);
