@@ -10,13 +10,6 @@
   --font-mono: var(--font-geist-mono), monospace; */
 }
 
-@media (prefers-color-scheme: light) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
 @layer base {
   :root {
     --background: 0 0% 100%;
