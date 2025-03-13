@@ -32,6 +32,7 @@ type SchemaTableProps = {
   currentPage?: number;
   lastPage?: number;
   isLoading?: boolean;
+  onFinishedAction: () => void;
 };
 
 export const SchemaTable: React.FC<SchemaTableProps> = ({
@@ -39,16 +40,22 @@ export const SchemaTable: React.FC<SchemaTableProps> = ({
   currentPage = 1,
   lastPage = 1,
   isLoading = false,
+  onFinishedAction,
 }) => {
   const [showEditModal, setShowEditModal] = React.useState(false);
   const [showConfirmationDialog, setShowConfirmationDialog] = React.useState(false);
   const [selectedSchema, setSelectedSchema] = React.useState<Schema | null>(null);
   const pages = generatePagination(currentPage, lastPage);
 
-  const handleEdit = (schema: Schema) => {
+  const handleOpenEditModal = (schema: Schema) => {
     setSelectedSchema(schema);
     setShowEditModal(true);
   };
+
+  const handleCloseEditModal = () => {
+    setShowEditModal(false);
+    onFinishedAction();
+  }
 
   const handleDelete = (schema: Schema) => {
     setSelectedSchema(schema);
@@ -68,6 +75,7 @@ export const SchemaTable: React.FC<SchemaTableProps> = ({
       toast.error("Gagal menghapus skema");
     }
     setShowConfirmationDialog(false);
+    onFinishedAction();
   };
 
   return (
@@ -116,7 +124,7 @@ export const SchemaTable: React.FC<SchemaTableProps> = ({
               <TableCell className="text-right">
                 <Button
                   size="sm"
-                  onClick={() => handleEdit(schema)}
+                  onClick={() => handleOpenEditModal(schema)}
                   className="mr-2 bg-[#00B0EB] hover:bg-[#00B0EB]/90"
                 >
                   Edit
@@ -164,7 +172,7 @@ export const SchemaTable: React.FC<SchemaTableProps> = ({
       {showEditModal && (
         <EditSchemaModal
           isVisible={showEditModal}
-          onClose={() => setShowEditModal(false)}
+          onClose={handleCloseEditModal}
           schema={{
             id: selectedSchema!.id,
             name: selectedSchema!.name,
