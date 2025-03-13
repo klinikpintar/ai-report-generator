@@ -42,7 +42,7 @@ export default function Navbar() {
                 className="mx-8"
               />
               <div className="flex items-center space-x-4">
-                <Image src="/Profile.svg" width={50} height={50} alt="Profile Icon" />
+                <Image src="/profile.svg" width={50} height={50} alt="Profile Icon" />
                 <h1 className="text-sm font-regular text-black">{email}</h1>
                 <button
                   className="bg-red-700 hover:bg-red-800 text-white text-sm font-semibold py-2 px-6 rounded-lg"
