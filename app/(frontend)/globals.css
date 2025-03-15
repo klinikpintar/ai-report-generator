@@ -4,10 +4,7 @@
 
 :root {
   --background: #ffffff;
-  --foreground: #171717;
-
-  /* --font-sans: var(--font-inter), var(--font-geist-sans), sans-serif;
-  --font-mono: var(--font-geist-mono), monospace; */
+  --foreground: #2D3648;
 }
 
 @layer base {
