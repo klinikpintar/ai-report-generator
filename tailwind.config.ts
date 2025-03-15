@@ -1,65 +1,108 @@
 import type { Config } from "tailwindcss";
 
-export default {
+const config: Config = {
   content: [
+    "./app/**/*.{js,ts,jsx,tsx,mdx}",
     "./pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./components/**/*.{js,ts,jsx,tsx,mdx}",
     "./app/**/*.{js,ts,jsx,tsx,mdx}",
+    "./modules/**/*.{js,ts,jsx,tsx,mdx}",
   ],
   theme: {
     extend: {
       colors: {
-        background: "var(--background)",
-        foreground: "var(--foreground)",
-        // primary color
+        background: 'hsl(var(--background))',
+        foreground: 'hsl(var(--foreground))',
+        card: {
+          DEFAULT: 'hsl(var(--card))',
+          foreground: 'hsl(var(--card-foreground))'
+        },
+        popover: {
+          DEFAULT: 'hsl(var(--popover))',
+          foreground: 'hsl(var(--popover-foreground))'
+        },
+        primary: {
+          DEFAULT: 'hsl(var(--primary))',
+          foreground: 'hsl(var(--primary-foreground))'
+        },
+        secondary: {
+          DEFAULT: 'hsl(var(--secondary))',
+          foreground: 'hsl(var(--secondary-foreground))'
+        },
+        muted: {
+          DEFAULT: 'hsl(var(--muted))',
+          foreground: 'hsl(var(--muted-foreground))'
+        },
+        accent: {
+          DEFAULT: 'hsl(var(--accent))',
+          foreground: 'hsl(var(--accent-foreground))'
+        },
+        destructive: {
+          DEFAULT: 'hsl(var(--destructive))',
+          foreground: 'hsl(var(--destructive-foreground))'
+        },
+        border: 'hsl(var(--border))',
+        input: 'hsl(var(--input))',
+        ring: 'hsl(var(--ring))',
+        chart: {
+          '1': 'hsl(var(--chart-1))',
+          '2': 'hsl(var(--chart-2))',
+          '3': 'hsl(var(--chart-3))',
+          '4': 'hsl(var(--chart-4))',
+          '5': 'hsl(var(--chart-5))'
+        },
+        // primary
         blue: {
-          50: "#e4f6fc",
-          100: "#bae8f7",
-          200: "#8dd8f2",
-          300: "#5fc8ed",
-          400: "#3cbde9",
-          500: "#1ab1e5",
-          600: "#17aae2",
-          700: "#13a1de",
-          800: "#0f98da",
-          900: "#088ad3",
+          1: "#e4f6fc",
+          2: "#bae8f7",
+          3: "#8dd8f2",
+          4: "#5fc8ed",
+          5: "#3cbde9",
+          6: "#00b0eb",
+          7: "#17aae2",
+          8: "#0f98da",
+          9: "#0888d3",
+          10: "#f0f8ff" 
         },
         teal: {
-          50: "#e1eef1",
-          100: "#b4d4dc",
-          200: "#82b7c4",
-          300: "#4f9aac",
-          400: "#2a849b",
-          500: "#046e89",
-          600: "#036681",
-          700: "#035b76",
-          800: "#02516c",
-          900: "#013f59",
+          1: "#e1eef1",
+          2: "#b4d4dc",
+          3: "#82b7c4",
+          4: "#4f9aac",
+          5: "#2a849b",
+          6: "#046e89",
+          7: "#036681",
+          8: "#035b76",
+          9: "#02516c",
+          10: "#013f59",
         },
-        //secondary color
+        // secondary
         black: {
-          50: "#e9e9e9",
-          100: "#c7c7c7",
-          200: "#a2a2a2",
-          300: "#7c7c7c",
-          400: "#606060",
-          500: "#444444",
-          600: "#3e3e3e",
-          700: "#353535",
-          800: "#2d2d2d",
-          900: "#1f1f1f",
+          1: "#e9e9e9",
+          2: "#c7c7c7",
+          3: "#a2a2a2",
+          4: "#7c7c7c",
+          5: "#606060",
+          6: "#444444",
+          7: "#3e3e3e",
+          8: "#353535",
+          9: "#2d2d2d",
+          10: "#1f1f1f",
+          11: "#2e2e2e",
+          12: "#cbd2e0",
+          13: "#1e1e1e"
         },
         magenta: {
-          50: "#fbe0ec",
-          100: "#f4b3d0",
-          200: "#ed80b1",
-          300: "#e64d91",
-          400: "#e0267a",
-          500: "#db0062",
-          600: "#d7005a",
-          700: "#d20050",
-          800: "#cd0046",
-          900: "#c40034",
+          1: "#fbe0ec",
+          2: "#f4b3d0",
+          3: "#ed80b1",
+          4: "#e64d91",
+          5: "#e0267a",
+          6: "#db0062",
+          7: "#d7005a",
+          8: "#d20050",
+          9: "#cd0046",
+          10: "#c40034",
         },
         orange: {
           50: "#fff4e6",
@@ -84,6 +127,7 @@ export default {
           700: "#1bc853",
           800: "#16c249",
           900: "#0db738",
+          1000: "#62bb50"
         },
         yellow: {
           50: "#fffff9",
@@ -100,5 +144,7 @@ export default {
       },
     },
   },
-  plugins: [],
-} satisfies Config;
+  plugins: [require("tailwindcss-animate")]
+};
+
+export default config;
