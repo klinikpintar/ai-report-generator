@@ -3,9 +3,9 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import prisma from "@/lib/prisma";
 import { NextRequest } from "next/server";
-import { POST as logoutHandler } from "@/app/api/auth/logout/route";
+import { POST as logoutHandler } from "@backend/api/auth/logout/route";
 import { User } from "@prisma/client";
-import config from "@/app/config";
+import config from "@backend/config";
 
 jest.mock("@/lib/prisma", () => ({
   user: {

@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { POST } from '../../../app/api/chat/route';
+import { POST } from '@backend/api/chat/route';
 import { generateText } from 'ai';
 
 // Mock the ai module

@@ -3,7 +3,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import prisma from "@/lib/prisma";
 import { NextRequest } from "next/server";
-import { POST as refreshHandler } from "@/app/api/auth/token/refresh/route";
+import { POST as refreshHandler } from "@backend/api/auth/token/refresh/route";
 import { User } from "@prisma/client";
 
 jest.mock("@/lib/prisma", () => ({

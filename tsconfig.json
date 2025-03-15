@@ -19,7 +19,9 @@
       }
     ],
     "paths": {
-      "@/*": ["./*"]
+      "@backend/*": ["./app/(backend)/*"],
+      "@frontend/*": ["./app/(frontend)/*"],
+      "@/*": ["./*"],
     }
   },
   "include": [
@@ -27,7 +29,7 @@
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts",
-    "__test__/frontend/login.test.tsx",
+    "__test__/frontend/login/login.test.tsx",
     "__test__/schema/AddSchemaModal.test.jsx"
   ],
   "exclude": ["node_modules"]
