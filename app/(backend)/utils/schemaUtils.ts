@@ -1,7 +1,7 @@
 import { ZodError } from 'zod';
 import { StatusCodes } from 'http-status-codes';
 import { NextResponse } from 'next/server';
-import { CreateSchemaDto } from '../api/dtos/schema.dtos';
+import { CreateSchemaDto } from '../dtos/schema.dtos';
 import { Prisma } from '@prisma/client';
 
 export const validateSchemaInput = (body: unknown) => {

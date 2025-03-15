@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import authService from "@backend/services/authService";
 import { BadRequestResponse, ErrorResponse } from "@backend/utils/exceptions";
-import { LoginSchemaDto } from "@/app/(backend)/api/dtos/auth.dto";
+import { LoginSchemaDto } from "@backend/dtos/auth.dto";
 
 export async function POST(req: Request) {
   const body = await req.json();

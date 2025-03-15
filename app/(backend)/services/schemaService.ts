@@ -1,7 +1,7 @@
 import { ISchemaService, UpdateSchemaDto } from '../interfaces/ISchemaService';
 import prisma from '@/lib/prisma';
 import { Schema } from '@prisma/client';
-import { CreateSchemaDto as CreateSchemaValidator } from '../api/dtos/schema.dtos';
+import { CreateSchemaDto as CreateSchemaValidator } from '../dtos/schema.dtos';
 
 class SchemaService implements ISchemaService {
   async createSchema(data: unknown): Promise<Schema> {
