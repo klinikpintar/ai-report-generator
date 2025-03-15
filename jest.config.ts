@@ -14,9 +14,9 @@ const config: Config = {
     "!app/utils/exceptions.ts",
   ],
   moduleNameMapper: {
-    '^@/(.*)$': '<rootDir>/$1',
     '^@frontend/(.*)$': '<rootDir>/app/(frontend)/$1',
     '^@backend/(.*)$': '<rootDir>/app/(backend)/$1',
+    '^@/(.*)$': '<rootDir>/$1',
   },
   coverageThreshold: {
     global: {

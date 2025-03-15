@@ -15,8 +15,8 @@ const backendConfig: Config = {
   roots: ["<rootDir>/__test__/backend"],
   setupFilesAfterEnv: ["<rootDir>/jest.setup.ts"],
   moduleNameMapper: {
-    "^@/(.*)$": "<rootDir>/$1",
     '^@backend/(.*)$': '<rootDir>/app/(backend)/$1',
+    "^@/(.*)$": "<rootDir>/$1",
   },
 };
 
