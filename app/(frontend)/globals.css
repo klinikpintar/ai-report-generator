@@ -10,7 +10,6 @@
   --font-mono: var(--font-geist-mono), monospace; */
 }
 
-
 @layer base {
   :root {
     --background: 0 0% 100%;

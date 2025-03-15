@@ -1,7 +1,7 @@
 // modules/schema/sections/schema-table-section.tsx
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import { ServiceFilter, PlatformFilter, SchemaTable } from "@frontend/admin/schema/components";
 import { fetchPlatforms, fetchSchemas, fetchServices } from "@frontend/admin/schema/utils/api";
@@ -44,27 +44,32 @@ export const SchemaTableSection = () => {
     loadInitialData();
   }, []);
 
-  useEffect(() => {
-    const fetchFilteredSchemas = async () => {
-      try {
-        setLoading(true);
-        const params = {
-          serviceIds: selectedServices.map((service) => service.id),
-          platformCodes: selectedPlatforms.map((platform) => platform.id),
-        };
-        const filteredSchemas = await fetchSchemas(params);
-        setSchemas(filteredSchemas);
-      } catch {
-        toast.error("Failed to fetch filtered schemas");
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchFilteredSchemas = useCallback(async () => {
+    try {
+      setLoading(true);
+      const params = {
+        serviceIds: selectedServices.map((service) => service.id),
+        platformCodes: selectedPlatforms.map((platform) => platform.id),
+      };
+      const filteredSchemas = await fetchSchemas(params);
+      setSchemas(filteredSchemas);
+    } catch {
+      toast.error("Failed to fetch filtered schemas");
+    } finally {
+      setLoading(false);
+    }
+  }, [selectedServices, selectedPlatforms]);
 
+  useEffect(() => {
     if (services.length > 0 && platforms.length > 0) {
       fetchFilteredSchemas();
     }
-  }, [selectedServices, selectedPlatforms, services, platforms]);
+  }, [fetchFilteredSchemas, services, platforms]);
+
+  const onSchemaModalClose = async () => {
+    await fetchFilteredSchemas();
+    setShowAddModal(false);
+  };
 
   return (
     <>
@@ -80,7 +85,13 @@ export const SchemaTableSection = () => {
           onSelectionChange={setSelectedPlatforms}
         />
       </div>
-      <SchemaTable schemas={schemas} currentPage={currentPage} lastPage={1} isLoading={isLoading} />
+      <SchemaTable
+        schemas={schemas}
+        currentPage={currentPage}
+        lastPage={1}
+        isLoading={isLoading}
+        onFinishedAction={fetchFilteredSchemas}
+      />
 
       <div className="flex justify-center">
         <Button
@@ -92,9 +103,7 @@ export const SchemaTableSection = () => {
         </Button>
       </div>
 
-      {showAddModal && (
-        <AddSchemaModal isVisible={showAddModal} onClose={() => setShowAddModal(false)} />
-      )}
+      {showAddModal && <AddSchemaModal isVisible={showAddModal} onClose={onSchemaModalClose} />}
     </>
   );
 };
