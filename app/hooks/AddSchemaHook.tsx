@@ -1,5 +1,6 @@
 import axios, { AxiosError } from "axios";
 import { useState, useRef, FormEvent, useEffect } from "react";
+import { toast } from "react-toastify";
 
 interface SchemaData {
   id: number;
@@ -46,7 +47,7 @@ export const AddSchemaHook = (
     if (!file) return;
 
     if (!allowedFormat.includes(file.name.slice(file.name.lastIndexOf(".")))) {
-      alert("File format not allowed!");
+      toast.error("File format not allowed!");
       e.target.value = "";
       return;
     }
@@ -83,7 +84,7 @@ export const AddSchemaHook = (
 
     if (isAddSchema) {
       if (!formData.schemaText) {
-        alert("Please upload schema");
+        toast.error("Please upload schema");
         return;
       }
 
@@ -94,14 +95,14 @@ export const AddSchemaHook = (
           schemaText: formData.schemaText,
         });
 
-        alert("Schema successfully added");
+        toast.success("Schema successfully added");
         clearForm();
         onClose();
       } catch (error) {
         const axiosError = error as AxiosError<{ error: string }>;
         const errorMessage = axiosError.response?.data?.error;
 
-        alert(errorMessage);
+        toast.error(errorMessage);
       }
     } else {
       if (!initialData) return;
@@ -113,14 +114,14 @@ export const AddSchemaHook = (
           description: formData.description,
         });
 
-        alert("Schema successfully updated");
+        toast.success("Schema successfully updated");
         clearForm();
         onClose();
       } catch (error) {
         const axiosError = error as AxiosError<{ error: string }>;
         const errorMessage = axiosError.response?.data?.error;
 
-        alert(errorMessage);
+        toast.error(errorMessage);
       }
     }
   }

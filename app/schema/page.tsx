@@ -3,6 +3,7 @@ import React, { Fragment, useState, useEffect } from "react";
 import AddSchemaModal from "../components/AddSchemaModal";
 import EditSchemaModal from "../components/EditSchemaModal";
 import axios from "axios";
+import { Slide, ToastContainer } from "react-toastify";
 
 interface Schema {
   id: number;
@@ -91,6 +92,11 @@ const Schema = () => {
         isVisible={showEditModal}
         onClose={() => setShowEditModal(false)}
         schema={selectedSchema}
+      />
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        transition={Slide}
       />
     </Fragment>
   );
