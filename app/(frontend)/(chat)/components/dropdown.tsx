@@ -7,7 +7,6 @@ import { useService } from "../context/serviceContext"; // Import context
 export default function Dropdown() {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
-  const [selectedPlatform, setSelectedPlatform] = useState<string | null>(null);
   const { selectedService, setSelectedService } = useService(); // Gunakan context
 
   // Daftar layanan dengan platformnya
@@ -19,46 +18,37 @@ export default function Dropdown() {
     { service: "Inventaris", platform: "MySQL" },
   ];
 
-  const toggleOption = (service: string, platform: string) => {
-    if (service === "Select All") {
-      const samePlatformServices = options
-        .filter(
-          (opt) =>
-            opt.platform === selectedPlatform || opt.service === "Select All"
-        )
-        .map((opt) => opt.service);
+  // Cek apakah semua layanan sudah dipilih
+  const allSelected = selectedOptions.length === options.length - 1; // -1 karena "Select All" tidak dihitung sebagai layanan
 
-      if (selectedOptions.length === samePlatformServices.length - 1) {
+  const toggleOption = (service: string) => {
+    if (service === "Select All") {
+      // Jika "Select All" diklik, toggle semua layanan
+      if (allSelected) {
         setSelectedOptions([]);
-        setSelectedService("Pilih Service"); // Pakai context
-        setSelectedPlatform(null);
+        setSelectedService("Pilih Service");
       } else {
-        setSelectedOptions(samePlatformServices);
-        setSelectedService("Select All"); // Pakai context
+        setSelectedOptions(options.slice(1).map((opt) => opt.service)); // Pilih semua layanan kecuali "Select All"
+        setSelectedService("Select All");
       }
       return;
     }
 
-    if (selectedPlatform && selectedPlatform !== platform) {
-      return; // Tidak bisa memilih layanan dengan platform berbeda
-    }
-
+    // Tambah/hapus layanan dari daftar pilihan
     const newSelection = selectedOptions.includes(service)
       ? selectedOptions.filter((item) => item !== service)
       : [...selectedOptions, service];
 
     setSelectedOptions(newSelection);
-    setSelectedPlatform(platform); // Set platform hanya jika item dipilih
 
     if (newSelection.length === 0) {
-      setSelectedService("Pilih Service"); // Pakai context
-      setSelectedPlatform(null);
+      setSelectedService("Pilih Service");
     } else if (newSelection.length === 1) {
-      setSelectedService(newSelection[0]); // Pakai context
+      setSelectedService(newSelection[0]);
+    } else if (newSelection.length === options.length - 1) {
+      setSelectedService("Select All");
     } else {
-      setSelectedService(
-        `${newSelection[0]} and ${newSelection.length - 1} more`
-      ); // Pakai context
+      setSelectedService(`${newSelection[0]} and ${newSelection.length - 1} more`);
     }
   };
 
@@ -74,9 +64,7 @@ export default function Dropdown() {
           width={14}
           height={14}
           alt="Toggle Dropdown"
-          className={`transform transition ${
-            isOpen ? "rotate-180" : "rotate-0"
-          }`}
+          className={`transform transition ${isOpen ? "rotate-180" : "rotate-0"}`}
         />
       </button>
 
@@ -87,47 +75,19 @@ export default function Dropdown() {
       {isOpen && (
         <div className="absolute w-full mt-2 border rounded-lg bg-white shadow-lg p-3 border-blue-6">
           {options.map((option, index) => (
-            <label
-              key={index}
-              className="flex items-center justify-between py-1 cursor-pointer"
-            >
+            <label key={index} className="flex items-center justify-between py-1 cursor-pointer">
               <div className="flex items-center space-x-3">
                 <input
                   type="checkbox"
-                  checked={selectedOptions.includes(option.service)}
-                  onChange={() => toggleOption(option.service, option.platform)}
+                  checked={
+                    option.service === "Select All" ? allSelected : selectedOptions.includes(option.service)
+                  }
+                  onChange={() => toggleOption(option.service)}
                   className="form-checkbox h-5 w-5 text-red-500 border-gray-300 rounded focus:ring-red-500"
-                  disabled={
-                    selectedPlatform !== null &&
-                    selectedPlatform !== option.platform &&
-                    option.service !== "Select All"
-                  } // Disable jika platform berbeda
                 />
-                <span
-                  className={`text-gray-700 ${
-                    selectedPlatform !== null &&
-                    selectedPlatform !== option.platform &&
-                    option.service !== "Select All"
-                      ? "text-gray-400"
-                      : ""
-                  }`}
-                >
-                  {option.service}
-                </span>
+                <span className="text-gray-700">{option.service}</span>
               </div>
-              {option.platform && (
-                <span
-                  className={`text-gray-500 text-sm ${
-                    selectedPlatform !== null &&
-                    selectedPlatform !== option.platform &&
-                    option.service !== "Select All"
-                      ? "text-gray-400"
-                      : ""
-                  }`}
-                >
-                  {option.platform}
-                </span>
-              )}
+              {option.platform && <span className="text-gray-500 text-sm">{option.platform}</span>}
             </label>
           ))}
         </div>
