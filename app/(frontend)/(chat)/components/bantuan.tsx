@@ -48,7 +48,7 @@ export default function Bantuan() {
                 1. Pilih Layanan dari dropdown di atas.(Contoh: Reservasi, Keuangan, Kesehatan, dll.)
               </li>
               <li>
-                2. Masukkan Prompt di kolom input.{" "} (Contoh: "Berikan Rekomendasi Service ini.")
+                2. Masukkan Prompt di kolom input.{" "} (Contoh: &quot;Berikan Rekomendasi Service ini.&quot;)
               </li>
               <li>3. Klik Kirim atau Enter untuk mendapatkan hasil.</li>
             </ol>
