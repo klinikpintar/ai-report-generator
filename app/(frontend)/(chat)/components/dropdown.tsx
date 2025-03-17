@@ -84,6 +84,7 @@ export default function Dropdown() {
                   }
                   onChange={() => toggleOption(option.service)}
                   className="form-checkbox h-5 w-5 text-red-500 border-gray-300 rounded focus:ring-red-500"
+                  aria-label={option.service} 
                 />
                 <span className="text-gray-700">{option.service}</span>
               </div>
