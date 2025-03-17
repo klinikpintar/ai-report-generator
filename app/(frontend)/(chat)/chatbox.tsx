@@ -113,8 +113,7 @@ export default function ChatBox() {
 
       {!hasChatted && (
         <h1
-          className="text-3xl font-bold text-center flex items-center justify-center h-full pb-24"
-          style={{ color: "#00B0EB" }}
+          className="text-3xl font-bold text-center flex items-center justify-center h-full pb-24 text-blue-6"
         >
           Hello, Virgillia Yeala !!
         </h1>

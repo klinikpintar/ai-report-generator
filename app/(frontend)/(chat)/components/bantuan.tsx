@@ -23,23 +23,22 @@ export default function Bantuan() {
   return (
     <div className="relative inline-block">
       {/* Container untuk Bantuan */}
-      <div
+      <button
         className="flex items-center space-x-2 cursor-pointer"
         onClick={() => setIsOpen(!isOpen)} // Toggle modal
       >
-        <Image src="/icon-info.svg" width={20} height={20} alt="Help Icon" />
-        <span >Bantuan</span>
-      </div>
+        <Image src="/icon-info.svg" width={20} height={20} alt="Help Icon"className="mr-2"/>
+        Bantuan
+      </button>
 
       {/* Modal sebagai overlay dropdown */}
       {isOpen && (
         <div
           ref={modalRef}
-          className="absolute top-8 right-0 w-[380px] bg-white shadow-lg rounded-lg border z-50"
-          style={{ borderColor: "#00B0EB" }}
+          className="absolute top-8 right-0 w-[380px] bg-white shadow-lg rounded-lg border z-50 border-blue-6"
         >
           <div className="p-9 ">
-            <h3 className="text-lg font-bold text-[#00B0EB] text-center">
+            <h3 className="text-lg font-bold text-blue-6 text-center">
               Cara Menggunakan AI Report Generator
             </h3>
 
