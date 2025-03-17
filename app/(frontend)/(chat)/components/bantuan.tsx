@@ -23,13 +23,13 @@ export default function Bantuan() {
   return (
     <div className="relative inline-block">
       {/* Container untuk Bantuan */}
-      <div
+      <button
         className="flex items-center space-x-2 cursor-pointer"
         onClick={() => setIsOpen(!isOpen)} // Toggle modal
       >
-        <Image src="/icon-info.svg" width={20} height={20} alt="Help Icon" />
-        <span >Bantuan</span>
-      </div>
+        <Image src="/icon-info.svg" width={20} height={20} alt="Help Icon"className="mr-2"/>
+        Bantuan
+      </button>
 
       {/* Modal sebagai overlay dropdown */}
       {isOpen && (
