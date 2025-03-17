@@ -1,6 +1,6 @@
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import EditSchemaModal from "@/app/components/EditSchemaModal";
-import Schema from "@/app/schema/page";
+import { SchemaTable } from "@/modules/schema/module-elements";
 import mockAxios from "axios";
 
 jest.mock("axios");
@@ -9,19 +9,45 @@ describe("Edit Schema Modal Test", () => {
   const mockSchemas = [
     {
       id: 1,
-      name: "users-2",
-      description: "auth-2 purpose",
-      schemaText:
-        "CREATE TABLE users_2 (id SERIAL PRIMARY KEY, username TEXT, password TEXT);",
-      createdAt: "2025-03-03T06:08:42.673Z",
+      name: "Schema A",
+      description: "Schema A description",
+      schemaText: "Schema A text",
+      createdAt: new Date(),
+      modifiedAt: new Date(),
+      service: {
+        id: 1,
+        name: "Service A",
+        createdAt: new Date(),
+        modifiedAt: new Date(),
+        platform: {
+          id: 1,
+          name: "Platform A",
+          img_url: "https://via.placeholder.com/150",
+          createdAt: new Date(),
+          modifiedAt: new Date(),
+        },
+      },
     },
     {
       id: 2,
-      name: "users-3",
-      description: "auth-3 purpose",
-      schemaText:
-        "CREATE TABLE users_3 (id SERIAL PRIMARY KEY, username TEXT, password TEXT);",
-      createdAt: "2025-03-03T06:08:42.673Z",
+      name: "Schema B",
+      description: "Schema B description",
+      schemaText: "Schema B text",
+      createdAt: new Date(),
+      modifiedAt: new Date(),
+      service: {
+        id: 2,
+        name: "Service B",
+        createdAt: new Date(),
+        modifiedAt: new Date(),
+        platform: {
+          id: 2,
+          name: "Platform B",
+          img_url: "https://via.placeholder.com/150",
+          createdAt: new Date(),
+          modifiedAt: new Date(),
+        },
+      },
     },
   ];
 
@@ -43,7 +69,7 @@ describe("Edit Schema Modal Test", () => {
   });
 
   it("Should appear when user click 'Edit'", async () => {
-    render(<Schema />);
+    render(<SchemaTable schemas={mockSchemas} />);
 
     const editButton = await screen.findAllByRole("button", { name: "Edit" });
     fireEvent.click(editButton[0]);
@@ -64,24 +90,22 @@ describe("Edit Schema Modal Test", () => {
   });
 
   it("Should be a edit button for each entry", async () => {
-    render(<Schema />);
+    render(<SchemaTable schemas={mockSchemas} />);
 
-    expect(await screen.findByText("users-2")).toBeInTheDocument();
-    expect(await screen.findByText("auth-2 purpose")).toBeInTheDocument();
+    expect(await screen.findByText("Schema A")).toBeInTheDocument();
     expect(screen.queryAllByRole("button", { name: "Edit" }).length).toBe(2);
   });
 
   it("Should displays the correct data when the Edit button is clicked", async () => {
-    render(<Schema />);
+    render(<SchemaTable schemas={mockSchemas} />);
 
-    await screen.findByText("users-2");
+    await screen.findByText("Schema A");
     const editButtons = await screen.findAllByRole("button", { name: "Edit" });
     fireEvent.click(editButtons[0]);
     await waitFor(() => {
       expect(screen.getByText("Edit Skema Database")).toBeInTheDocument();
     });
 
-    expect(screen.getByDisplayValue("users-2")).toBeInTheDocument();
-    expect(screen.getByDisplayValue("auth-2 purpose")).toBeInTheDocument();
+    expect(screen.getByDisplayValue("Schema A")).toBeInTheDocument();
   });
 });

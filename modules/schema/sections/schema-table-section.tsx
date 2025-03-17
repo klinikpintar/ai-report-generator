@@ -3,8 +3,16 @@
 
 import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
-import { ServiceFilter, PlatformFilter, SchemaTable } from "@/modules/schema/module-elements";
-import { fetchPlatforms, fetchSchemas, fetchServices } from "@/modules/schema/utils/api";
+import {
+  ServiceFilter,
+  PlatformFilter,
+  SchemaTable,
+} from "@/modules/schema/module-elements";
+import {
+  fetchPlatforms,
+  fetchSchemas,
+  fetchServices,
+} from "@/modules/schema/utils/api";
 import { Platform, Schema, Service } from "@/modules/schema/types";
 import { Button } from "@/components/ui/button";
 import AddSchemaModal from "@/app/components/AddSchemaModal";
@@ -80,7 +88,12 @@ export const SchemaTableSection = () => {
           onSelectionChange={setSelectedPlatforms}
         />
       </div>
-      <SchemaTable schemas={schemas} currentPage={currentPage} lastPage={1} isLoading={isLoading} />
+      <SchemaTable
+        schemas={schemas}
+        currentPage={currentPage}
+        lastPage={1}
+        isLoading={isLoading}
+      />
 
       <div className="flex justify-center">
         <Button
@@ -93,7 +106,10 @@ export const SchemaTableSection = () => {
       </div>
 
       {showAddModal && (
-        <AddSchemaModal isVisible={showAddModal} onClose={() => setShowAddModal(false)} />
+        <AddSchemaModal
+          isVisible={showAddModal}
+          onClose={() => setShowAddModal(false)}
+        />
       )}
     </>
   );

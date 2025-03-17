@@ -1,16 +1,21 @@
 import { renderHook, act, waitFor } from "@testing-library/react";
 import { AddSchemaHook } from "@/app/hooks/AddSchemaHook";
 import axios from "axios";
+import { toast } from "react-toastify";
 
 jest.mock("axios");
-global.alert = jest.fn();
+jest.mock("react-toastify", () => ({
+  toast: {
+    error: jest.fn(),
+    success: jest.fn(),
+  },
+}));
 
 describe("AddSchemaHook Test", () => {
   const onCloseMock = jest.fn();
 
   beforeEach(() => {
     jest.clearAllMocks();
-    jest.spyOn(window, "alert").mockImplementation(() => {});
   });
 
   it("Should initialize empty formData", () => {
@@ -43,7 +48,7 @@ describe("AddSchemaHook Test", () => {
       result.current.handleFileChange(mockEvent);
     });
 
-    expect(global.alert).toHaveBeenCalledWith("File format not allowed!");
+    expect(toast.error).toHaveBeenCalledWith("File format not allowed!");
   });
 
   it("Should read input file", async () => {
@@ -88,7 +93,7 @@ describe("AddSchemaHook Test", () => {
       await result.current.handleSubmit({ preventDefault: jest.fn() } as any);
     });
 
-    expect(global.alert).toHaveBeenCalledWith("Please upload schema");
+    expect(toast.error).toHaveBeenCalledWith("Please upload schema");
   });
 
   it("Should call API and 'onClose' when 'handleSubmit' succeeds", async () => {
@@ -109,7 +114,7 @@ describe("AddSchemaHook Test", () => {
       description: result.current.formData.description,
       schemaText: "CREATE TABLE users;",
     });
-    expect(global.alert).toHaveBeenCalledWith("Schema successfully added");
+    expect(toast.success).toHaveBeenCalledWith("Schema successfully added");
     expect(onCloseMock).toHaveBeenCalled();
   });
 
@@ -117,8 +122,6 @@ describe("AddSchemaHook Test", () => {
     (axios.post as jest.Mock).mockRejectedValue({
       response: { data: { error: "Server error" } },
     });
-
-    jest.spyOn(window, "alert").mockImplementation(() => {});
 
     const { result } = renderHook(() => AddSchemaHook(onCloseMock, true));
 
@@ -130,7 +133,7 @@ describe("AddSchemaHook Test", () => {
       await result.current.handleSubmit({ preventDefault: jest.fn() } as any);
     });
 
-    expect(global.alert).toHaveBeenCalledWith("Server error");
+    expect(toast.error).toHaveBeenCalledWith("Server error");
   });
 
   it("Should do nothing if the file does not exist", () => {
@@ -197,8 +200,6 @@ describe("AddSchemaHook Test", () => {
       response: { data: { error: "Failed to update schema" } },
     });
 
-    jest.spyOn(window, "alert").mockImplementation(() => {});
-
     const { result } = renderHook(() =>
       AddSchemaHook(onCloseMock, false, initialData)
     );
@@ -207,6 +208,6 @@ describe("AddSchemaHook Test", () => {
       await result.current.handleSubmit({ preventDefault: jest.fn() } as any);
     });
 
-    expect(alert).toHaveBeenCalledWith("Failed to update schema");
+    expect(toast.error).toHaveBeenCalledWith("Failed to update schema");
   });
 });

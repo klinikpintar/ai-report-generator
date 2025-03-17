@@ -41,8 +41,11 @@ export const SchemaTable: React.FC<SchemaTableProps> = ({
   isLoading = false,
 }) => {
   const [showEditModal, setShowEditModal] = React.useState(false);
-  const [showConfirmationDialog, setShowConfirmationDialog] = React.useState(false);
-  const [selectedSchema, setSelectedSchema] = React.useState<Schema | null>(null);
+  const [showConfirmationDialog, setShowConfirmationDialog] =
+    React.useState(false);
+  const [selectedSchema, setSelectedSchema] = React.useState<Schema | null>(
+    null
+  );
   const pages = generatePagination(currentPage, lastPage);
 
   const handleEdit = (schema: Schema) => {
@@ -138,14 +141,19 @@ export const SchemaTable: React.FC<SchemaTableProps> = ({
       <Pagination className="w-full flex justify-between">
         <PaginationContent>
           <PaginationItem>
-            <PaginationPrevious href={currentPage > 1 ? `?page=${currentPage - 1}` : ""} />
+            <PaginationPrevious
+              href={currentPage > 1 ? `?page=${currentPage - 1}` : ""}
+            />
           </PaginationItem>
         </PaginationContent>
         <PaginationContent>
           {pages.map((page, index) => (
             <PaginationItem key={index}>
               {typeof page === "number" ? (
-                <PaginationLink href={`?page=${page}`} isActive={page === currentPage}>
+                <PaginationLink
+                  href={`?page=${page}`}
+                  isActive={page === currentPage}
+                >
                   {page}
                 </PaginationLink>
               ) : (
@@ -156,7 +164,9 @@ export const SchemaTable: React.FC<SchemaTableProps> = ({
         </PaginationContent>
         <PaginationContent>
           <PaginationItem>
-            <PaginationNext href={currentPage < lastPage ? `?page=${currentPage + 1}` : ""} />
+            <PaginationNext
+              href={currentPage < lastPage ? `?page=${currentPage + 1}` : ""}
+            />
           </PaginationItem>
         </PaginationContent>
       </Pagination>
