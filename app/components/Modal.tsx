@@ -35,6 +35,8 @@ const Modal: React.FC<ModalProps> = (props) => {
   return (
     <main className={inter.className}>
       <div
+        role="button"
+        tabIndex={0}
         className={`fixed inset-0 flex justify-center items-center transition-colors ${
           isVisible ? "visible bg-black/50" : "invisible"
         }`}
