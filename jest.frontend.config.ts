@@ -14,6 +14,13 @@ const frontendConfig: Config = {
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
   roots: ['<rootDir>/__test__/frontend'],
   setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
+  moduleNameMapper: {
+    '^@/(.*)$': '<rootDir>/$1',
+  },
+  coveragePathIgnorePatterns: [
+    '/node_modules/',
+    '/components/ui/'
+  ],
 };
 
 export default createJestConfig(frontendConfig);
