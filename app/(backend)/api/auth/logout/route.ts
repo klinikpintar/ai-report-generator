@@ -9,7 +9,7 @@ export async function POST(req: Request) {
     const token = extractToken(authorization);
     await authService.logout(token);
     const response = NextResponse.json({ message: "Logged out" });
-    return authService.putRefreshTokenInCookie(response, "");
+    return authService.putTokenInCookie(response, "", "");
   } catch (error) {
     return (error as ErrorResponse).generate();
   }

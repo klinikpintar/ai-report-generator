@@ -15,7 +15,7 @@ export async function POST(req: Request) {
       data: { access_token: newAccessToken },
       message: "Token refreshed",
     });
-    return authService.putRefreshTokenInCookie(response, newRefreshToken);
+    return authService.putTokenInCookie(response, newAccessToken, newRefreshToken);
   } catch (error) {
     return (error as ErrorResponse).generate();
   }

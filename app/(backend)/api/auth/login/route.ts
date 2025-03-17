@@ -20,7 +20,7 @@ export async function POST(req: Request) {
       message: "Login successful",
       data: { access_token: accessToken },
     });
-    return authService.putRefreshTokenInCookie(response, refreshToken);
+    return authService.putTokenInCookie(response, accessToken, refreshToken);
   } catch (error) {
     return (error as ErrorResponse).generate();
   }
