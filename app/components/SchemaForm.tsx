@@ -31,6 +31,9 @@ const SchemaForm: React.FC<SchemaFormProps> = ({
   onClose,
   clearForm,
 }) => {
+  const platforms = ["PostgreSQL", "MySQL", "MongoDB"];
+  const services = ["Reservasi", "Kesehatan", "Keuangan", "Inventaris"];
+
   return (
     <form className="md:p-10" onSubmit={handleSubmit}>
       <div className="grid gap-4 mb-4 grid-cols-2">
@@ -78,24 +81,15 @@ const SchemaForm: React.FC<SchemaFormProps> = ({
             >
               Pilih Platform
             </option>
-            <option
-              value="PostgreSQL"
-              className="bg-white text-[#00B0EB] text-[16.44px] font-bold"
-            >
-              PostgreSQL
-            </option>
-            <option
-              value="MySQL"
-              className="bg-white text-[#00B0EB] text-[16.44px] font-bold"
-            >
-              MySQL
-            </option>
-            <option
-              value="MongoDB"
-              className="bg-white text-[#00B0EB] text-[16.44px] font-bold"
-            >
-              MongoDB
-            </option>
+            {platforms.map((platform) => (
+              <option
+                key={platform}
+                value={platform}
+                className="bg-white text-[#00B0EB] text-[16.44px] font-bold"
+              >
+                {platform}
+              </option>
+            ))}
           </select>
         </div>
         <div className="col-span-2 sm:col-span-1">
@@ -114,30 +108,15 @@ const SchemaForm: React.FC<SchemaFormProps> = ({
             >
               Pilih Service
             </option>
-            <option
-              value="Reservasi"
-              className="bg-white text-[#00B0EB] text-[16.44px] font-bold"
-            >
-              Reservasi
-            </option>
-            <option
-              value="Kesehatan"
-              className="bg-white text-[#00B0EB] text-[16.44px] font-bold"
-            >
-              Kesehatan
-            </option>
-            <option
-              value="Keuangan"
-              className="bg-white text-[#00B0EB] text-[16.44px] font-bold"
-            >
-              Keuangan
-            </option>
-            <option
-              value="Inventaris"
-              className="bg-white text-[#00B0EB] text-[16.44px] font-bold"
-            >
-              Inventaris
-            </option>
+            {services.map((service) => (
+              <option
+                key={service}
+                value={service}
+                className="bg-white text-[#00B0EB] text-[16.44px] font-bold"
+              >
+                {service}
+              </option>
+            ))}
           </select>
         </div>
         {showFileInput && (

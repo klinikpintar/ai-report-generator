@@ -29,7 +29,6 @@ const EditSchemaModal = ({ isVisible, onClose, schema }: Props) => {
     <Modal
       isVisible={isVisible}
       onClose={onClose}
-      onClearForm={() => {}}
       title={"Edit Skema Database"}
       subtitle="Sesuaikan informasi skema database agar tetap relevan dengan kebutuhan
           sistem"
