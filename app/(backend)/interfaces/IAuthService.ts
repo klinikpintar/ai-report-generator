@@ -7,7 +7,10 @@ export interface Payload {
 }
 
 export interface IAuthService {
-  login(email: string, password: string): Promise<{ accessToken: string }>;
+  login(
+    email: string,
+    password: string
+  ): Promise<{ accessToken: string; refreshToken: string }>;
 
   logout(token: string): Promise<void>;
 
@@ -40,8 +43,13 @@ export interface IAuthService {
   /**
    * Put Refresh Token in Cookie
    * @param response - NextResponse object
-   * @param token - Refresh token
+   * @param accessToken - Access token
+   * @param refreshToken - Refresh token
    * @returns NextResponse object with cookie
    */
-  putRefreshTokenInCookie(response: NextResponse, token: string): NextResponse;
+  putTokenInCookie(
+    response: NextResponse,
+    accessToken: string,
+    refreshToken: string
+  ): NextResponse;
 }
