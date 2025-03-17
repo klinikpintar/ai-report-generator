@@ -89,7 +89,7 @@ export const AddSchemaHook = (
       }
 
       try {
-        const response = await axios.post("/api/schema", {
+        await axios.post("/api/schema", {
           name: formData.name,
           description: formData.description,
           schemaText: formData.schemaText,
@@ -108,7 +108,7 @@ export const AddSchemaHook = (
       if (!initialData) return;
 
       try {
-        const response = await axios.patch("/api/schema", {
+        await axios.patch("/api/schema", {
           id: initialData.id,
           name: formData.name,
           description: formData.description,

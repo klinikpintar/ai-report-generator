@@ -18,7 +18,7 @@ const Schema = () => {
   const [showEditModal, setShowEditModal] = useState(false);
 
   const [schemas, setSchemas] = useState<Schema[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedSchema, setSelectedSchema] = useState<Schema | null>(null);
 
@@ -27,7 +27,7 @@ const Schema = () => {
       try {
         const { data } = await axios.get<Schema[]>("/api/schema");
         setSchemas(data);
-      } catch (err) {
+      } catch {
         setError("Gagal mengambil data skema.");
       } finally {
         setLoading(false);
@@ -55,15 +55,9 @@ const Schema = () => {
           <tbody>
             {schemas.map((schema) => (
               <tr key={schema.id} className="hover:bg-gray-100">
-                <td className="border border-gray-300 px-4 py-2 text-center">
-                  {schema.id}
-                </td>
-                <td className="border border-gray-300 px-4 py-2">
-                  {schema.name}
-                </td>
-                <td className="border border-gray-300 px-4 py-2">
-                  {schema.description}
-                </td>
+                <td className="border border-gray-300 px-4 py-2 text-center">{schema.id}</td>
+                <td className="border border-gray-300 px-4 py-2">{schema.name}</td>
+                <td className="border border-gray-300 px-4 py-2">{schema.description}</td>
                 <td className="border border-gray-300 px-4 py-2 text-center">
                   <button
                     className="px-3 py-1"
@@ -84,10 +78,7 @@ const Schema = () => {
       <div>
         <button onClick={() => setShowAddModal(true)}>Tambah Skema</button>
       </div>
-      <AddSchemaModal
-        isVisible={showAddModal}
-        onClose={() => setShowAddModal(false)}
-      />
+      <AddSchemaModal isVisible={showAddModal} onClose={() => setShowAddModal(false)} />
       <EditSchemaModal
         isVisible={showEditModal}
         onClose={() => setShowEditModal(false)}
