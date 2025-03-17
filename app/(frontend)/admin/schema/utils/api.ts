@@ -1,5 +1,5 @@
-import { dummyPlatforms, dummyServices } from "../constant"
-import { Schema } from "../types"
+import { dummyServices } from "../constant"
+import { Schema, Platform } from "../types"
 
 export interface FetchSchemasParams {
   serviceIds?: number[]
@@ -26,8 +26,9 @@ export async function fetchServices() {
 }
 
 export async function fetchPlatforms() {
-  const platforms = dummyPlatforms
-  return Promise.resolve(platforms)
+  const response = await fetch(`${window.location.origin}/api/schema/platform`);
+  const platforms = await response.json() as Platform[];
+  return platforms;
 }
 
 
