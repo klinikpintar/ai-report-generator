@@ -35,11 +35,10 @@ export default function Bantuan() {
       {isOpen && (
         <div
           ref={modalRef}
-          className="absolute top-8 right-0 w-[380px] bg-white shadow-lg rounded-lg border z-50"
-          style={{ borderColor: "#00B0EB" }}
+          className="absolute top-8 right-0 w-[380px] bg-white shadow-lg rounded-lg border z-50 border-blue-6"
         >
           <div className="p-9 ">
-            <h3 className="text-lg font-bold text-[#00B0EB] text-center">
+            <h3 className="text-lg font-bold text-blue-6 text-center">
               Cara Menggunakan AI Report Generator
             </h3>
 
