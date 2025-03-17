@@ -1,5 +1,4 @@
-import React, { ReactNode } from "react";
-import { MouseEvent } from "react";
+import React, { ReactNode, MouseEvent } from "react";
 import { Inter } from "next/font/google";
 
 const inter = Inter({

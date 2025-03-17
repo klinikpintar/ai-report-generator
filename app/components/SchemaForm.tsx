@@ -38,7 +38,10 @@ const SchemaForm: React.FC<SchemaFormProps> = ({
     <form className="md:p-10" onSubmit={handleSubmit}>
       <div className="grid gap-4 mb-4 grid-cols-2">
         <div className="col-span-2">
-          <label className="block mb-2 text-[14.74px] font-semibold text-gray-900">
+          <label
+            htmlFor="name"
+            className="block mb-2 text-[14.74px] font-semibold text-gray-900"
+          >
             Nama Skema
           </label>
           <input
@@ -53,10 +56,14 @@ const SchemaForm: React.FC<SchemaFormProps> = ({
           />
         </div>
         <div className="col-span-2">
-          <label className="block mb-2 text-[14.74px] font-semibold text-gray-900">
+          <label
+            htmlFor="description"
+            className="block mb-2 text-[14.74px] font-semibold text-gray-900"
+          >
             Deskripsi Skema
           </label>
           <textarea
+            id="description"
             name="description"
             value={formData.description}
             onChange={handleChange}
@@ -66,7 +73,10 @@ const SchemaForm: React.FC<SchemaFormProps> = ({
           ></textarea>
         </div>
         <div className="col-span-2 sm:col-span-1">
-          <label className="block mb-2 text-[14.74px] font-semibold text-gray-900">
+          <label
+            htmlFor="platform"
+            className="block mb-2 text-[14.74px] font-semibold text-gray-900"
+          >
             Platform Skema
           </label>
           <select
@@ -93,7 +103,10 @@ const SchemaForm: React.FC<SchemaFormProps> = ({
           </select>
         </div>
         <div className="col-span-2 sm:col-span-1">
-          <label className="block mb-2 text-[14.74px] font-semibold text-gray-900">
+          <label
+            htmlFor="service"
+            className="block mb-2 text-[14.74px] font-semibold text-gray-900"
+          >
             Service Skema
           </label>
           <select
@@ -121,10 +134,16 @@ const SchemaForm: React.FC<SchemaFormProps> = ({
         </div>
         {showFileInput && (
           <div className="col-span-2">
-            <label className="block mb-2 text-[14.74px] font-semibold text-gray-900">
+            <label
+              htmlFor="dropzone-file"
+              className="block mb-2 text-[14.74px] font-semibold text-gray-900"
+            >
               File Skema
             </label>
-            <label className="flex items-center p-2 justify-center border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-white hover:bg-gray-100">
+            <label
+              htmlFor="dropzone-file"
+              className="flex items-center p-2 justify-center border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-white hover:bg-gray-100"
+            >
               <div className="flex items-center justify-center">
                 <Image
                   aria-hidden
