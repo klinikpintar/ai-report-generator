@@ -4,7 +4,7 @@ import { NextResponse } from 'next/server';
 import { Prisma } from '@prisma/client';
 import { CreateSchemaDto } from '../dtos/schema.dtos';
 
-type AppError = ZodError | Prisma.PrismaClientKnownRequestError | Error;
+type AppError = ZodError | Prisma.PrismaClientKnownRequestError | Error | unknown;
 
 export const validateSchemaInput = (body: unknown) => {
   return CreateSchemaDto.parse(body);
