@@ -55,9 +55,8 @@ export default function Dropdown() {
   return (
     <div className="relative w-72 pt-3 pl-5">
       <button
-        className="w-full text-left flex items-center gap-5 font-bold text-lg"
+        className="w-full text-left flex items-center gap-5 font-bold text-lg text-blue-6"
         onClick={() => setIsOpen(!isOpen)}
-        style={{ color: "#00B0EB" }}
       >
         Select a Service
         <Image
@@ -77,8 +76,7 @@ export default function Dropdown() {
       {/* Dropdown Menu */}
       {isOpen && (
         <div
-          className="absolute w-full mt-2 border rounded-lg bg-white shadow-lg p-3"
-          style={{ borderColor: "#00B0EB" }}
+          className="absolute w-full mt-2 border rounded-lg bg-white shadow-lg p-3 border-blue-6"
         >
           {options.map((option, index) => (
             <label key={index} className="flex items-center space-x-3 py-1">

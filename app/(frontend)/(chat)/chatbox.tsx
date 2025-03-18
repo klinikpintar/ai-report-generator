@@ -7,6 +7,7 @@ import remarkGfm from "remark-gfm";
 import rehypeRaw from "rehype-raw";
 import Dropdown from "./components/dropdown";
 import { useService } from "./context/serviceContext"; // Import context
+import Bantuan from "./components/bantuan";
 
 // Definisikan tipe data pesan
 interface Message {
@@ -98,12 +99,21 @@ export default function ChatBox() {
 
   return (
     <div className="ml-64 flex flex-col h-screen">
-      <Dropdown />
+      <div className="flex justify-between items-center p-4">
+        {/* Container untuk Select a Service */}
+        <div className="flex flex-col">
+          <Dropdown />
+        </div>
+
+        {/* Container untuk Bantuan */}
+        <div className="flex items-center space-x-2">
+        <Bantuan/>
+        </div>
+      </div>
 
       {!hasChatted && (
         <h1
-          className="text-3xl font-bold text-center flex items-center justify-center h-full pb-24"
-          style={{ color: "#00B0EB" }}
+          className="text-3xl font-bold text-center flex items-center justify-center h-full pb-24 text-blue-6"
         >
           Hello, Virgillia Yeala !!
         </h1>
