@@ -5,6 +5,13 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import FeAuthService from "@frontend/login/services/feAuthService"; 
 
+/**
+ * Renders a fixed navigation bar for authenticated users.
+ *
+ * The component displays a navigation bar at the top of the screen with a logo, user profile information, and a logout button.
+ * Upon mounting, it sets a loaded state to ensure that content is only rendered after initialization.
+ * The logout button initiates an asynchronous logout process; on success, it redirects the user to the login page, and on failure, it alerts the user.
+ */
 export default function Navbar() {
   const [isAuthenticated, setIsAuthenticated] = useState(true);
   const email = "virgillia.yeala@ui.ac.id";
