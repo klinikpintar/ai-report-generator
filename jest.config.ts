@@ -8,12 +8,23 @@ const config: Config = {
   collectCoverage: true,
   coverageDirectory: "coverage",
   coverageReporters: ["json", "lcov", "text", "clover"],
-  coveragePathIgnorePatterns: [
-    "/app/config.ts",
-    "/app/services/authService.ts",
+  collectCoverageFrom: [
+    "**/*.{ts,tsx, js, jsx}",
+    "!app/config.ts",
+    "!app/utils/exceptions.ts",
   ],
   moduleNameMapper: {
+    '^@frontend/(.*)$': '<rootDir>/app/(frontend)/$1',
+    '^@backend/(.*)$': '<rootDir>/app/(backend)/$1',
     '^@/(.*)$': '<rootDir>/$1',
+  },
+  coverageThreshold: {
+    global: {
+      branches: 85,
+      functions: 85,
+      lines: 85,
+      statements: 85,
+    },
   },
 };
 

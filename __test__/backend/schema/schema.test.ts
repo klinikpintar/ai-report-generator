@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { StatusCodes } from "http-status-codes";
-import { POST, GET, PATCH, DELETE } from "@/app/api/schema/route";
+import { POST, GET, PATCH, DELETE } from "@backend/api/schema/route";
 import prisma from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
 import { ZodError } from "zod";
@@ -16,8 +16,8 @@ jest.mock("@/lib/prisma", () => ({
   },
 }));
 
-jest.mock("../../../app/utils/schemaUtils", () => {
-  const actual = jest.requireActual("../../../app/utils/schemaUtils");
+jest.mock("@backend/utils/schemaUtils", () => {
+  const actual = jest.requireActual("@backend/utils/schemaUtils");
 
   return {
     ...actual,

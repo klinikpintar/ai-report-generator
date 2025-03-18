@@ -14,20 +14,14 @@ datasource db {
 }
 
 model User {
-  id       String  @id @default(uuid()) @db.Uuid
-  email    String  @unique @db.VarChar(255)
-  password String  @db.VarChar(255)
-  name     String  @db.VarChar(255)
-  isActive Boolean @default(true)
-  role     Role    @default(BUSINESS_ANALYST)
-}
+  id        String  @id @default(uuid()) @db.Uuid
+  email     String  @unique @db.VarChar(255)
+  password  String  @db.VarChar(255)
+  name      String  @db.VarChar(255)
+  isActive  Boolean @default(true)
+  role      Role    @default(BUSINESS_ANALYST)
 
-model Schema {
-  id          Int      @id @default(autoincrement())
-  name        String   @unique
-  description String
-  schemaText  String
-  createdAt   DateTime @default(now())
+  refreshToken RefreshToken?
 }
 
 enum Role {
@@ -36,8 +30,17 @@ enum Role {
 }
 
 model RefreshToken {
-  userId String @db.Uuid
-  token  String @unique @db.VarChar(255)
+  userId    String  @db.Uuid @unique
+  token     String  @unique @db.VarChar(255)
 
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade) 
   @@id([userId, token])
+}
+
+model Schema {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  description String
+  schemaText  String
+  createdAt   DateTime @default(now())
 }
