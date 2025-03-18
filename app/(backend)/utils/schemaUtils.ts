@@ -4,11 +4,13 @@ import { NextResponse } from 'next/server';
 import { Prisma } from '@prisma/client';
 import { CreateSchemaDto } from '../dtos/schema.dtos';
 
+type AppError = ZodError | Prisma.PrismaClientKnownRequestError | Error;
+
 export const validateSchemaInput = (body: unknown) => {
   return CreateSchemaDto.parse(body);
 }
 
-export const handleError = (error: any, context: string) => {
+export const handleError = (error: AppError, context: string) => {
   if (error instanceof ZodError) {
     return NextResponse.json(
       { error: `${context}: Invalid input`, details: error.errors },
