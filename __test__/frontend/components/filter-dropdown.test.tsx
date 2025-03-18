@@ -2,7 +2,7 @@ import "@testing-library/jest-dom";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useState } from "react";
-import { Filterable, FilterDropdown } from "@/components/ui/filter-dropdown";
+import { Filterable, FilterDropdown } from "@frontend/components/filter-dropdown";
 
 interface TestItem extends Filterable {
   name: string;
@@ -10,9 +10,9 @@ interface TestItem extends Filterable {
 }
 
 const testItems: TestItem[] = [
-  { id: "1", name: "Item 1", value: 100 },
-  { id: "2", name: "Item 2", value: 200 },
-  { id: "3", name: "Item 3", value: 300 },
+  { id: 1, name: "Item 1", value: 100 },
+  { id: 2, name: "Item 2", value: 200 },
+  { id: 3, name: "Item 3", value: 300 },
 ];
 
 const FilterDropdownWrapper = () => {
@@ -60,7 +60,7 @@ describe("FilterDropdown Component", () => {
     await user.click(screen.getByText("Filter Items"));
     await user.click(screen.getByText("Item 2"));
 
-    expect(screen.getByText("Item 2")).toHaveAttribute("aria-checked", "true");
+    expect(screen.getByText("Item 2")).toBeChecked();
   });
 
   it("should deselect an item when clicked again", async () => {
@@ -70,7 +70,7 @@ describe("FilterDropdown Component", () => {
     await user.click(screen.getByText("Item 1"));
     await user.click(screen.getByText("Item 1"));
 
-    expect(screen.getByText("Item 1")).not.toHaveAttribute("aria-checked", "true");;
+    expect(screen.getByText("Item 1")).not.toBeChecked();;
   });
 
   it('should select all items when "Select All" is clicked', async () => {
@@ -79,9 +79,9 @@ describe("FilterDropdown Component", () => {
     await user.click(screen.getByText("Filter Items"));
     await user.click(screen.getByText("Select All"));
 
-    expect(screen.getByText("Item 1")).toHaveAttribute("aria-checked", "true");
-    expect(screen.getByText("Item 2")).toHaveAttribute("aria-checked", "true");
-    expect(screen.getByText("Item 3")).toHaveAttribute("aria-checked", "true");
+    expect(screen.getByText("Item 1")).toBeChecked();
+    expect(screen.getByText("Item 2")).toBeChecked();
+    expect(screen.getByText("Item 3")).toBeChecked();
   });
 
   it('should deselect all items when "Select All" is clicked again', async () => {
@@ -91,9 +91,9 @@ describe("FilterDropdown Component", () => {
     await user.click(screen.getByText("Select All"));
     await user.click(screen.getByText("Select All"));
 
-    expect(screen.getByText("Item 1")).not.toHaveAttribute("aria-checked", "true");;
-    expect(screen.getByText("Item 2")).not.toHaveAttribute("aria-checked", "true");;
-    expect(screen.getByText("Item 3")).not.toHaveAttribute("aria-checked", "true");;
+    expect(screen.getByText("Item 1")).not.toBeChecked();;
+    expect(screen.getByText("Item 2")).not.toBeChecked();;
+    expect(screen.getByText("Item 3")).not.toBeChecked();;
   });
 
   it("should handle empty items array", async () => {
