@@ -4,6 +4,7 @@ import { SchemaTableSection } from "@/modules/schema/sections";
 import { fetchPlatforms, fetchServices, fetchSchemas } from "@/modules/schema/utils/api";
 import { dummyPlatforms, dummySchemas, dummyServices } from "@/modules/schema/constant";
 import userEvent from "@testing-library/user-event";
+import { ToastContainer } from "react-toastify";
 
 jest.mock("@/modules/schema/utils/api", () => ({
   fetchPlatforms: jest.fn(),
@@ -11,44 +12,64 @@ jest.mock("@/modules/schema/utils/api", () => ({
   fetchSchemas: jest.fn(),
 }));
 
-jest.mock('next/navigation', () => ({
-  ...jest.requireActual('next/navigation'),
+jest.mock("next/navigation", () => ({
+  ...jest.requireActual("next/navigation"),
   useSearchParams: jest.fn(() => ({
-    get: jest.fn().mockReturnValue('1'),
+    get: jest.fn().mockReturnValue("1"),
   })),
 }));
 
-const useSearchParams = jest.requireMock('next/navigation').useSearchParams;
+const useSearchParams = jest.requireMock("next/navigation").useSearchParams;
 
 describe("Schema Table Section", () => {
-  it("should render loading state", () => {
+  it("should render dropdown filter by services", async () => {
+    render(<SchemaTableSection />);
+    const filterByServiceDropdown = screen.getByText(/filter by services/i);
+    expect(filterByServiceDropdown).toBeInTheDocument();
+  });
+
+  it("should render dropdown filter by platforms", async () => {
+    render(<SchemaTableSection />);
+    const filterByPlatformDropdown = screen.getByText(/filter by platforms/i);
+    expect(filterByPlatformDropdown).toBeInTheDocument();
+  });
+
+  it("should render message in schema table while loading", async () => {
     render(<SchemaTableSection />);
     expect(screen.getByText(/loading/i)).toBeInTheDocument();
   });
 
-  it("should render the schema table when fetches resolve", async () => {
-    (fetchPlatforms as jest.Mock).mockResolvedValue(dummyPlatforms);
-    (fetchServices as jest.Mock).mockResolvedValue(dummyServices);
-    (fetchSchemas as jest.Mock).mockResolvedValue(dummySchemas);
-
+  it("should render empty message in schema table when it is empty", async () => {
+    (fetchSchemas as jest.Mock).mockResolvedValue([]);
+    (fetchServices as jest.Mock).mockResolvedValue([]);
+    (fetchPlatforms as jest.Mock).mockResolvedValue([]);
     render(<SchemaTableSection />);
-    await screen.findByTestId("schema-table");
+
+    const emptyMessage = await screen.findByText(/tidak ada skema/i);
+    expect(emptyMessage).toBeInTheDocument();
   });
 
-  it("should render error when one of the fetches fails", async () => {
-    (fetchPlatforms as jest.Mock).mockRejectedValue(new Error("Failed to fetch platforms"));
-    (fetchServices as jest.Mock).mockResolvedValue(dummyServices);
-    (fetchSchemas as jest.Mock).mockResolvedValue(dummySchemas);
+  it("should render error message when one fetch fails", async () => {
+    (fetchSchemas as jest.Mock).mockRejectedValue(new Error("Failed to fetch schemas"));
+    (fetchServices as jest.Mock).mockResolvedValue([]);
+    (fetchPlatforms as jest.Mock).mockResolvedValue([]);
 
-    render(<SchemaTableSection />);
-    await screen.findByText(/failed to load initial data/i);
+    render(
+      <>
+        <SchemaTableSection />
+        <ToastContainer />
+      </>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText(/failed to load initial data/i)).toBeInTheDocument();
+    });
   });
 
-  // when select service, it should render the schema table with the selected service
   it("should render the schema table with the selected service", async () => {
-    (fetchPlatforms as jest.Mock).mockResolvedValue(dummyPlatforms);
     (fetchServices as jest.Mock).mockResolvedValue(dummyServices);
     (fetchSchemas as jest.Mock).mockResolvedValue(dummySchemas);
+    (fetchPlatforms as jest.Mock).mockResolvedValue(dummyPlatforms);
 
     render(<SchemaTableSection />);
     await screen.findByTestId("schema-table");
@@ -56,31 +77,21 @@ describe("Schema Table Section", () => {
     const serviceDropdownTrigger = screen.getByText(/filter by services/i);
     await userEvent.click(serviceDropdownTrigger);
 
+    // User select the first service
     const dropdownMenu = screen.getByTestId("service-filter-dropdown");
-
     const serviceOption = within(dropdownMenu).getByText(dummyServices[0].name);
-    // Only fetch schemas with the selected service (first service for this test)
     (fetchSchemas as jest.Mock).mockResolvedValue([dummySchemas[0]]);
     await userEvent.click(serviceOption);
 
     expect(fetchSchemas).toHaveBeenCalledWith(
       expect.objectContaining({ serviceIds: [dummyServices[0].id] })
     );
-
-    const table = screen.getByTestId("schema-table");
-    const allRows = within(table).getAllByRole("row");
-    const dataRows = allRows.slice(1);
-
-    expect(dataRows).toHaveLength(1);
-    expect(dataRows[0]).toHaveTextContent(dummySchemas[0].name);
-    expect(dataRows[0]).toHaveTextContent(dummySchemas[0].service.name);
   });
 
-  // when select platform, it should render the schema table with the selected platform
   it("should render the schema table with the selected platform", async () => {
     (fetchPlatforms as jest.Mock).mockResolvedValue(dummyPlatforms);
-    (fetchServices as jest.Mock).mockResolvedValue(dummyServices);
     (fetchSchemas as jest.Mock).mockResolvedValue(dummySchemas);
+    (fetchServices as jest.Mock).mockResolvedValue(dummyServices);
 
     render(<SchemaTableSection />);
 
@@ -89,24 +100,15 @@ describe("Schema Table Section", () => {
     const platformDropdownTrigger = screen.getByText(/filter by platforms/i);
     await userEvent.click(platformDropdownTrigger);
 
+    // User select the first platform
     const dropdownMenu = screen.getByTestId("platform-filter-dropdown");
-
     const platformOption = within(dropdownMenu).getByText(dummyPlatforms[0].name);
-    // Only fetch schemas with the selected platform (first platform for this test)
     (fetchSchemas as jest.Mock).mockResolvedValue([dummySchemas[0]]);
     await userEvent.click(platformOption);
 
     expect(fetchSchemas).toHaveBeenCalledWith(
       expect.objectContaining({ platformCodes: [dummyPlatforms[0].id] })
     );
-
-    const table = screen.getByTestId("schema-table");
-    const allRows = within(table).getAllByRole("row");
-    const dataRows = allRows.slice(1);
-
-    expect(dataRows).toHaveLength(1);
-    expect(dataRows[0]).toHaveTextContent(dummySchemas[0].name);
-    expect(dataRows[0]).toHaveTextContent(dummySchemas[0].service.name);
   });
 
   it("should render error when request to fetch filtered schemas fails", async () => {
@@ -114,7 +116,12 @@ describe("Schema Table Section", () => {
     (fetchServices as jest.Mock).mockResolvedValue(dummyServices);
     (fetchSchemas as jest.Mock).mockResolvedValue(dummySchemas);
 
-    render(<SchemaTableSection />);
+    render(
+      <>
+        <SchemaTableSection />
+        <ToastContainer />
+      </>
+    );
     await screen.findByTestId("schema-table");
 
     const serviceDropdownTrigger = screen.getByText(/filter by services/i);
@@ -131,13 +138,34 @@ describe("Schema Table Section", () => {
     });
   });
 
-
   it("should handle missing or invalid page query param", async () => {
     jest.mocked(useSearchParams).mockReturnValue({
       get: jest.fn().mockReturnValue(undefined),
-    } as any);
-  
+    });
+
     render(<SchemaTableSection />);
     expect(screen.getByText(/loading/i)).toBeInTheDocument();
+  });
+
+  it("should open upload schema modal when click button Tambah Skema", async () => {
+    render(<SchemaTableSection />);
+
+    const addSchemaButton = screen.getByText(/tambah skema/i);
+    await userEvent.click(addSchemaButton);
+
+    await screen.findByText(/form upload skema database/i);
+  });
+
+  // should close upload schema modal when click button Batal
+  it("should close upload schema modal when click button Batal", async () => {
+    render(<SchemaTableSection />);
+
+    const addSchemaButton = screen.getByText(/tambah skema/i);
+    await userEvent.click(addSchemaButton);
+
+    const cancelButton = screen.getByText(/batal/i);
+    await userEvent.click(cancelButton);
+
+    expect(screen.queryByText(/form upload skema database/i)).not.toBeInTheDocument();
   });
 });

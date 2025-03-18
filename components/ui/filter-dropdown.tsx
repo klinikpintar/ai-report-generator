@@ -13,11 +13,10 @@ import { ChevronDown } from "lucide-react";
 import { useState } from "react";
 
 export interface Filterable {
-  id: string;
-  [key: string]: any;
+  id: number;
 }
 
-interface FilterDropdownProps<T extends { id: string; [key: string]: any }> {
+interface FilterDropdownProps<T extends Filterable> {
   items: T[];
   selectedItems: T[];
   onSelectionChange: (items: T[]) => void;

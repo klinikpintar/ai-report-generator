@@ -7,6 +7,8 @@ import { ServiceFilter, PlatformFilter, SchemaTable } from "@/modules/schema/mod
 import { fetchPlatforms, fetchSchemas, fetchServices } from "@/modules/schema/utils/api";
 import { Platform, Schema, Service } from "@/modules/schema/types";
 import { Button } from "@/components/ui/button";
+import AddSchemaModal from "@/app/components/AddSchemaModal";
+import { toast } from "react-toastify";
 
 export const SchemaTableSection = () => {
   const [schemas, setSchemas] = useState<Schema[]>([]);
@@ -14,16 +16,17 @@ export const SchemaTableSection = () => {
   const [platforms, setPlatforms] = useState<Platform[]>([]);
   const [selectedServices, setSelectedServices] = useState<Service[]>([]);
   const [selectedPlatforms, setSelectedPlatforms] = useState<Platform[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>("");
+  const [isLoading, setLoading] = useState(true);
 
-  // get current page from query params (page=1)
+  const [showAddModal, setShowAddModal] = useState(false);
+
   const searchParam = useSearchParams();
   const currentPage = parseInt(searchParam.get("page") || "1", 10);
 
   useEffect(() => {
     const loadInitialData = async () => {
       try {
+        setLoading(true);
         const [allSchemas, allServices, allPlatforms] = await Promise.all([
           fetchSchemas(),
           fetchServices(),
@@ -33,7 +36,7 @@ export const SchemaTableSection = () => {
         setServices(allServices);
         setPlatforms(allPlatforms);
       } catch {
-        setError("Failed to load initial data");
+        toast.error("Failed to load initial data");
       } finally {
         setLoading(false);
       }
@@ -52,7 +55,7 @@ export const SchemaTableSection = () => {
         const filteredSchemas = await fetchSchemas(params);
         setSchemas(filteredSchemas);
       } catch {
-        setError("Failed to fetch filtered schemas");
+        toast.error("Failed to fetch filtered schemas");
       } finally {
         setLoading(false);
       }
@@ -62,14 +65,6 @@ export const SchemaTableSection = () => {
       fetchFilteredSchemas();
     }
   }, [selectedServices, selectedPlatforms, services, platforms]);
-
-  if (loading) {
-    return <div>Loading...</div>;
-  }
-
-  if (error) {
-    return <div>{error}</div>;
-  }
 
   return (
     <>
@@ -85,13 +80,21 @@ export const SchemaTableSection = () => {
           onSelectionChange={setSelectedPlatforms}
         />
       </div>
-      <SchemaTable schemas={schemas} currentPage={currentPage} lastPage={10} />
+      <SchemaTable schemas={schemas} currentPage={currentPage} lastPage={1} isLoading={isLoading} />
 
       <div className="flex justify-center">
-        <Button size="lg" className="mr-2 bg-[#00B0EB] hover:bg-[#00B0EB]/90">
+        <Button
+          size="lg"
+          onClick={() => setShowAddModal(true)}
+          className="mr-2 bg-[#00B0EB] hover:bg-[#00B0EB]/90"
+        >
           Tambah Skema
         </Button>
       </div>
+
+      {showAddModal && (
+        <AddSchemaModal isVisible={showAddModal} onClose={() => setShowAddModal(false)} />
+      )}
     </>
   );
 };

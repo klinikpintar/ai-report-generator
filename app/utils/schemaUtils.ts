@@ -4,7 +4,7 @@ import { NextResponse } from 'next/server';
 import { Prisma } from '@prisma/client';
 import { CreateSchemaDto } from '../api/dtos/schema.dtos';
 
-export const validateSchemaInput = (body: any) => {
+export const validateSchemaInput = (body: unknown) => {
   return CreateSchemaDto.parse(body);
 }
 

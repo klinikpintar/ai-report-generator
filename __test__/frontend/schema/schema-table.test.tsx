@@ -1,23 +1,30 @@
 import { SchemaTable } from "@/modules/schema/module-elements";
 import { Schema } from "@/modules/schema/types";
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { ToastContainer } from "react-toastify";
+import { deleteSchema } from "@/modules/schema/utils/api";
+
+jest.mock("@/modules/schema/utils/api", () => ({
+  deleteSchema: jest.fn(),
+}));
 
 // Mock data for testing
 const mockSchemas: Schema[] = [
   {
-    id: "1",
+    id: 1,
     name: "Schema A",
     description: "Schema A description",
     schemaText: "Schema A text",
     createdAt: new Date(),
     modifiedAt: new Date(),
     service: {
-      id: "1",
+      id: 1,
       name: "Service A",
       createdAt: new Date(),
       modifiedAt: new Date(),
       platform: {
-        id: "1",
+        id: 1,
         name: "Platform A",
         img_url: "https://via.placeholder.com/150",
         createdAt: new Date(),
@@ -26,19 +33,19 @@ const mockSchemas: Schema[] = [
     },
   },
   {
-    id: "2",
+    id: 2,
     name: "Schema B",
     description: "Schema B description",
     schemaText: "Schema B text",
     createdAt: new Date(),
     modifiedAt: new Date(),
     service: {
-      id: "2",
+      id: 2,
       name: "Service B",
       createdAt: new Date(),
       modifiedAt: new Date(),
       platform: {
-        id: "2",
+        id: 2,
         name: "Platform B",
         img_url: "https://via.placeholder.com/150",
         createdAt: new Date(),
@@ -51,19 +58,19 @@ const mockSchemas: Schema[] = [
 describe("SchemaTable Component", () => {
   it("should render the table columns correctly", () => {
     render(<SchemaTable schemas={mockSchemas} />);
+    const schemaTable = screen.getByTestId("schema-table");
+    const headerRow = within(schemaTable).getAllByRole("row")[0];
 
-    // Check if the table headers are rendered
-    expect(screen.getByText("Nama Skema")).toBeInTheDocument();
-    expect(screen.getByText("Platform")).toBeInTheDocument();
-    expect(screen.getByText("Service")).toBeInTheDocument();
-    expect(screen.getAllByText("File")[0]).toBeInTheDocument();
-    expect(screen.getByText("Aksi")).toBeInTheDocument();
+    expect(within(headerRow).getByText("Nama Skema")).toBeInTheDocument();
+    expect(within(headerRow).getByText("Platform")).toBeInTheDocument();
+    expect(within(headerRow).getByText("Service")).toBeInTheDocument();
+    expect(within(headerRow).getAllByText("File")[0]).toBeInTheDocument();
+    expect(within(headerRow).getByText("Aksi")).toBeInTheDocument();
   });
 
   it("should render the table data correctly", () => {
     render(<SchemaTable schemas={mockSchemas} />);
 
-    // Check if the schema data is rendered
     expect(screen.getByText("Schema A")).toBeInTheDocument();
     expect(screen.getByText("Platform A")).toBeInTheDocument();
     expect(screen.getByText("Service A")).toBeInTheDocument();
@@ -78,7 +85,6 @@ describe("SchemaTable Component", () => {
     const lastPage = 5;
     render(<SchemaTable schemas={mockSchemas} currentPage={currentPage} lastPage={lastPage} />);
 
-    // Check if pagination is rendered
     expect(screen.getByText("1")).toBeInTheDocument();
     expect(screen.getByText("2")).toBeInTheDocument();
     expect(screen.getByText("3")).toBeInTheDocument();
@@ -90,7 +96,6 @@ describe("SchemaTable Component", () => {
   it("should handle empty schemas array gracefully", () => {
     render(<SchemaTable schemas={[]} />);
 
-    // Should render empty message, insensitive case to the message content
     expect(screen.getByText(/tidak ada skema yang ditemukan/i)).toBeInTheDocument();
   });
 
@@ -100,7 +105,6 @@ describe("SchemaTable Component", () => {
     const lastPage = 10;
     render(<SchemaTable schemas={mockSchemas} currentPage={currentPage} lastPage={lastPage} />);
 
-    // Check if ellipsis is rendered
     expect(screen.getByText("1")).toBeInTheDocument();
     expect(screen.getAllByText("...")[0]).toBeInTheDocument();
     expect(screen.getByText("4")).toBeInTheDocument();
@@ -115,7 +119,6 @@ describe("SchemaTable Component", () => {
     const lastPage = 10;
     render(<SchemaTable schemas={mockSchemas} currentPage={currentPage} lastPage={lastPage} />);
 
-    // Check if pagination is rendered correctly for the first page
     expect(screen.getByText("1")).toBeInTheDocument();
     expect(screen.getByText("2")).toBeInTheDocument();
     expect(screen.getByText("3")).toBeInTheDocument();
@@ -128,7 +131,6 @@ describe("SchemaTable Component", () => {
     const lastPage = 10;
     render(<SchemaTable schemas={mockSchemas} currentPage={currentPage} lastPage={lastPage} />);
 
-    // Check if pagination is rendered correctly for the last page
     expect(screen.getByText("1")).toBeInTheDocument();
     expect(screen.getByText("...")).toBeInTheDocument();
     expect(screen.getByText("8")).toBeInTheDocument();
@@ -141,8 +143,84 @@ describe("SchemaTable Component", () => {
     const lastPage = 5;
     render(<SchemaTable schemas={mockSchemas} currentPage={currentPage} lastPage={lastPage} />);
 
-    // Check if next and previous buttons are rendered
     expect(screen.getByText(/sebelumnya/i)).toBeInTheDocument();
     expect(screen.getByText(/selanjutnya/i)).toBeInTheDocument();
+  });
+
+  it("should open edit schema modal when edit button is clicked", async () => {
+    render(<SchemaTable schemas={mockSchemas} />);
+    const editButton = screen.getAllByText(/Edit/i)[0];
+
+    await userEvent.click(editButton);
+    expect(screen.getByText(/Edit Skema Database/i)).toBeInTheDocument();
+  });
+
+  it("should close edit schema modal when close button is clicked", async () => {
+    render(<SchemaTable schemas={mockSchemas} />);
+    const editButton = screen.getAllByText(/Edit/i)[0];
+
+    await userEvent.click(editButton);
+    const closeButton = screen.getByText(/Batal/i);
+
+    await userEvent.click(closeButton);
+    expect(screen.queryByText(/Edit Skema Database/i)).not.toBeInTheDocument();
+  });
+
+  it("should open confirmation dialog when delete button is clicked", async () => {
+    render(<SchemaTable schemas={mockSchemas} />);
+    const deleteButton = screen.getAllByText(/Hapus/i)[0];
+
+    await userEvent.click(deleteButton);
+    expect(screen.getByText(/Apakah Anda yakin ingin menghapus skema ini?/i)).toBeInTheDocument();
+  });
+
+  it("should close confirmation dialog when cancel button is clicked", async () => {
+    render(<SchemaTable schemas={mockSchemas} />);
+    const deleteButton = screen.getAllByText(/Hapus/i)[0];
+
+    await userEvent.click(deleteButton);
+    const cancelButton = screen.getByText(/Batal/i);
+
+    await userEvent.click(cancelButton);
+    expect(screen.queryByText(/Apakah Anda yakin ingin menghapus skema ini?/i)).not.toBeInTheDocument();
+  });
+
+  it("should render success message when schema is deleted", async () => {
+    (deleteSchema as jest.Mock).mockResolvedValueOnce({ ok: true });
+
+    render(
+      <>
+        <SchemaTable schemas={mockSchemas} />
+        <ToastContainer />
+      </>
+    );
+    const deleteButton = screen.getAllByText(/Hapus/i)[0];
+
+    await userEvent.click(deleteButton);
+    const confirmButton = screen.getByText(/Konfirmasi/i);
+
+    await userEvent.click(confirmButton);
+
+    await waitFor(() => {
+      expect(screen.getByText(/Skema berhasil dihapus/i)).toBeInTheDocument();
+    });
+  });
+
+  it("should render error message when schema deletion fails", async () => {
+    (deleteSchema as jest.Mock).mockResolvedValueOnce({ ok: false });
+    render(
+      <>
+        <SchemaTable schemas={mockSchemas} />
+        <ToastContainer />
+      </>
+    );
+    const deleteButton = screen.getAllByText(/Hapus/i)[0];
+
+    await userEvent.click(deleteButton);
+    const confirmButton = screen.getByText(/Konfirmasi/i);
+
+    await userEvent.click(confirmButton);
+
+    expect(screen.getByText(/Gagal menghapus skema/i)).toBeInTheDocument();
   });
 });
