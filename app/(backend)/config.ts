@@ -1,6 +1,4 @@
-import dotenv from "dotenv";
 import { timeConvertMs } from './utils/authUtils';
-dotenv.config();
 
 const config = {
   JWT_ACCESS_SECRET: process.env.JWT_ACCESS_SECRET ?? "access_secret",
