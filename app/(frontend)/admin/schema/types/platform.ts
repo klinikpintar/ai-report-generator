@@ -1,6 +1,6 @@
-import { BaseModel } from "./base-model";
 
-export interface Platform extends BaseModel{
+export interface Platform{
+  id: number;
   name: string;
-  img_url: string;
+  color: string;
 }

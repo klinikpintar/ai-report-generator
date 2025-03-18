@@ -4,24 +4,18 @@ import { Platform, Schema, Service } from "./types"
 export const dummyPlatforms: Platform[] = [
   {
     id: 1,
-    createdAt: new Date(),
-    modifiedAt: new Date(),
     name: "PostgreSQL",
-    img_url: "https://static-00.iconduck.com/assets.00/postgresql-icon-1987x2048-v2fkmdaw.png",
+    color: "#013F59",
   },
   {
     id: 2,
-    createdAt: new Date(),
-    modifiedAt: new Date(),
     name: "MySQL",
-    img_url: "https://www.svgrepo.com/show/303251/mysql-logo.svg",
+    color: "#FF9500",
   },
   {
     id: 3,
-    createdAt: new Date(),
-    modifiedAt: new Date(),
     name: "MongoDB",
-    img_url: "https://www.vectorlogo.zone/logos/mongodb/mongodb-icon.svg",
+    color: "#009951",
   }
 ];
 

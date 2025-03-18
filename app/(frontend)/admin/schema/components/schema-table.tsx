@@ -26,6 +26,7 @@ import EditSchemaModal from "./EditSchemaModal";
 import { deleteSchema } from "../utils/api";
 import { ConfirmationDialog } from "./confirmation-dialog";
 import { toast } from "react-toastify";
+import Modal from "@frontend/components/Modal";
 
 type SchemaTableProps = {
   schemas: Schema[];
@@ -42,30 +43,28 @@ export const SchemaTable: React.FC<SchemaTableProps> = ({
   isLoading = false,
   onFinishedAction = () => {},
 }) => {
-  const [showEditModal, setShowEditModal] = React.useState(false);
-  const [showConfirmationDialog, setShowConfirmationDialog] = React.useState(false);
-  const [selectedSchema, setSelectedSchema] = React.useState<Schema | null>(null);
+  const [schemaToEdit, setSchemaToEdit] = React.useState<Schema | null>(null);
+  const [schemaToDelete, setSchemaToDelete] = React.useState<Schema | null>(null);
+  const [schemaToRead, setSchemaToRead] = React.useState<Schema | null>(null);
   const pages = generatePagination(currentPage, lastPage);
 
   const handleOpenEditModal = (schema: Schema) => {
-    setSelectedSchema(schema);
-    setShowEditModal(true);
+    setSchemaToEdit(schema);
   };
 
   const handleCloseEditModal = () => {
-    setShowEditModal(false);
+    setSchemaToEdit(null);
     onFinishedAction();
-  }
+  };
 
-  const handleDelete = (schema: Schema) => {
-    setSelectedSchema(schema);
-    setShowConfirmationDialog(true);
+  const handleOpenDeleteModal = (schema: Schema) => {
+    setSchemaToDelete(schema);
   };
 
   const handleConfirmDelete = async () => {
     try {
-      if (!selectedSchema) return;
-      const response = await deleteSchema(selectedSchema.id);
+      if (!schemaToDelete) return;
+      const response = await deleteSchema(schemaToDelete.id);
       if (response.ok) {
         toast.success("Skema berhasil dihapus");
       } else {
@@ -74,8 +73,20 @@ export const SchemaTable: React.FC<SchemaTableProps> = ({
     } catch {
       toast.error("Gagal menghapus skema");
     }
-    setShowConfirmationDialog(false);
+    handleCloseDeleteModal();
     onFinishedAction();
+  };
+
+  const handleCloseDeleteModal = () => {
+    setSchemaToDelete(null);
+  };
+
+  const handleOpenReadModal = async (schema: Schema) => {
+    setSchemaToRead(schema);
+  };
+
+  const handleCloseReadModal = async () => {
+    setSchemaToRead(null);
   };
 
   return (
@@ -98,48 +109,52 @@ export const SchemaTable: React.FC<SchemaTableProps> = ({
               </TableCell>
             </TableRow>
           )}
-          {schemas.map((schema) => (
-            <TableRow key={schema.id}>
-              <TableCell>{schema.name}</TableCell>
-              <TableCell className="px-2">
-                <Chip variant="orange" className="w-full cursor-default">
-                  {schema.service!.platform.name}
-                </Chip>
-              </TableCell>
-              <TableCell className="px-2">
-                <Chip variant="pink" className="w-full cursor-default">
-                  {schema.service!.name}
-                </Chip>
-              </TableCell>
-              <TableCell>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="text-[#00B0EB] hover:text-[#00B0EB]/90"
-                >
-                  <FileIcon className="h-4 w-4 mr-1" />
-                  File
-                </Button>
-              </TableCell>
-              <TableCell className="text-right">
-                <Button
-                  size="sm"
-                  onClick={() => handleOpenEditModal(schema)}
-                  className="mr-2 bg-[#00B0EB] hover:bg-[#00B0EB]/90"
-                >
-                  Edit
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleDelete(schema)}
-                  className="text-red-500 hover:text-red-700 border-red-500 border-2"
-                >
-                  Hapus
-                </Button>
-              </TableCell>
-            </TableRow>
-          ))}
+          {schemas.map((schema) => {
+            const platform = schema.service!.platform;
+            return (
+              <TableRow key={schema.id}>
+                <TableCell>{schema.name}</TableCell>
+                <TableCell className="px-2">
+                  <Chip
+                    variant="default"
+                    className="w-full cursor-default text-white"
+                    style={{ backgroundColor: platform.color }}
+                  >
+                    {platform.name}
+                  </Chip>
+                </TableCell>
+                <TableCell className="px-2">{schema.service!.name}</TableCell>
+                <TableCell>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleOpenReadModal(schema)}
+                    className="text-[#00B0EB] hover:text-[#00B0EB]/90"
+                  >
+                    <FileIcon className="h-4 w-4 mr-1" />
+                    File
+                  </Button>
+                </TableCell>
+                <TableCell>
+                  <Button
+                    size="sm"
+                    onClick={() => handleOpenEditModal(schema)}
+                    className="mr-2 bg-[#00B0EB] hover:bg-[#00B0EB]/90"
+                  >
+                    Edit
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleOpenDeleteModal(schema)}
+                    className="text-red-500 hover:text-red-700 border-red-500 border-2"
+                  >
+                    Hapus
+                  </Button>
+                </TableCell>
+              </TableRow>
+            );
+          })}
         </TableBody>
       </Table>
 
@@ -169,27 +184,41 @@ export const SchemaTable: React.FC<SchemaTableProps> = ({
         </PaginationContent>
       </Pagination>
 
-      {showEditModal && (
-        <EditSchemaModal
-          isVisible={showEditModal}
-          onClose={handleCloseEditModal}
-          schema={{
-            id: selectedSchema!.id,
-            name: selectedSchema!.name,
-            description: selectedSchema!.description || "",
-            schemaText: selectedSchema!.schemaText,
-            fileName: selectedSchema!.name,
-          }}
-        />
-      )}
-
       <ConfirmationDialog
-        isOpen={showConfirmationDialog}
-        onClose={() => setShowConfirmationDialog(false)}
+        isOpen={schemaToDelete !== null}
+        onClose={handleCloseDeleteModal}
         onConfirm={handleConfirmDelete}
         title="Hapus Skema"
         description="Apakah Anda yakin ingin menghapus skema ini?"
       />
+
+      {schemaToEdit && (
+        <EditSchemaModal
+          isVisible={schemaToEdit !== null}
+          onClose={handleCloseEditModal}
+          schema={{
+            id: schemaToEdit.id,
+            name: schemaToEdit.name,
+            description: schemaToEdit.description || "",
+            schemaText: schemaToEdit.schemaText,
+            fileName: schemaToEdit.name,
+          }}
+        />
+      )}
+
+      {schemaToRead && (
+        <Modal
+          title={schemaToRead.name}
+          subtitle=""
+          onClose={handleCloseReadModal}
+          isVisible={schemaToRead !== null}
+          onClearForm={() => {}}
+        >
+          <div className="p-8">
+            <code className="block h-[500px] overflow-y-scroll">{schemaToRead.schemaText}</code>
+          </div>
+        </Modal>
+      )}
     </div>
   );
 };

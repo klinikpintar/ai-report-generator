@@ -10,7 +10,7 @@ export default function Layout({ children }: LayoutProps) {
   return (
     <main className="min-h-screen bg-gray-100">
       <ServiceProvider>
-        <div className="h-screen overflow-hidden flex flex-col bg-white">
+        <div className="h-screen overflow-hidden flex flex-col bg-white pt-[72px]">
           <Navbar />
           {children}
         </div>

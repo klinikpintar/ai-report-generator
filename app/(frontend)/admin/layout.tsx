@@ -4,7 +4,7 @@ import Navbar from "../components/navbar";
 const Layout = ({ children }: { children: React.ReactNode }) => {
   return (
     <main className="min-h-screen bg-gray-100">
-      <div className="h-screen overflow-hidden flex flex-col bg-white">
+      <div className="flex flex-col bg-white pt-[72px]">
         <Navbar />
         <Suspense fallback={<div>Loading...</div>}>{children}</Suspense>
       </div>
