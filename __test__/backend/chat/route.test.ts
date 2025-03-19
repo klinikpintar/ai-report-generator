@@ -372,6 +372,48 @@ describe('Schema context enhancement', () => {
     expect(responseBody.metadata).toHaveProperty('schemaName', 'Users Schema, Orders Schema');
     expect(responseBody.metadata.schemaId).toEqual(['1', '2']);
   });
+
+  it('handles outer error in schema processing', async () => {
+    // Mock Array.isArray to throw an error when called with schemaId
+    const originalIsArray = Array.isArray;
+    
+    // Fix: Use a proper type predicate with the correct signature
+    Array.isArray = function(arg): arg is any[] {
+      if (arg === '1') {
+        throw new Error('Forced error in schema processing');
+      }
+      return originalIsArray(arg);
+    };
+    
+    // Set up console.error spy to check it's called
+    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
+    
+    const req = new NextRequest('http://localhost/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        messages: [{ role: 'user', content: 'Show users' }],
+        schemaId: '1',
+      }),
+    });
+  
+    const response = await POST(req);
+    expect(response.status).toBe(200);
+    
+    // Check that console.error was called with the right message
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      'Error processing schemas:', 
+      expect.any(Error)
+    );
+    
+    // Verify the response doesn't include schema context
+    const responseBody = await response.json();
+    expect(responseBody.metadata).toHaveProperty('schemaIncluded', false);
+    
+    // Restore original functions
+    Array.isArray = originalIsArray;
+    consoleErrorSpy.mockRestore();
+  });
 });
 
 // end-to-end
@@ -485,5 +527,40 @@ describe('Chat API from user perspective', () => {
     expect(requestBody.messages[0].content).toBe('First message');
     expect(requestBody.messages[1].content).toBe('First response');
     expect(requestBody.messages[2].content).toBe('Second message');
+  });
+
+  it('handles JSON parsing errors in request body', async () => {
+    // Create a request with invalid JSON
+    const invalidReq = new Request('http://localhost/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      // Using a getter that throws an error when json() is called
+      body: '',
+    });
+
+    // Replace req.json with a function that throws
+    Object.defineProperty(invalidReq, 'json', {
+      value: () => Promise.reject(new Error('Invalid JSON')),
+      configurable: true
+    });
+    
+    // Set up console.error spy
+    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
+    
+    const response = await POST(invalidReq);
+    
+    // Verify error handling
+    expect(response.status).toBe(500);
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      'Error processing request:', 
+      expect.any(Error)
+    );
+    
+    // Verify error response format
+    const responseBody = await response.json();
+    expect(responseBody).toEqual({ error: 'Failed to generate response' });
+    
+    // Restore original console.error
+    consoleErrorSpy.mockRestore();
   });
 });
