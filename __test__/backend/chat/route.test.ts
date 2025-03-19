@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
-import { POST } from '@backend/api/chat/route';
+import { POST } from '@/app/(backend)/api/chat/route';
 import { generateText } from 'ai';
+import prisma from '@/lib/prisma';
 
 // Mock the ai module
 jest.mock('ai', () => ({
@@ -22,6 +23,16 @@ jest.mock('@ai-sdk/google', () => ({
 // Mock the deepseek module for model switching tests
 jest.mock('@ai-sdk/deepseek', () => ({
   deepseek: jest.fn().mockReturnValue('mocked-deepseek-model'),
+}));
+
+// Add these mocks after your existing mocks
+jest.mock('@/lib/prisma', () => ({
+  __esModule: true,
+  default: {
+    schema: {
+      findUnique: jest.fn(),
+    },
+  },
 }));
 
 describe('POST /api/chat', () => {
@@ -206,7 +217,106 @@ it('accepts array of schemaIds in request', async () => {
 });
 });
 
+describe('Schema context enhancement', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    // Mock the schema data to be returned by prisma
+    (prisma.schema.findUnique as jest.Mock).mockResolvedValue({
+      id: 1,
+      name: 'Test Schema',
+      schemaText: 'CREATE TABLE users (id INT, name VARCHAR(255))',
+      description: 'Test schema description',
+      createdAt: new Date(),
+    });
+  });
 
+  it('enhances user message with schema context when schemaId is provided', async () => {
+    // Create a spy on generateText to check what messages are passed to it
+    const generateTextSpy = jest.spyOn(require('ai'), 'generateText');
+    generateTextSpy.mockResolvedValue({
+      text: 'Response with schema context',
+      finishReason: 'stop',
+      usage: {
+        promptTokens: 15,
+        completionTokens: 25,
+      },
+    });
+
+    const req = new NextRequest('http://localhost/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        messages: [{ role: 'user', content: 'Show users' }],
+        schemaId: '1',
+      }),
+    });
+
+    const response = await POST(req);
+    expect(response.status).toBe(200);
+    
+    // Verify that generateText was called with enhanced message
+    expect(generateTextSpy).toHaveBeenCalled();
+  // Add type information to fix the TypeScript error
+    const call = generateTextSpy.mock.calls[0][0] as { 
+      model: any; 
+      messages: Array<{ role: string; content: string }>
+    };
+    
+    const lastMessage = call.messages[call.messages.length - 1];
+    
+    // Check that the message was enhanced with schema context
+    expect(lastMessage.content).toContain('SQL Schema');
+    expect(lastMessage.content).toContain('CREATE TABLE users');
+    expect(lastMessage.content).toContain('Show users');
+    
+    // Check that the response metadata includes schema information
+    const responseBody = await response.json();
+    expect(responseBody.metadata).toHaveProperty('schemaIncluded', true);
+    expect(responseBody.metadata).toHaveProperty('schemaName', 'Test Schema');
+  });
+
+  it('handles invalid schemaId gracefully', async () => {
+    // Mock prisma to return null for non-existent schema
+    (prisma.schema.findUnique as jest.Mock).mockResolvedValue(null);
+    
+    const req = new NextRequest('http://localhost/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        messages: [{ role: 'user', content: 'Show users' }],
+        schemaId: '999', // Non-existent schema
+      }),
+    });
+
+    const response = await POST(req);
+    expect(response.status).toBe(200);
+    
+    const responseBody = await response.json();
+    expect(responseBody.metadata).not.toHaveProperty('schemaName');
+    expect(responseBody.metadata).toHaveProperty('schemaIncluded', false);
+  });
+
+  it('handles database errors when fetching schema', async () => {
+    // Mock prisma to throw an error
+    (prisma.schema.findUnique as jest.Mock).mockRejectedValue(new Error('Database error'));
+    
+    const req = new NextRequest('http://localhost/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        messages: [{ role: 'user', content: 'Show users' }],
+        schemaId: '1',
+      }),
+    });
+
+    const response = await POST(req);
+    expect(response.status).toBe(200);
+    
+    const responseBody = await response.json();
+    expect(responseBody.metadata).not.toHaveProperty('schemaName');
+    expect(responseBody.metadata).toHaveProperty('schemaIncluded', false);
+  });
+});
 
 // end-to-end
 describe('Chat API from user perspective', () => {
