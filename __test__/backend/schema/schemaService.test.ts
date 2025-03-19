@@ -1,4 +1,4 @@
-import schemaService from '@/app/services/schemaService';
+import schemaService from '@backend/services/schemaService';
 import prisma from '@/lib/prisma';
 import { Schema } from '@prisma/client';
 
