@@ -56,6 +56,7 @@ export async function POST(req: Request) {
           completionTokens: result.usage?.completionTokens || 0,
         },
         modelUsed: model,
+        ...(schemaId && { schemaId })
       },
     };
 

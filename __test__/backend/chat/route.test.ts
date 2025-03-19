@@ -192,6 +192,24 @@ describe('POST /api/chat', () => {
   });
 });
 
+it('accepts multiple schemaIds in request', async () => {
+  const req = new NextRequest('http://localhost/api/chat', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      messages: [{ role: 'user', content: 'Hello' }],
+      schemaIds: ['1', '2', '3'],  // Multiple schema IDs
+    }),
+  });
+
+  const response = await POST(req);
+  expect(response.status).toBe(200);
+  
+  const responseBody = await response.json();
+  expect(responseBody.metadata).toHaveProperty('schemaIds');
+  expect(responseBody.metadata.schemaIds).toEqual(['1', '2', '3']);
+});
+
 // end-to-end
 describe('Chat API from user perspective', () => {
   const originalFetch = global.fetch;
