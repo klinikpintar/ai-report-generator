@@ -1,4 +1,4 @@
-import React, { ReactNode, MouseEvent } from "react";
+import React, { ReactNode, MouseEvent, useState, useEffect } from "react";
 import { Inter } from "next/font/google";
 
 const inter = Inter({
@@ -21,6 +21,17 @@ type ModalProps = BaseModalProps | FormModalProps;
 
 const Modal: React.FC<ModalProps> = (props) => {
   const { isVisible, title, subtitle, children, onClose } = props;
+  const [shouldRender, setShouldRender] = useState(isVisible);
+
+  useEffect(() => {
+    if (isVisible) {
+      setShouldRender(true);
+    } else {
+      setTimeout(() => {
+        setShouldRender(false);
+      }, 300);
+    }
+  }, [isVisible]);
 
   const handleClose = (event: MouseEvent<HTMLDivElement>) => {
     const target = event.target as HTMLDivElement;
@@ -31,6 +42,8 @@ const Modal: React.FC<ModalProps> = (props) => {
       }
     }
   };
+
+  if (!shouldRender) return null;
 
   return (
     <main className={inter.className}>

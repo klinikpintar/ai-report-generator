@@ -18,7 +18,7 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 import { FileIcon } from "lucide-react";
-import React, {useState} from "react";
+import React from "react";
 import { Chip } from "@/components/ui/chip";
 import { Schema } from "../types";
 import { generatePagination } from "../utils/pagination";
@@ -46,7 +46,6 @@ export const SchemaTable: React.FC<SchemaTableProps> = ({
   const [schemaToEdit, setSchemaToEdit] = React.useState<Schema | null>(null);
   const [schemaToDelete, setSchemaToDelete] = React.useState<Schema | null>(null);
   const [schemaToRead, setSchemaToRead] = React.useState<Schema | null>(null);
-  const [isAnimateClose, setIsAnimateClose] = useState(false);
   const pages = generatePagination(currentPage, lastPage);
 
   const handleOpenEditModal = (schema: Schema) => {
@@ -56,11 +55,6 @@ export const SchemaTable: React.FC<SchemaTableProps> = ({
   const handleCloseEditModal = () => {
     setSchemaToEdit(null);
     onFinishedAction();
-    setIsAnimateClose(true);
-
-    setTimeout(() => {
-      setIsAnimateClose(false);
-    }, 300);
   };
 
   const handleOpenDeleteModal = (schema: Schema) => {
@@ -198,19 +192,17 @@ export const SchemaTable: React.FC<SchemaTableProps> = ({
         description="Apakah Anda yakin ingin menghapus skema ini?"
       />
 
-      {(schemaToEdit || isAnimateClose) && (
-        <EditSchemaModal
-          isVisible={schemaToEdit !== null}
-          onClose={handleCloseEditModal}
-          schema={{
-            id: schemaToEdit?.id ?? 0,
-            name: schemaToEdit?.name ?? "",
-            description: schemaToEdit?.description ?? "",
-            schemaText: schemaToEdit?.schemaText ?? "",
-            fileName: schemaToEdit?.name ?? "",
-          }}
-        />
-      )}
+      <EditSchemaModal
+        isVisible={schemaToEdit !== null}
+        onClose={handleCloseEditModal}
+        schema={{
+          id: schemaToEdit?.id ?? 0,
+          name: schemaToEdit?.name ?? "",
+          description: schemaToEdit?.description ?? "",
+          schemaText: schemaToEdit?.schemaText ?? "",
+          fileName: schemaToEdit?.name ?? "",
+        }}
+      />
 
       {schemaToRead && (
         <Modal
