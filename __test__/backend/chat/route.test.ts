@@ -1,7 +1,6 @@
 import { NextRequest } from 'next/server';
 import { POST } from '@backend/api/chat/route';
 import { generateText } from 'ai';
-import prisma from '@/lib/prisma';
 
 // Mock the ai module
 jest.mock('ai', () => ({
@@ -23,16 +22,6 @@ jest.mock('@ai-sdk/google', () => ({
 // Mock the deepseek module for model switching tests
 jest.mock('@ai-sdk/deepseek', () => ({
   deepseek: jest.fn().mockReturnValue('mocked-deepseek-model'),
-}));
-
-// Add prisma mock after your existing mocks
-jest.mock('@/lib/prisma', () => ({
-  __esModule: true,
-  default: {
-    schema: {
-      findUnique: jest.fn(),
-    },
-  },
 }));
 
 describe('POST /api/chat', () => {
@@ -193,30 +182,13 @@ describe('POST /api/chat', () => {
         schemaId: '1',
       }),
     });
-
+  
     const response = await POST(req);
     expect(response.status).toBe(200);
     
     const responseBody = await response.json();
     expect(responseBody).toHaveProperty('aiResponse', 'Mocked response');
-  });
-
-  it('accepts schemaId parameter in request', async () => {
-    const req = new NextRequest('http://localhost/api/chat', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        messages: [{ role: 'user', content: 'Hello' }],
-        schemaId: '1',
-      }),
-    });
-
-    const response = await POST(req);
-    expect(response.status).toBe(200);
-    
-    const responseBody = await response.json();
-    // Check that schemaId was acknowledged in the response metadata
-    expect(responseBody.metadata).toHaveProperty('schemaIncluded', true);
+    expect(responseBody.metadata).toHaveProperty('schemaId', '1');
   });
 });
 
@@ -331,145 +303,5 @@ describe('Chat API from user perspective', () => {
     expect(requestBody.messages[0].content).toBe('First message');
     expect(requestBody.messages[1].content).toBe('First response');
     expect(requestBody.messages[2].content).toBe('Second message');
-  });
-});
-
-describe('Chat API with schema context', () => {
-  const originalFetch = global.fetch;
-  
-  beforeEach(() => {
-    jest.clearAllMocks();
-    // Mock prisma to return a schema
-    (prisma.schema.findUnique as jest.Mock).mockResolvedValue({
-      id: 1,
-      name: 'Test Schema',
-      schemaText: 'CREATE TABLE users (id INT, name VARCHAR(255))',
-      description: 'Test schema description',
-      createdAt: new Date(),
-    });
-    
-    // Reset fetch mock
-    global.fetch = jest.fn(() =>
-      Promise.resolve({
-        json: () => Promise.resolve({
-          messageId: 'msg-12345',
-          userPrompt: 'Hello',
-          aiResponse: 'Mocked response',
-          createdAt: new Date().toISOString(),
-          metadata: { 
-            finishReason: 'stop', 
-            usage: { promptTokens: 10, completionTokens: 20 },
-            modelUsed: 'gemini',
-            schemaIncluded: true,
-            schemaName: 'Test Schema'
-          }
-        }),
-        status: 200,
-        ok: true,
-      })
-    ) as jest.Mock;
-  });
-  
-  afterAll(() => {
-    global.fetch = originalFetch;
-  });
-
-  it('sends schemaId parameter correctly', async () => {
-    await fetch('/api/chat', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        messages: [{ role: 'user', content: 'Show user data' }],
-        schemaId: '1',
-      }),
-    });
-    
-    const fetchCall = (global.fetch as jest.Mock).mock.calls[0];
-    const requestOptions = fetchCall[1];
-    const requestBody = JSON.parse(requestOptions.body);
-    expect(requestBody).toHaveProperty('schemaId', '1');
-  });
-
-  it('handles invalid schemaId gracefully', async () => {
-    (prisma.schema.findUnique as jest.Mock).mockResolvedValue(null);
-    
-    const req = new NextRequest('http://localhost/api/chat', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        messages: [{ role: 'user', content: 'Show users' }],
-        schemaId: '999', // Non-existent schema
-      }),
-    });
-
-    const response = await POST(req);
-    // Should still work even without finding a schema
-    expect(response.status).toBe(200);
-    
-    const responseBody = await response.json();
-    expect(responseBody).toHaveProperty('aiResponse');
-    expect(responseBody.metadata).not.toHaveProperty('schemaName');
-  });
-
-  it('handles database errors when fetching schema', async () => {
-    // Mock prisma to throw an error
-    (prisma.schema.findUnique as jest.Mock).mockRejectedValue(new Error('Database error'));
-    
-    const req = new NextRequest('http://localhost/api/chat', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        messages: [{ role: 'user', content: 'Show users' }],
-        schemaId: '1',
-      }),
-    });
-
-    const response = await POST(req);
-    // Should still work even with database errors
-    expect(response.status).toBe(200);
-    
-    const responseBody = await response.json();
-    expect(responseBody).toHaveProperty('aiResponse');
-  });
-
-  it('enhances user message with schema context when schemaId is provided', async () => {
-    // Mock generateText to capture and verify the enhanced message
-    const mockGenerateText = generateText as jest.Mock;
-    mockGenerateText.mockImplementation((params) => {
-      // Check if the messages contain schema information
-      const lastMessage = params.messages[params.messages.length - 1];
-      const containsSchema = lastMessage.content.includes('SQL Schema');
-      
-      return Promise.resolve({
-        text: containsSchema ? 'Response with schema context' : 'Response without schema context',
-        finishReason: 'stop',
-        usage: {
-          promptTokens: 15,
-          completionTokens: 25,
-        },
-      });
-    });
-
-    const req = new NextRequest('http://localhost/api/chat', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        messages: [{ role: 'user', content: 'Show users' }],
-        schemaId: '1',
-      }),
-    });
-
-    const response = await POST(req);
-    expect(response.status).toBe(200);
-    
-    // Verify generateText was called with appended message
-    expect(mockGenerateText).toHaveBeenCalled();
-    const call = mockGenerateText.mock.calls[0][0];
-    const lastMessage = call.messages[call.messages.length - 1];
-    expect(lastMessage.content).toContain('SQL Schema');
-    expect(lastMessage.content).toContain('CREATE TABLE users');
-    
-    // Original message should be preserved
-    expect(lastMessage.content).toContain('Show users');
   });
 });

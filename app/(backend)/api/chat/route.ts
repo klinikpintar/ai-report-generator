@@ -1,10 +1,11 @@
 import { google } from '@ai-sdk/google';
 import { deepseek } from '@ai-sdk/deepseek';
-import { generateText } from 'ai'; 
+import { generateText } from 'ai';
+import prisma from '@/lib/prisma';
 
 export async function POST(req: Request) {
   try {
-    const { messages, model = 'gemini' } = await req.json();
+    const { messages, model = 'gemini', schemaId } = await req.json();
 
     if (!messages || !Array.isArray(messages) || messages.length === 0) {
       return new Response(JSON.stringify({ error: 'No messages provided' }), {
