@@ -163,7 +163,16 @@ describe("SchemaTable Component", () => {
     const closeButton = screen.getByText(/Batal/i);
 
     await userEvent.click(closeButton);
-    expect(screen.queryByText(/Edit Skema Database/i)).not.toBeInTheDocument();
+
+    await waitFor(
+      () =>
+        expect(
+          screen.queryByText(/Edit Skema Database/i)
+        ).not.toBeInTheDocument(),
+      {
+        timeout: 400,
+      }
+    );
   });
 
   it("should open confirmation dialog when delete button is clicked", async () => {

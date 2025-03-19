@@ -35,7 +35,7 @@ const SchemaForm: React.FC<SchemaFormProps> = ({
   const services = ["Reservasi", "Kesehatan", "Keuangan", "Inventaris"];
 
   return (
-    <form className="md:p-10" onSubmit={handleSubmit}>
+    <form className="p-10" onSubmit={handleSubmit}>
       <div className="grid gap-4 mb-4 grid-cols-2">
         <div className="col-span-2">
           <label

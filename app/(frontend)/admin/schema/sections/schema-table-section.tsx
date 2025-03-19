@@ -27,6 +27,7 @@ export const SchemaTableSection = () => {
   const [isLoading, setLoading] = useState(true);
 
   const [showAddModal, setShowAddModal] = useState(false);
+  const [isAnimateClose, setIsAnimateClose] = useState(false);
 
   const searchParam = useSearchParams();
   const currentPage = parseInt(searchParam.get("page") || "1", 10);
@@ -77,6 +78,11 @@ export const SchemaTableSection = () => {
   const onSchemaModalClose = async () => {
     await fetchFilteredSchemas();
     setShowAddModal(false);
+    setIsAnimateClose(true);
+
+    setTimeout(() => {
+      setIsAnimateClose(false);
+    }, 300);
   };
 
   return (
@@ -111,7 +117,7 @@ export const SchemaTableSection = () => {
         </Button>
       </div>
 
-      {showAddModal && (
+      {(showAddModal || isAnimateClose) && (
         <AddSchemaModal isVisible={showAddModal} onClose={onSchemaModalClose} />
       )}
     </>

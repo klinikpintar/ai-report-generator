@@ -37,8 +37,10 @@ const Modal: React.FC<ModalProps> = (props) => {
       <div
         role="button"
         tabIndex={0}
-        className={`fixed inset-0 flex justify-center items-center transition-colors ${
-          isVisible ? "visible bg-black/50" : "invisible"
+        className={`fixed inset-0 flex justify-center items-center ${
+          isVisible
+            ? "visible animate-in fade-in bg-black-9 bg-opacity-70"
+            : "invisible animate-out fade-out"
         }`}
         id="wrapper"
         data-testid="wrapper"
@@ -46,7 +48,7 @@ const Modal: React.FC<ModalProps> = (props) => {
       >
         <div
           className={`bg-white w-full max-w-[600px] max-h-full rounded-lg shadow transition-all ${
-            isVisible ? "scale-100 opacity-100" : "scale-105 opacity-0"
+            isVisible ? "animate-in zoom-in-90" : "animate-out zoom-out-90"
           }`}
         >
           <div className="flex items-center justify-center p-7 pb-1 rounded-t border-gray-200 ">
