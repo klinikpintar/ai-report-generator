@@ -200,6 +200,24 @@ describe('POST /api/chat', () => {
     const responseBody = await response.json();
     expect(responseBody).toHaveProperty('aiResponse', 'Mocked response');
   });
+
+  it('accepts schemaId parameter in request', async () => {
+    const req = new NextRequest('http://localhost/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        messages: [{ role: 'user', content: 'Hello' }],
+        schemaId: '1',
+      }),
+    });
+
+    const response = await POST(req);
+    expect(response.status).toBe(200);
+    
+    const responseBody = await response.json();
+    // Check that schemaId was acknowledged in the response metadata
+    expect(responseBody.metadata).toHaveProperty('schemaIncluded', true);
+  });
 });
 
 // end-to-end
