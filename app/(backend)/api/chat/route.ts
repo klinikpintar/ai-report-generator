@@ -1,7 +1,6 @@
 import { google } from '@ai-sdk/google';
 import { deepseek } from '@ai-sdk/deepseek';
 import { generateText } from 'ai';
-import prisma from '@/lib/prisma';
 
 export async function POST(req: Request) {
   try {
@@ -22,6 +21,13 @@ export async function POST(req: Request) {
         status: 400,
         headers: { 'Content-Type': 'application/json' },
       });
+    }
+
+    // Process schemaId - can be single ID or array
+    let normalizedSchemaId = schemaId;
+    if (schemaId !== undefined && !Array.isArray(schemaId)) {
+      // If it's a single value, keep it as is
+      normalizedSchemaId = schemaId;
     }
 
     let result;
@@ -56,7 +62,7 @@ export async function POST(req: Request) {
           completionTokens: result.usage?.completionTokens || 0,
         },
         modelUsed: model,
-        ...(schemaId && { schemaId })
+        ...(normalizedSchemaId !== undefined && { schemaId: normalizedSchemaId })
       },
     };
 

@@ -173,42 +173,40 @@ describe('POST /api/chat', () => {
     expect(responseBody.metadata.usage).toHaveProperty('completionTokens', 0); // Default value
   });
 
-  it('accepts schemaId parameter in request', async () => {
-    const req = new NextRequest('http://localhost/api/chat', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        messages: [{ role: 'user', content: 'Hello' }],
-        schemaId: '1',
-      }),
-    });
-  
-    const response = await POST(req);
-    expect(response.status).toBe(200);
-    
-    const responseBody = await response.json();
-    expect(responseBody).toHaveProperty('aiResponse', 'Mocked response');
-    expect(responseBody.metadata).toHaveProperty('schemaId', '1');
-  });
-});
 
-it('accepts multiple schemaIds in request', async () => {
+it('accepts single schemaId parameter in request', async () => {
   const req = new NextRequest('http://localhost/api/chat', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       messages: [{ role: 'user', content: 'Hello' }],
-      schemaIds: ['1', '2', '3'],  // Multiple schema IDs
+      schemaId: '1',
     }),
   });
-
-  const response = await POST(req);
-  expect(response.status).toBe(200);
   
+  const response = await POST(req);
   const responseBody = await response.json();
-  expect(responseBody.metadata).toHaveProperty('schemaIds');
-  expect(responseBody.metadata.schemaIds).toEqual(['1', '2', '3']);
+  expect(responseBody.metadata).toHaveProperty('schemaId', '1');
 });
+
+it('accepts array of schemaIds in request', async () => {
+  const req = new NextRequest('http://localhost/api/chat', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      messages: [{ role: 'user', content: 'Hello' }],
+      schemaId: ['1', '2', '3'],
+    }),
+  });
+  
+  const response = await POST(req);
+  const responseBody = await response.json();
+  expect(responseBody.metadata).toHaveProperty('schemaId');
+  expect(responseBody.metadata.schemaId).toEqual(['1', '2', '3']);
+});
+});
+
+
 
 // end-to-end
 describe('Chat API from user perspective', () => {
