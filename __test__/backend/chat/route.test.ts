@@ -316,6 +316,62 @@ describe('Schema context enhancement', () => {
     expect(responseBody.metadata).not.toHaveProperty('schemaName');
     expect(responseBody.metadata).toHaveProperty('schemaIncluded', false);
   });
+
+  it('enhances user message with multiple schema contexts when multiple schemaIds are provided', async () => {
+    const mockSchemas = [
+      {
+        id: 1,
+        name: 'Users Schema',
+        schemaText: 'CREATE TABLE users (id INT, name VARCHAR(255))',
+        description: 'User data',
+      },
+      {
+        id: 2,
+        name: 'Orders Schema',
+        schemaText: 'CREATE TABLE orders (id INT, user_id INT, amount DECIMAL)',
+        description: 'Order data',
+      }
+    ];
+    
+    (prisma.schema.findUnique as jest.Mock).mockImplementation(({ where }) => {
+      const schema = mockSchemas.find(s => s.id === where.id);
+      return Promise.resolve(schema || null);
+    });
+    
+    const generateTextSpy = jest.spyOn(require('ai'), 'generateText');
+    
+    const req = new NextRequest('http://localhost/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        messages: [{ role: 'user', content: 'Show user orders' }],
+        schemaId: ['1', '2'],
+      }),
+    });
+
+    const response = await POST(req);
+    expect(response.status).toBe(200);
+    
+    expect(generateTextSpy).toHaveBeenCalled();
+    const call = generateTextSpy.mock.calls[0][0] as { 
+      model: any; 
+      messages: Array<{ role: string; content: string }>
+    };
+    
+    const lastMessage = call.messages[call.messages.length - 1];
+    
+
+    expect(lastMessage.content).toContain('Users Schema');
+    expect(lastMessage.content).toContain('CREATE TABLE users');
+    expect(lastMessage.content).toContain('Orders Schema');
+    expect(lastMessage.content).toContain('CREATE TABLE orders');
+    expect(lastMessage.content).toContain('Show user orders');
+
+    const responseBody = await response.json();
+    expect(responseBody.metadata).toHaveProperty('schemaIncluded', true);
+    expect(responseBody.metadata).toHaveProperty('schemaName', 'Users Schema, Orders Schema');
+    expect(responseBody.metadata.schemaId).toEqual(['1', '2']);
+  });
 });
 
 // end-to-end
