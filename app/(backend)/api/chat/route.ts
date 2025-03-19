@@ -39,7 +39,8 @@ export async function POST(req: Request) {
       
       // If a schema ID is provided, fetch and enhance messages with schema context
       if (normalizedSchemaId !== undefined) {
-        let fetchedSchemas = [];
+        // Change from let to const since it's never reassigned
+        const fetchedSchemas = [];
         const schemaIds = Array.isArray(normalizedSchemaId) 
           ? normalizedSchemaId 
           : [normalizedSchemaId];
