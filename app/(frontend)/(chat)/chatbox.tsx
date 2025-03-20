@@ -98,7 +98,7 @@ export default function ChatBox() {
   };
 
   return (
-    <div className="ml-64 flex flex-col h-screen">
+    <div className="ml-64 flex flex-col h-screen pt-[72px]">
       <div className="flex justify-between items-center p-4">
         {/* Container untuk Select a Service */}
         <div className="flex flex-col">

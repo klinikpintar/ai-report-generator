@@ -32,11 +32,6 @@ const LoginPage = () => {
 
   return (
     <div className="flex items-center justify-center min-h-screen">
-      {/* Logo */}
-      <div className="absolute top-[38px] left-[104px] h-auto">
-        <Image src="/images/logo.png" alt="Klinik Pintar" width={135} height={50} />
-      </div>
-
       <div className="max-w-2xl bg-white p-8">
         {/* Judul */}
         <h2 className="font-bold text-center text-[#00B0EB] text-[32px]">
