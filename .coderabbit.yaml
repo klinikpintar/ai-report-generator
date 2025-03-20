@@ -85,9 +85,6 @@ knowledge_base:
     scope: "auto"
   issues:
     scope: "auto"
-  jira:
-    usage: "auto"
-    team_keys: []
   linear:
     usage: "auto"
     team_keys: []
