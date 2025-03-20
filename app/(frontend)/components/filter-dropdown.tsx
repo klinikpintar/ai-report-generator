@@ -1,7 +1,7 @@
 // components/ui/filter-dropdown/index.tsx
 "use client";
 
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/admin/button";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -46,7 +46,9 @@ export function FilterDropdown<T extends Filterable>({
 
   const handleSelectItem = (item: T) => (event: Event) => {
     event.preventDefault();
-    const isSelected = selectedItems.some((selected) => selected.id === item.id);
+    const isSelected = selectedItems.some(
+      (selected) => selected.id === item.id
+    );
     const newSelectedItems = isSelected
       ? selectedItems.filter((selected) => selected.id !== item.id)
       : [...selectedItems, item];
@@ -55,19 +57,27 @@ export function FilterDropdown<T extends Filterable>({
 
   const allSelected = selectedItems.length === items.length && items.length > 0;
 
-  const isItemSelected = (item: T) => selectedItems.some((selected) => selected.id === item.id);
+  const isItemSelected = (item: T) =>
+    selectedItems.some((selected) => selected.id === item.id);
 
   return (
     <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger asChild className={dropdownWidth}>
-        <Button variant="default" className={cn("flex justify-between", buttonClassName)}>
+        <Button
+          variant="default"
+          className={cn("flex justify-between", buttonClassName)}
+        >
           <span>
-            {buttonText} {selectedItems.length > 0 && `(${selectedItems.length})`}
+            {buttonText}{" "}
+            {selectedItems.length > 0 && `(${selectedItems.length})`}
           </span>
           <ChevronDown className={cn("text-white", open && "rotate-180")} />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent data-testid={contentTestid} className={dropdownWidth}>
+      <DropdownMenuContent
+        data-testid={contentTestid}
+        className={dropdownWidth}
+      >
         <DropdownMenuCheckboxItem
           checked={allSelected}
           onSelect={handleSelectAll}
