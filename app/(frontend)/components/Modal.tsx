@@ -36,7 +36,7 @@ const Modal: React.FC<ModalProps> = (props) => {
   return (
     <main className={inter.className}>
       <div
-        className={`fixed inset-0 flex justify-center items-center transition-colors ${
+        className={`fixed inset-0 flex justify-center backdrop-filter backdrop-brightness-75 items-center transition-colors ${
           isVisible ? "visible bg-black/50" : "invisible"
         }`}
         id="wrapper"
