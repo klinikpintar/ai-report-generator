@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { ToastContainer } from "react-toastify";
 import Navbar from "./components/navbar";
+import { UserProvider } from "./login/context/userContext";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -27,8 +28,12 @@ export default function RootLayout({
       <body className={`${inter.className} antialiased`}>
         <ToastContainer />
         <div className="h-screen overflow-hidden flex flex-col bg-white">
-          <Navbar />
-          {children}
+          <UserProvider>
+            {" "}
+            {/* Bungkus semua halaman dengan Context */}
+            <Navbar />
+            {children}
+          </UserProvider>
         </div>
       </body>
     </html>

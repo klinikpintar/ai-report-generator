@@ -3,10 +3,11 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import FeAuthService from "./services/feAuthService";
-import Image from "next/image";
+import { useUser } from "@/app/(frontend)/login/context/userContext";
 
 const LoginPage = () => {
   const [email, setEmail] = useState("");
+  const { setEmailContext } = useUser();
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -18,6 +19,8 @@ const LoginPage = () => {
     setError("");
 
     const { success } = await FeAuthService.login(email, password);
+    setEmailContext(email);
+    localStorage.setItem("userEmail", email);
 
     if (success) {
       router.push("/");

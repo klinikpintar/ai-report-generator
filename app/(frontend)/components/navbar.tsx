@@ -4,10 +4,12 @@ import React, { useState, useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Image from "next/image";
 import FeAuthService from "@frontend/login/services/feAuthService";
+import { useUser } from "@frontend/login/context/userContext";
 
 export default function Navbar() {
   const router = useRouter();
   const pathname = usePathname(); // Untuk deteksi halaman aktif
+  const { email } = useUser();
 
   const [isLoaded, setIsLoaded] = useState(false);
   useEffect(() => {
@@ -34,7 +36,7 @@ export default function Navbar() {
           {pathname !== "/login" && (
             <div className="flex items-center space-x-4">
               <Image src="/profile.svg" width={50} height={50} alt="Profile Icon" />
-              <h1 className="text-sm font-regular text-black">virgillia.yeala@ui.ac.id</h1>
+              <h1 className="text-sm font-regular text-black">{email}</h1>
               <button
                 className="bg-red-700 hover:bg-red-800 text-white text-sm font-semibold py-2 px-6 rounded-lg"
                 onClick={handleLogout}
