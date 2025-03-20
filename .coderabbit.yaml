@@ -30,8 +30,6 @@ reviews:
       enabled: true
     eslint:
       enabled: true
-    prettier:
-      enabled: true
     shellcheck:
       enabled: true
     gitleaks:
