@@ -69,30 +69,30 @@ const SchemaForm: React.FC<SchemaFormProps> = ({
           <select
             id="platform"
             defaultValue=""
-            className="bg-[#00B0EB] text-white text-[16.44px] font-bold rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-3 cursor-pointer"
+            className="bg-[#00B0EB] text-white text-[16.44px] font-semibold rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-3 cursor-pointer"
           >
             <option
               value=""
-              className="bg-white text-[16.44px] font-bold"
+              className="bg-white text-[16.44px] font-semibold"
               disabled
             >
               Pilih Platform
             </option>
             <option
               value="PostgreSQL"
-              className="bg-white text-[#00B0EB] text-[16.44px] font-bold"
+              className="bg-white text-[#00B0EB] text-[16.44px] font-semibold"
             >
               PostgreSQL
             </option>
             <option
               value="MySQL"
-              className="bg-white text-[#00B0EB] text-[16.44px] font-bold"
+              className="bg-white text-[#00B0EB] text-[16.44px] font-semibold"
             >
               MySQL
             </option>
             <option
               value="MongoDB"
-              className="bg-white text-[#00B0EB] text-[16.44px] font-bold"
+              className="bg-white text-[#00B0EB] text-[16.44px] font-semibold"
             >
               MongoDB
             </option>
@@ -105,36 +105,36 @@ const SchemaForm: React.FC<SchemaFormProps> = ({
           <select
             id="service"
             defaultValue=""
-            className="bg-[#00B0EB] text-white text-[16.44px] font-bold rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-3 cursor-pointer"
+            className="bg-[#00B0EB] text-white text-[16.44px] font-semibold rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-3 cursor-pointer"
           >
             <option
               value=""
-              className="bg-white text-[16.44px] font-bold"
+              className="bg-white text-[16.44px] font-semibold"
               disabled
             >
               Pilih Service
             </option>
             <option
               value="Reservasi"
-              className="bg-white text-[#00B0EB] text-[16.44px] font-bold"
+              className="bg-white text-[#00B0EB] text-[16.44px] font-semibold"
             >
               Reservasi
             </option>
             <option
               value="Kesehatan"
-              className="bg-white text-[#00B0EB] text-[16.44px] font-bold"
+              className="bg-white text-[#00B0EB] text-[16.44px] font-semibold"
             >
               Kesehatan
             </option>
             <option
               value="Keuangan"
-              className="bg-white text-[#00B0EB] text-[16.44px] font-bold"
+              className="bg-white text-[#00B0EB] text-[16.44px] font-semibold"
             >
               Keuangan
             </option>
             <option
               value="Inventaris"
-              className="bg-white text-[#00B0EB] text-[16.44px] font-bold"
+              className="bg-white text-[#00B0EB] text-[16.44px] font-semibold"
             >
               Inventaris
             </option>
