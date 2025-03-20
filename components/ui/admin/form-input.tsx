@@ -29,7 +29,7 @@ const FormInput: React.FC<FormInputProps> = ({
           name={name}
           value={value}
           onChange={onChange}
-          className="block p-2.5 w-full text-[16px] text-gray-900 bg-white rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+          className="block p-2.5 w-full text-[16px] text-gray-900 bg-white rounded-lg border-2 border-gray-300 focus:ring-blue-500 focus:border-blue-500"
           placeholder={placeholder}
           required={required}
         ></textarea>
@@ -39,7 +39,7 @@ const FormInput: React.FC<FormInputProps> = ({
           name={name}
           value={value}
           onChange={onChange}
-          className="bg-white border border-gray-300 text-gray-900 text-[16px] rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5"
+          className="bg-white border-2 border-gray-300 text-gray-900 text-[16px] rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5"
           placeholder={placeholder}
           required={required}
         />

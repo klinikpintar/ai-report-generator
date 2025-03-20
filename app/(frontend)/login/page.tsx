@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import FeAuthService from "./services/feAuthService";
 import { useUser } from "@/app/(frontend)/login/context/userContext";
+import FormInput from "@/components/ui/admin/form-input";
 
 const LoginPage = () => {
   const [email, setEmail] = useState("");
@@ -43,43 +44,38 @@ const LoginPage = () => {
         <p className="mt-2 text-center text-base text-[18px]">
           Selamat Datang di AI Report Generator by
         </p>
-        <p className="text-center text-base mb-5 text-[18px]">Klinik Pintar</p>
+        <p className="text-center text-base mb-3 text-[18px]">Klinik Pintar</p>
 
         {/* Form */}
         <form onSubmit={handleSubmit}>
-          <div className="mb-5">
-            <label htmlFor="email" className="block font-semibold">
-              Email
-            </label>
-            <input
-              id="email"
-              type="email"
-              className="w-full p-2 border-2 text-sm border-gray rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-          </div>
-
-          <div className="mb-4">
-            <label htmlFor="password" className="block font-semibold">
-              Password
-            </label>
-            <input
-              id="password"
-              type="password"
-              className="w-full p-2 border-2 text-sm border-gray rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-          </div>
+        <div className="flex flex-col gap-y-4">
+          <FormInput
+            label="Email"
+            name="email"
+            type="text"
+            value={email}
+            placeholder="Masukkan email"
+            required
+            onChange={(e) => setEmail(e.target.value)}
+          />
+          <FormInput
+            label="Password"
+            name="password"
+            type="text"
+            value={password}
+            placeholder="Masukkan password"
+            required
+            onChange={(e) => setPassword(e.target.value)}
+          />
+        </div>
 
           {error && <p className="text-magenta-900 text-sm mb-2">{error}</p>}
 
           <button
             type="submit"
-            className={`w-full mt-6 font-semibold text-18 py-3 px-6 rounded-[50px] ${loading ? 'bg-[#00B0EB]/80' : 'bg-[#00B0EB]'} text-white`}
+            className={`w-full mt-6 font-semibold text-18 py-3 px-6 rounded-[50px] ${
+              loading ? "bg-[#00B0EB]/80" : "bg-[#00B0EB]"
+            } text-white`}
             disabled={loading}
           >
             {loading ? "Logging in..." : "Login"}
