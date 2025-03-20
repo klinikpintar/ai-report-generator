@@ -1,5 +1,5 @@
 # yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
-language: "id-ID"
+language: "en-US"
 early_access: false
 enable_free_tier: true
 auto_resolve_threads: true
@@ -25,6 +25,21 @@ reviews:
   suggested_reviewers: true
   auto_assign_reviewers: false
   poem: true
+  tools:
+    markdownlint:
+      enabled: true
+    eslint:
+      enabled: true
+    prettier:
+      enabled: true
+    shellcheck:
+      enabled: true
+    gitleaks:
+      enabled: true
+    checkov:
+      enabled: true
+    actionlint:
+      enabled: true
   path_filters:
     - "!**/.xml"
     - "!**/__generated__/**"
@@ -42,11 +57,10 @@ reviews:
         API Routes, serta optimasi performance menggunakan lazy loading dan caching. Berikan saran jika ada inefisiensi."
     - path: "**/next.config.js"
       instructions:
-        "Periksa konfigurasi Next.js untuk kesesuaian dengan best practices, termasuk penggunaan i18n, optimasi gambar, 
+        "Periksa konfigurasi Next.js untuk kesesuaian dengan best practices, termasuk penggunaan i18n, optimasi gambar,
         dan setup API Routes."
     - path: "**/middleware.ts"
-      instructions:
-        "Periksa middleware Next.js untuk keamanan dan optimasi performa."
+      instructions: "Periksa middleware Next.js untuk keamanan dan optimasi performa."
   auto_review:
     enabled: true
     auto_incremental_review: true
@@ -62,7 +76,6 @@ reviews:
 
 chat:
   auto_reply: true
-  create_issues: true
 
 knowledge_base:
   opt_out: false
@@ -83,20 +96,4 @@ knowledge_base:
 
 code_generation:
   docstrings:
-    language: "id-ID"
-
-tools:
-  markdownlint:
-    enabled: true
-  eslint:
-    enabled: true
-  prettier:
-    enabled: true
-  shellcheck:
-    enabled: true
-  gitleaks:
-    enabled: true
-  checkov:
-    enabled: true
-  actionlint:
-    enabled: true
+    language: "en-US"
