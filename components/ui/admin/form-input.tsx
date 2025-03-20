@@ -3,7 +3,7 @@ import React from "react";
 interface FormInputProps {
   label: string;
   name: string;
-  type?: "text" | "textarea"; // Bisa input atau textarea
+  type?: "text" | "password" | "textarea"; // Tambahkan "password"
   value: string;
   placeholder?: string;
   required?: boolean;
@@ -35,7 +35,7 @@ const FormInput: React.FC<FormInputProps> = ({
         ></textarea>
       ) : (
         <input
-          type="text"
+          type={type} // Bisa "text", "password", atau lainnya
           name={name}
           value={value}
           onChange={onChange}

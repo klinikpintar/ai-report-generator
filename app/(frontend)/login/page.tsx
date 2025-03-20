@@ -61,7 +61,7 @@ const LoginPage = () => {
           <FormInput
             label="Password"
             name="password"
-            type="text"
+            type="password"
             value={password}
             placeholder="Masukkan password"
             required
