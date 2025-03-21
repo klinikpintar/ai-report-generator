@@ -1,5 +1,5 @@
 "use client";
-import { Button } from "@/components/ui/admin/button";
+import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,

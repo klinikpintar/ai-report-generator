@@ -1,7 +1,7 @@
 // components/ui/filter-dropdown/index.tsx
 "use client";
 
-import { Button } from "@/components/ui/admin/button";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,

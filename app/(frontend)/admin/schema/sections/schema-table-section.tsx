@@ -14,7 +14,7 @@ import {
   fetchServices,
 } from "@frontend/admin/schema/utils/api";
 import { Platform, Schema, Service } from "@frontend/admin/schema/types";
-import { Button } from "@/components/ui/admin/button";
+import { Button } from "@/components/ui/button";
 import AddSchemaModal from "@frontend/admin/schema/components/AddSchemaModal";
 import { toast } from "react-toastify";
 

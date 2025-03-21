@@ -1,8 +1,8 @@
 import React, { FormEvent } from "react";
 import Image from "next/image";
-import FormInput from "@/components/ui/admin/form-input";
-import SelectInput from "@/components/ui/admin/select-input";
-import ButtonSubmit from "@/components/ui/admin/button-submit";
+import FormInput from "@frontend/components/form-input";
+import SelectInput from "@frontend/components/select-input";
+import ButtonSubmit from "@frontend/components/button-submit";
 
 interface SchemaFormProps {
   showFileInput?: boolean;

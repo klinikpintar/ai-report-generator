@@ -20,8 +20,11 @@ export default function Navbar() {
     const logoutResponse = await FeAuthService.logout();
     if (logoutResponse.success) {
       router.push("/login");
+    } else {
+      alert("Logout failed. Please try again."); // 🔹 Pastikan alert dipanggil di sini
     }
   }
+  
 
   return (
     <nav

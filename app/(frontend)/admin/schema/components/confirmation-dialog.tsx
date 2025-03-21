@@ -1,7 +1,7 @@
 "use client";
 
 import { AlertCircle } from "lucide-react";
-import { Button } from "@/components/ui/admin/button";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -28,7 +28,7 @@ export const ConfirmationDialog = ({
   title,
   description,
   cancelButtonText = "Batal",
-  confirmButtonText = "Hapus",
+  confirmButtonText = "Konfirmasi",
 }: ConfirmationDialogProps) => {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>

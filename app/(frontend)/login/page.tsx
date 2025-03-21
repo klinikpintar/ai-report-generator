@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import FeAuthService from "./services/feAuthService";
 import { useUser } from "@/app/(frontend)/login/context/userContext";
-import FormInput from "@/components/ui/admin/form-input";
+import FormInput from "@frontend/components/form-input";
 
 const LoginPage = () => {
   const [email, setEmail] = useState("");
@@ -13,30 +13,39 @@ const LoginPage = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const router = useRouter();
+  const isSubmitting = useRef(false); // <--- tambahkan ini
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Blokir multiple submissions instan
+    if (isSubmitting.current) return;
+    isSubmitting.current = true;
+
     setLoading(true);
     setError("");
 
-    const { success } = await FeAuthService.login(email, password);
-    setEmailContext(email);
-    localStorage.setItem("userEmail", email);
+    try {
+      const { success } = await FeAuthService.login(email, password);
+      console.log(success)
 
-    if (success) {
-      router.push("/");
-    } else {
-      setError("Login failed. Please check your credentials.");
-      setEmail("");
-      setPassword("");
+      if (success) {
+        setEmailContext(email);
+        localStorage.setItem("userEmail", email);
+        router.push("/");
+      } else {
+        setError("Login failed. Please check your credentials.");
+      }
+    } catch (err) {
+      setError("Something went wrong. Please try again.");
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   };
 
   return (
     <div className="flex items-center justify-center min-h-screen">
-      <div className="max-w-2xl bg-white p-8">
+      <div className="max-w-2xl p-8">
         {/* Judul */}
         <h2 className="font-bold text-center text-[#00B0EB] text-[32px]">
           Sign in to your account
@@ -47,8 +56,7 @@ const LoginPage = () => {
         <p className="text-center text-base mb-3 text-[18px]">Klinik Pintar</p>
 
         {/* Form */}
-        <form onSubmit={handleSubmit}>
-        <div className="flex flex-col gap-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
           <FormInput
             label="Email"
             name="email"
@@ -67,14 +75,17 @@ const LoginPage = () => {
             required
             onChange={(e) => setPassword(e.target.value)}
           />
-        </div>
 
-          {error && <p className="text-magenta-900 text-sm mb-2">{error}</p>}
+          {error && (
+            <p className="text-red-600 text-sm font-semibold text-center">
+              {error}
+            </p>
+          )}
 
           <button
             type="submit"
-            className={`w-full mt-6 font-semibold text-18 py-3 px-6 rounded-[50px] ${
-              loading ? "bg-[#00B0EB]/80" : "bg-[#00B0EB]"
+            className={`w-full mt-4 font-semibold text-18 py-3 px-6 rounded-[50px] ${
+              loading ? "bg-[#00B0EB]/80 cursor-not-allowed" : "bg-[#00B0EB]"
             } text-white`}
             disabled={loading}
           >
