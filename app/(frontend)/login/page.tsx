@@ -13,7 +13,7 @@ const LoginPage = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const router = useRouter();
-  const isSubmitting = useRef(false); // <--- tambahkan ini
+  const isSubmitting = useRef(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,7 +36,7 @@ const LoginPage = () => {
       } else {
         setError("Login failed. Please check your credentials.");
       }
-    } catch (err) {
+    } catch (error) {
       setError("Something went wrong. Please try again.");
     } finally {
       setLoading(false);

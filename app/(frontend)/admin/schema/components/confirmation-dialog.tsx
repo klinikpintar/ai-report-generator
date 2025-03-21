@@ -7,8 +7,6 @@ import {
   DialogContent,
   DialogDescription,
   DialogFooter,
-  DialogHeader,
-  DialogTitle,
 } from "@/components/ui/dialog";
 
 interface ConfirmationDialogProps {
@@ -25,7 +23,6 @@ export const ConfirmationDialog = ({
   isOpen,
   onClose,
   onConfirm,
-  title,
   description,
   cancelButtonText = "Batal",
   confirmButtonText = "Konfirmasi",
