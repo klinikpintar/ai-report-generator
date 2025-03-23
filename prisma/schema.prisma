@@ -44,3 +44,10 @@ model Schema {
   schemaText  String
   createdAt   DateTime @default(now())
 }
+
+model Service {
+  id            String   @id @default(uuid()) @db.Uuid
+  name          String   @db.VarChar(255)
+  platformCode  String   @db.VarChar(255)
+  createdAt     DateTime @default(now())
+}
