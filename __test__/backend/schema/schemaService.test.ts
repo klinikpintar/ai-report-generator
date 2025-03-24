@@ -78,4 +78,43 @@ describe('SchemaService Unit Tests', () => {
     (prisma.schema.delete as jest.Mock).mockRejectedValue(new Error('Instance not found'));
     await expect(schemaService.deleteSchema(9999)).rejects.toThrow('Instance not found');
   });
+
+  it('should retrieve schemas filtered by serviceId', async () => {
+    const SERVICE_ID = "bd7a4c7a-1234-4c5e-b123-df12345abcd1";
+    const SERVICE_ID_2 = "bd7a4c7a-1234-4c5e-b123-df12345abcd2";
+  
+    const filteredSchemas = [
+      {
+        id: 1,
+        name: "products",
+        description: "Table for product info",
+        schemaText: "CREATE TABLE products (id SERIAL PRIMARY KEY);",
+        serviceId: SERVICE_ID,
+      },
+      {
+        id: 1,
+        name: "users",
+        description: "Table for user info",
+        schemaText: "CREATE TABLE users (id SERIAL PRIMARY KEY);",
+        serviceId: SERVICE_ID_2,
+      },
+    ];
+    const filteredSchema = {
+      id: 1,
+      name: "products",
+      description: "Table for product info",
+      schemaText: "CREATE TABLE products (id SERIAL PRIMARY KEY);",
+      serviceId: SERVICE_ID,
+    }
+  
+    (prisma.schema.findMany as jest.Mock).mockResolvedValue([filteredSchema]);
+  
+    const result = await schemaService.findAllSchemas(SERVICE_ID);
+  
+    expect(prisma.schema.findMany).toHaveBeenCalledWith({
+      where: { serviceId: SERVICE_ID },
+    });
+    expect(result).toEqual([filteredSchema]);
+  });
+  
 });

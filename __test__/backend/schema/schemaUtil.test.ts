@@ -1,4 +1,4 @@
-import { validateSchemaInput } from '../../../app/(backend)/utils/schemaUtils';
+import { CreateSchemaDto } from '@backend/dtos/schema.dtos';
 import { handleError } from '@backend/utils/errorUtils';
 import { ZodError } from 'zod';
 import { StatusCodes } from 'http-status-codes';
@@ -50,12 +50,33 @@ describe('Schema Utils Unit Tests', () => {
     };
 
     it('should validate correct input', () => {
-      expect(validateSchemaInput(validData)).toEqual(validData);
+      expect(CreateSchemaDto.parse(validData)).toEqual(validData);
     });
 
     it('should throw a ZodError for invalid input', () => {
-      expect(() => validateSchemaInput({})).toThrow(ZodError);
+      expect(() => CreateSchemaDto.parse({})).toThrow(ZodError);
     });
+
+    it('should throw a ZodError for missing serviceId', () => {
+      const invalidData = {
+        name: 'Valid Name',
+        description: 'Valid Description',
+        schemaText: 'CREATE TABLE...',
+      };
+    
+      expect(() => CreateSchemaDto.parse(invalidData)).toThrow(ZodError);
+    });
+    
+    it('should throw a ZodError for invalid serviceId format', () => {
+      const invalidData = {
+        name: 'Valid Name',
+        description: 'Valid Description',
+        schemaText: 'CREATE TABLE...',
+        serviceId: 'not-a-uuid',
+      };
+    
+      expect(() => CreateSchemaDto.parse(invalidData)).toThrow(ZodError);
+    });    
   });
 
   describe('handleError', () => {
