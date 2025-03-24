@@ -1,5 +1,5 @@
 import { render, screen, fireEvent } from '@testing-library/react';
-import { ManageUserSection } from '@frontend/admin/manage-user/sections/manage-user-section';
+import { ManageUserSection } from '@frontend/admin/manage-user/sections/manageUserSection';
 import { useRouter } from 'next/navigation';
 
 jest.mock('next/navigation', () => ({
