@@ -1,4 +1,4 @@
-import React, { ReactNode, useState, useEffect } from "react";
+import React, { ReactNode, MouseEvent, useState, useEffect } from "react";
 import { Inter } from "next/font/google";
 
 const inter = Inter({
@@ -10,10 +10,12 @@ interface ModalProps {
   title?: string;
   subtitle?: string;
   children?: ReactNode;
+  isForm: boolean;
+  onClose: () => void;
 }
 
 const Modal: React.FC<ModalProps> = (props) => {
-  const { isVisible, title, subtitle, children } = props;
+  const { isVisible, title, subtitle, children, isForm, onClose } = props;
   const [shouldRender, setShouldRender] = useState(isVisible);
 
   useEffect(() => {
@@ -26,17 +28,30 @@ const Modal: React.FC<ModalProps> = (props) => {
     }
   }, [isVisible]);
 
+  const handleClose = (event: MouseEvent<HTMLDivElement>) => {
+    const target = event.target as HTMLDivElement;
+    if (target.id === "wrapper") {
+      if (!isForm) {
+        onClose();
+      }
+    }
+  };
+
   if (!shouldRender) return null;
 
   return (
     <main className={inter.className}>
       <div
+        role="button"
+        tabIndex={0}
         className={`fixed inset-0 flex justify-center cursor-default items-center ${
           isVisible
             ? "visible animate-in fade-in bg-black-9 bg-opacity-70"
             : "invisible animate-out fade-out"
         }`}
         id="wrapper"
+        data-testid="wrapper"
+        onClick={handleClose}
       >
         <div
           className={`bg-white w-full max-w-[600px] max-h-full rounded-lg shadow transition-all ${
