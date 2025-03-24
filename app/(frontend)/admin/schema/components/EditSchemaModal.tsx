@@ -32,6 +32,7 @@ const EditSchemaModal = ({ isVisible, onClose, schema }: Props) => {
       title={"Edit Skema Database"}
       subtitle="Sesuaikan informasi skema database agar tetap relevan dengan kebutuhan
           sistem"
+      isForm={true}
     >
       <SchemaForm
         showFileInput={false}

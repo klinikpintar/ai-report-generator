@@ -3,14 +3,23 @@ import Modal from "@frontend/components/Modal";
 
 describe("Modal Test", () => {
   const onCloseMock = jest.fn();
-  const onClearFormMock = jest.fn();
 
-  const defaultProps = {
+  const formModal = {
     isVisible: true,
     title: "Modal",
     subtitle: "Ini adalah Modal",
     onClose: onCloseMock,
     children: <p>Modal Content</p>,
+    isForm: true,
+  };
+
+  const nonFormModal = {
+    isVisible: true,
+    title: "Modal",
+    subtitle: "Ini adalah Modal",
+    onClose: onCloseMock,
+    children: <p>Modal Content</p>,
+    isForm: false,
   };
 
   beforeEach(() => {
@@ -18,7 +27,7 @@ describe("Modal Test", () => {
   });
 
   it("Should call 'onClose' if click outside modal", () => {
-    render(<Modal {...defaultProps} />);
+    render(<Modal {...nonFormModal} />);
 
     const wrapper = screen.getByTestId("wrapper");
     fireEvent.click(wrapper);
@@ -27,21 +36,11 @@ describe("Modal Test", () => {
   });
 
   it("Should not call 'onClose' if the click is inside the modal", () => {
-    render(<Modal {...defaultProps} />);
+    render(<Modal {...formModal} />);
 
     const modalContent = screen.getByText("Modal Content");
     fireEvent.click(modalContent);
 
     expect(onCloseMock).not.toHaveBeenCalled();
-  });
-
-  it("Should call 'onClearForm' if given as props and click outside modal", () => {
-    render(<Modal {...defaultProps} onClearForm={onClearFormMock} />);
-
-    const wrapper = screen.getByTestId("wrapper");
-    fireEvent.click(wrapper);
-
-    expect(onCloseMock).toHaveBeenCalledTimes(1);
-    expect(onClearFormMock).toHaveBeenCalledTimes(1);
   });
 });

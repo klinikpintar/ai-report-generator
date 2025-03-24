@@ -204,19 +204,19 @@ export const SchemaTable: React.FC<SchemaTableProps> = ({
         }}
       />
 
-      {schemaToRead && (
-        <Modal
-          title={schemaToRead.name}
-          subtitle=""
-          onClose={handleCloseReadModal}
-          isVisible={schemaToRead !== null}
-          onClearForm={() => {}}
-        >
-          <div className="p-8">
-            <code className="block h-[500px] overflow-y-scroll">{schemaToRead.schemaText}</code>
-          </div>
-        </Modal>
-      )}
+      <Modal
+        title={schemaToRead?.name ?? ""}
+        subtitle=""
+        onClose={handleCloseReadModal}
+        isVisible={schemaToRead !== null}
+        isForm={false}
+      >
+        <div className="p-8">
+          <code className="block h-[500px] overflow-y-scroll">
+            {schemaToRead?.schemaText ?? ""}
+          </code>
+        </div>
+      </Modal>
     </div>
   );
 };

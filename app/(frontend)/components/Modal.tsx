@@ -5,22 +5,17 @@ const inter = Inter({
   subsets: ["latin"],
 });
 
-interface BaseModalProps {
+interface ModalProps {
   isVisible: boolean;
-  title: string;
-  subtitle: string;
-  children: ReactNode;
+  title?: string;
+  subtitle?: string;
+  children?: ReactNode;
+  isForm: boolean;
   onClose: () => void;
 }
 
-interface FormModalProps extends BaseModalProps {
-  onClearForm: () => void;
-}
-
-type ModalProps = BaseModalProps | FormModalProps;
-
 const Modal: React.FC<ModalProps> = (props) => {
-  const { isVisible, title, subtitle, children, onClose } = props;
+  const { isVisible, title, subtitle, children, isForm, onClose } = props;
   const [shouldRender, setShouldRender] = useState(isVisible);
 
   useEffect(() => {
@@ -36,9 +31,8 @@ const Modal: React.FC<ModalProps> = (props) => {
   const handleClose = (event: MouseEvent<HTMLDivElement>) => {
     const target = event.target as HTMLDivElement;
     if (target.id === "wrapper") {
-      onClose();
-      if ("onClearForm" in props) {
-        props.onClearForm();
+      if (!isForm) {
+        onClose();
       }
     }
   };
@@ -50,7 +44,7 @@ const Modal: React.FC<ModalProps> = (props) => {
       <div
         role="button"
         tabIndex={0}
-        className={`fixed inset-0 flex justify-center items-center ${
+        className={`fixed inset-0 flex justify-center cursor-default items-center ${
           isVisible
             ? "visible animate-in fade-in bg-black-9 bg-opacity-70"
             : "invisible animate-out fade-out"
