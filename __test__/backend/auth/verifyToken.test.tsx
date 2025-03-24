@@ -11,6 +11,10 @@ jest.mock("@/lib/prisma", () => ({
   user: {
     findUnique: jest.fn(),
   },
+  refreshToken: {
+    findFirst: jest.fn(),
+    deleteMany: jest.fn(),
+  },
 }));
 
 // Mock JWT
@@ -34,26 +38,22 @@ describe("Auth API - Verify Token", () => {
   });
 
   beforeEach(() => {
-    (prisma.user.findUnique as jest.Mock).mockImplementation(
-      async ({ where }) => {
-        if (where.id === testUser.id) return testUser;
-        return null;
-      }
-    );
+    jest.clearAllMocks();
 
-    jwtVerifySpy = jest.spyOn(jwt, "verify").mockImplementation((token) => {
+    (prisma.user.findUnique as jest.Mock).mockImplementation(async ({ where }) => {
+      if (where.id === testUser.id) return testUser;
+      return null;
+    });
+
+    jwtVerifySpy = jest.spyOn(jwt, "verify").mockImplementation((token, secret) => {
       if (token.includes("invalid")) throw new Error("Invalid token");
       if (token.includes("expired")) throw new Error("Token expired");
       return { id: testUser.id };
     });
-
-    jest.clearAllMocks();
   });
 
-  // ✅ Happy Path
   test("✅ Should return user data if token is valid and user is found", async () => {
     (jwt.verify as jest.Mock).mockReturnValue({ id: testUser.id });
-
     (prisma.user.findUnique as jest.Mock).mockResolvedValue({
       id: testUser.id,
       email: testUser.email,
@@ -63,8 +63,9 @@ describe("Auth API - Verify Token", () => {
     const request = new NextRequest(new URL(BASE_API_URL_VERIFY_TOKEN), {
       method: "GET",
       headers: {
-        Authorization: "Bearer validToken",
+        Cookie: "access_token=validToken",
       },
+      credentials: "include",
     });
 
     const response = await verifyHandler(request);
@@ -78,26 +79,24 @@ describe("Auth API - Verify Token", () => {
       role: testUser.role,
     });
     expect(json).toHaveProperty("message", "Token verified");
-
-    expect(jwt.verify).toHaveBeenCalledWith(
-      "validToken",
-      config.JWT_ACCESS_SECRET
-    );
+    expect(jwt.verify).toHaveBeenCalledWith("validToken", config.JWT_ACCESS_SECRET);
     expect(prisma.user.findUnique).toHaveBeenCalledWith({
       where: { id: testUser.id },
       select: { id: true, email: true, role: true },
     });
   });
 
-  // ❌ Unhappy Path: Token Tidak Valid atau Expired
   test("❌ Should return 403 if token is invalid or expired", async () => {
-    (jwt.verify as jest.Mock).mockReturnValue(null);
+    jwtVerifySpy.mockImplementation(() => {
+      throw new Error("Invalid token");
+    });
 
     const request = new NextRequest(new URL(BASE_API_URL_VERIFY_TOKEN), {
       method: "GET",
       headers: {
-        Authorization: "Bearer invalidToken",
+        Cookie: "access_token=invalidToken",
       },
+      credentials: "include",
     });
 
     const response = await verifyHandler(request);
@@ -107,16 +106,16 @@ describe("Auth API - Verify Token", () => {
     expect(json).toHaveProperty("message", "Invalid or expired access token");
   });
 
-  // ❌ Unhappy Path: Token Valid, Tetapi User Tidak Ditemukan
-  test("❌ Should return 401 if user is not found", async () => {
+  test("❌ Should return 404 if user is not found", async () => {
     (jwt.verify as jest.Mock).mockReturnValue({ id: testUser.id });
     (prisma.user.findUnique as jest.Mock).mockResolvedValue(null);
 
     const request = new NextRequest(new URL(BASE_API_URL_VERIFY_TOKEN), {
       method: "GET",
       headers: {
-        Authorization: "Bearer validToken",
+        Cookie: "access_token=validToken",
       },
+      credentials: "include",
     });
 
     const response = await verifyHandler(request);
@@ -126,10 +125,10 @@ describe("Auth API - Verify Token", () => {
     expect(json).toHaveProperty("message", "User not found");
   });
 
-  // ❌ Corner Path: Token Tidak Diberikan
   test("❌ Should return 401 if no token is provided", async () => {
     const request = new NextRequest(new URL(BASE_API_URL_VERIFY_TOKEN), {
       method: "GET",
+      credentials: "include",
     });
 
     const response = await verifyHandler(request);
