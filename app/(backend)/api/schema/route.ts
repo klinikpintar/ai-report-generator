@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { StatusCodes } from 'http-status-codes';
 import schemaService from '../../services/schemaService';
-import { validateSchemaInput, handleError } from '../../utils/schemaUtils';
+import { validateSchemaInput } from '../../utils/schemaUtils';
+import { handleError } from '@backend/utils/errorUtils';
 
 export async function GET() {
   try {

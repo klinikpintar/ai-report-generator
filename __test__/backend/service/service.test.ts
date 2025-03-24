@@ -115,7 +115,7 @@ describe("CRUD of Service API (Using NextRequest)", () => {
     const json = await response.json();
 
     expect(response.status).toBe(StatusCodes.NOT_FOUND);
-    expect(json.error).toBe("Service not found");
+    expect(json.error).toBe("Instance not found");
   });
 
   it("should return BAD REQUEST when deleting service without ID", async () => {

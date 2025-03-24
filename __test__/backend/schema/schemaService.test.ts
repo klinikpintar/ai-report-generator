@@ -69,13 +69,13 @@ describe('SchemaService Unit Tests', () => {
   });
 
   it('should handle error when updating a non-existing schema', async () => {
-    (prisma.schema.update as jest.Mock).mockRejectedValue(new Error('Schema not found'));
+    (prisma.schema.update as jest.Mock).mockRejectedValue(new Error('Instance not found'));
     await expect(schemaService.updateSchema({ id: 9999, description: 'Invalid' }))
-      .rejects.toThrow('Schema not found');
+      .rejects.toThrow('Instance not found');
   });
 
   it('should handle error when deleting a non-existing schema', async () => {
-    (prisma.schema.delete as jest.Mock).mockRejectedValue(new Error('Schema not found'));
-    await expect(schemaService.deleteSchema(9999)).rejects.toThrow('Schema not found');
+    (prisma.schema.delete as jest.Mock).mockRejectedValue(new Error('Instance not found'));
+    await expect(schemaService.deleteSchema(9999)).rejects.toThrow('Instance not found');
   });
 });

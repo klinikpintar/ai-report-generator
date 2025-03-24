@@ -1,4 +1,5 @@
-import { validateSchemaInput, handleError } from '../../../app/(backend)/utils/schemaUtils';
+import { validateSchemaInput } from '../../../app/(backend)/utils/schemaUtils';
+import { handleError } from '@backend/utils/errorUtils';
 import { ZodError } from 'zod';
 import { StatusCodes } from 'http-status-codes';
 import { Prisma } from '@prisma/client';
@@ -24,13 +25,13 @@ const ERROR_CASES = [
     'CONFLICT for P2002 error',
     new Prisma.PrismaClientKnownRequestError('Unique constraint failed', { code: 'P2002', clientVersion: '4.0.0' }),
     StatusCodes.CONFLICT,
-    'Schema with this name already exists',
+    'Instance with this name already exists',
   ],
   [
     'NOT_FOUND for P2025 error',
     new Prisma.PrismaClientKnownRequestError('Record not found', { code: 'P2025', clientVersion: '4.0.0' }),
     StatusCodes.NOT_FOUND,
-    'Schema not found',
+    'Instance not found',
   ],
   [
     'INTERNAL_SERVER_ERROR for generic errors',

@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { StatusCodes } from 'http-status-codes';
 import serviceService from '@/app/(backend)/services/serviceService';
-import { validateServiceInput, handleError } from '@/app/(backend)/utils/serviceUtils';
+import { validateServiceInput } from '@/app/(backend)/utils/serviceUtils';
+import { handleError } from '@backend/utils/errorUtils';
 
 export async function GET() {
   try {

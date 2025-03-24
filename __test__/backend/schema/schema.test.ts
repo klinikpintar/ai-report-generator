@@ -120,7 +120,7 @@ describe("CRUD of Schema API (Using NextRequest)", () => {
   
   
     expect(response.status).toBe(StatusCodes.NOT_FOUND);
-    expect(json.error).toBe("Schema not found");
+    expect(json.error).toBe("Instance not found");
   });
   
   it("should update a schema successfully", async () => {
