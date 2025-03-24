@@ -1,5 +1,5 @@
-import { CreateServiceValidator } from '../dtos/service.dtos';
+import { CreateServiceDto } from "@backend/dtos/service.dtos";
 
 export function validateServiceInput(data: unknown) {
-  return CreateServiceValidator.parse(data);
+  return CreateServiceDto.parse(data);
 }
