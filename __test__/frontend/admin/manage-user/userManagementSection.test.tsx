@@ -33,12 +33,14 @@ describe('UserManagementSection', () => {
   });
 
   // Negative Case
-  it('does not crash if navigation fails', () => {
-    (useRouter as jest.Mock).mockReturnValue({
-      push: jest.fn().mockImplementation(() => { throw new Error('Navigation error'); }),
-    });
+  it('should not navigate when router is not available', () => {
+    // Mock useRouter to return null or undefined
+    (useRouter as jest.Mock).mockReturnValue(null);
+  
     render(<UserManagementSection />);
     const backButton = screen.getByRole('button', { name: /kembali/i });
+    
+    // Simulate click and ensure no unexpected behavior
     expect(() => fireEvent.click(backButton)).not.toThrow();
   });
 });

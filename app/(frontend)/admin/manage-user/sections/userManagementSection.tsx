@@ -10,11 +10,8 @@ export const UserManagementSection = () => {
   const router = useRouter();
 
   const handleBackClick = () => {
-    try {
-      router.push('/admin');
-    } catch (error) {
-      // Intentionally ignoring navigation errors
-      // This prevents component crash when navigation fails
+    if (router) {
+      router.push("/admin");
     }
   };
 
@@ -23,6 +20,7 @@ export const UserManagementSection = () => {
       <div className="mb-8 flex items-center gap-3">
         <Button
           onClick={handleBackClick}
+          disabled={!router}
           className="p-2 bg-blue-6 text-white font-semibold hover:bg-blue-4 rounded-md transition-colors"
           aria-label="Kembali"
         >
