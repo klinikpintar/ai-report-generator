@@ -4,11 +4,9 @@ import { ErrorResponse } from "@backend/utils/exceptions";
 import { extractToken } from "@backend/utils/authUtils";
 
 export async function POST(req: Request) {
-  console.log("POST /api/auth/token/refresh");
-  console.log(req.headers);
-
+  const cookie = req.headers.get("Cookie") ?? "";
   try {
-    const refreshToken = extractToken("cookie", "refresh_token");
+    const refreshToken = extractToken(cookie, "refresh_token");
     const { newAccessToken, newRefreshToken } = await authService.refreshToken(
       refreshToken
     );
