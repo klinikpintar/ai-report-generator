@@ -21,8 +21,6 @@ const AddSchemaModal = ({ isVisible, onClose }: Props) => {
   return (
     <Modal
       isVisible={isVisible}
-      onClose={onClose}
-      onClearForm={clearForm}
       title="Form Upload Skema Database"
       subtitle="Tambahkan skema baru ke sistem dengan mudah"
     >

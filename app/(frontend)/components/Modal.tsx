@@ -1,26 +1,19 @@
-import React, { ReactNode, MouseEvent, useState, useEffect } from "react";
+import React, { ReactNode, useState, useEffect } from "react";
 import { Inter } from "next/font/google";
 
 const inter = Inter({
   subsets: ["latin"],
 });
 
-interface BaseModalProps {
+interface ModalProps {
   isVisible: boolean;
-  title: string;
-  subtitle: string;
-  children: ReactNode;
-  onClose: () => void;
+  title?: string;
+  subtitle?: string;
+  children?: ReactNode;
 }
-
-interface FormModalProps extends BaseModalProps {
-  onClearForm: () => void;
-}
-
-type ModalProps = BaseModalProps | FormModalProps;
 
 const Modal: React.FC<ModalProps> = (props) => {
-  const { isVisible, title, subtitle, children, onClose } = props;
+  const { isVisible, title, subtitle, children } = props;
   const [shouldRender, setShouldRender] = useState(isVisible);
 
   useEffect(() => {
@@ -33,31 +26,17 @@ const Modal: React.FC<ModalProps> = (props) => {
     }
   }, [isVisible]);
 
-  const handleClose = (event: MouseEvent<HTMLDivElement>) => {
-    const target = event.target as HTMLDivElement;
-    if (target.id === "wrapper") {
-      onClose();
-      if ("onClearForm" in props) {
-        props.onClearForm();
-      }
-    }
-  };
-
   if (!shouldRender) return null;
 
   return (
     <main className={inter.className}>
       <div
-        role="button"
-        tabIndex={0}
-        className={`fixed inset-0 flex justify-center items-center ${
+        className={`fixed inset-0 flex justify-center cursor-default items-center ${
           isVisible
             ? "visible animate-in fade-in bg-black-9 bg-opacity-70"
             : "invisible animate-out fade-out"
         }`}
         id="wrapper"
-        data-testid="wrapper"
-        onClick={handleClose}
       >
         <div
           className={`bg-white w-full max-w-[600px] max-h-full rounded-lg shadow transition-all ${

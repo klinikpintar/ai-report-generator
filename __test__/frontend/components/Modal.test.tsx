@@ -3,7 +3,6 @@ import Modal from "@frontend/components/Modal";
 
 describe("Modal Test", () => {
   const onCloseMock = jest.fn();
-  const onClearFormMock = jest.fn();
 
   const defaultProps = {
     isVisible: true,
@@ -17,15 +16,6 @@ describe("Modal Test", () => {
     jest.clearAllMocks();
   });
 
-  it("Should call 'onClose' if click outside modal", () => {
-    render(<Modal {...defaultProps} />);
-
-    const wrapper = screen.getByTestId("wrapper");
-    fireEvent.click(wrapper);
-
-    expect(onCloseMock).toHaveBeenCalledTimes(1);
-  });
-
   it("Should not call 'onClose' if the click is inside the modal", () => {
     render(<Modal {...defaultProps} />);
 
@@ -33,15 +23,5 @@ describe("Modal Test", () => {
     fireEvent.click(modalContent);
 
     expect(onCloseMock).not.toHaveBeenCalled();
-  });
-
-  it("Should call 'onClearForm' if given as props and click outside modal", () => {
-    render(<Modal {...defaultProps} onClearForm={onClearFormMock} />);
-
-    const wrapper = screen.getByTestId("wrapper");
-    fireEvent.click(wrapper);
-
-    expect(onCloseMock).toHaveBeenCalledTimes(1);
-    expect(onClearFormMock).toHaveBeenCalledTimes(1);
   });
 });
