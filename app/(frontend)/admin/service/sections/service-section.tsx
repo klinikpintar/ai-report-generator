@@ -1,7 +1,12 @@
-import React from "react";
+"use client";
+
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
+import CreateServiceModal from "../components/create-service-modal";
 
 export const ServiceSection = () => {
+  const [showServiceModal, setShowServiceModal] = useState(false);
+
   return (
     <>
       <div className="w-1/2 text-center">
@@ -18,10 +23,19 @@ export const ServiceSection = () => {
       </div>
 
       <div className="flex justify-center">
-        <Button size="lg" className="mr-2 bg-[#00B0EB] hover:bg-[#00B0EB]/90">
+        <Button
+          size="lg"
+          className="mr-2 bg-[#00B0EB] hover:bg-[#00B0EB]/90"
+          onClick={() => setShowServiceModal(true)}
+        >
           Kelola Service Sekarang
         </Button>
       </div>
+
+      <CreateServiceModal
+        isVisible={showServiceModal}
+        onClose={() => setShowServiceModal(false)}
+      />
     </>
   );
 };

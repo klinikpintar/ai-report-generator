@@ -66,7 +66,7 @@ const Modal: React.FC<ModalProps> = (props) => {
               {title}
             </p>
           </div>
-          <div className="flex items-center justify-center md:pl-5 md:pr-5">
+          <div className="flex items-center justify-center px-10">
             <p className="text-center text-[18px]">{subtitle}</p>
           </div>
           {children}
