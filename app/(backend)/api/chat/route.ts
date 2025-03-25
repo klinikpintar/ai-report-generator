@@ -101,7 +101,7 @@ class RequestValidator {
       obj !== null &&
       'role' in obj &&
       'content' in obj &&
-      typeof (obj as any).content === 'string'
+      typeof (obj as Record<string, unknown>).content === 'string'
     );
   }
 
