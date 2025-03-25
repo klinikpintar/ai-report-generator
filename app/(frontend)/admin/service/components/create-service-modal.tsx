@@ -9,7 +9,7 @@ interface Props {
 
 const CreateServiceModal = ({ isVisible, onClose }: Props) => {
   const platforms = ["PostgreSQL", "MySQL", "MongoDB"];
-  const [data, setData] = useState([
+  const [services] = useState([
     { name: "Reservasi", db: "PostgreSQL" },
     { name: "Keuangan", db: "MySQL" },
     { name: "Kesehatan", db: "MongoDB" },
@@ -28,7 +28,7 @@ const CreateServiceModal = ({ isVisible, onClose }: Props) => {
     >
       <div className="px-10 pt-10">
         <ul className="border border-gray-300 rounded-lg max-h-48 overflow-y-auto">
-          {data.map((item, index) => (
+          {services.map((item, index) => (
             <li
               key={index}
               className="flex items-center py-2 px-4 gap-4 hover:bg-gray-100"
