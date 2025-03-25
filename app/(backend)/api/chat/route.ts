@@ -42,13 +42,11 @@ interface ApiResponse {
   };
 }
 
-// Abstract model provider (DIP)
 interface ModelProvider {
   generateResponse(messages: Message[]): Promise<GenerationResult>;
   getModelName(): string;
 }
 
-// Concrete model providers (DIP, OCP)
 class DeepseekProvider implements ModelProvider {
   generateResponse(messages: Message[]): Promise<GenerationResult> {
     const sdkMessages = messages as CoreMessage[];
@@ -81,7 +79,6 @@ class GeminiProvider implements ModelProvider {
   }
 }
 
-// Model factory (OCP)
 class ModelFactory {
   private providers: Record<string, ModelProvider> = {
     'deepseek': new DeepseekProvider(),
@@ -97,9 +94,18 @@ class ModelFactory {
   }
 }
 
-// Request validator (SRP)
 class RequestValidator {
-  validateMessages(messages: any[]): { isValid: boolean; error?: string } {
+  private isValidMessage(obj: unknown): obj is { role: string; content: string } {
+    return (
+      typeof obj === 'object' &&
+      obj !== null &&
+      'role' in obj &&
+      'content' in obj &&
+      typeof (obj as any).content === 'string'
+    );
+  }
+
+  validateMessages(messages: unknown[]): { isValid: boolean; error?: string } {
     if (!messages || !Array.isArray(messages) || messages.length === 0) {
       return { 
         isValid: false, 
@@ -108,7 +114,7 @@ class RequestValidator {
     }
 
     const invalidMessage = messages.find(
-      (msg) => !msg.role || !msg.content || typeof msg.content !== 'string'
+      (msg) => !this.isValidMessage(msg) || !msg.role
     );
 
     if (invalidMessage) {
@@ -122,7 +128,6 @@ class RequestValidator {
   }
 }
 
-// NEW: Schema repository (SRP, DIP)
 interface SchemaRepository {
   getSchemaById(id: number): Promise<Schema | null>;
 }
@@ -141,7 +146,6 @@ class PrismaSchemaRepository implements SchemaRepository {
   }
 }
 
-// NEW: Context enhancer (SRP)
 class SchemaContextEnhancer {
   private repository: SchemaRepository;
   
@@ -158,7 +162,7 @@ class SchemaContextEnhancer {
     schemaName: string | null
   }> {
     // Default values for no enhancement
-    let enhancedMessages = [...messages];
+    const enhancedMessages = [...messages]; 
     let schemaIncluded = false;
     let schemaName: string | null = null;
     
@@ -210,7 +214,6 @@ class SchemaContextEnhancer {
   }
 }
 
-// Response formatter (SRP)
 class ResponseFormatter {
   formatResponse(
     result: GenerationResult, 
@@ -240,9 +243,8 @@ class ResponseFormatter {
   }
 }
 
-// Error handler (SRP)
 class ErrorHandler {
-  handleError(error: any): Response {
+  handleError(error: unknown): Response { // Changed from any to unknown
     console.error('Error processing request:', error);
     return new Response(
       JSON.stringify({ error: 'Failed to generate response' }),
