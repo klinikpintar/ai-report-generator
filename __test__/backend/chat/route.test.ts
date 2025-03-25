@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server';
 import { POST } from '@/app/(backend)/api/chat/route';
 import { generateText } from 'ai';
 import prisma from '@/lib/prisma';
+import { ModelFactory } from '@/app/(backend)/api/chat/route';
 
 // Mock the ai module
 jest.mock('ai', () => ({
@@ -413,6 +414,28 @@ describe('Schema context enhancement', () => {
     // Restore original functions
     Array.isArray = originalIsArray;
     consoleErrorSpy.mockRestore();
+  });
+
+  it('allows registering custom model providers', () => {
+    const factory = new ModelFactory();
+    const mockProvider = {
+      generateResponse: jest.fn(),
+      getModelName: () => 'mock'
+    };
+    
+    factory.registerProvider('mock', mockProvider);
+    expect(factory.getProvider('mock')).toBe(mockProvider);
+  });
+
+  it('falls back to gemini provider when requested model does not exist', () => {
+    const factory = new ModelFactory();
+    const nonExistentModelName = 'non-existent-model';
+    
+    // Get provider for a model name that doesn't exist
+    const provider = factory.getProvider(nonExistentModelName);
+    
+    // Verify it returned the default gemini provider
+    expect(provider.getModelName()).toBe('gemini');
   });
 });
 

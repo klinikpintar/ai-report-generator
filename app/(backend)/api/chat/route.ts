@@ -1,151 +1,251 @@
 import { google } from '@ai-sdk/google';
 import { deepseek } from '@ai-sdk/deepseek';
-import { generateText } from 'ai';
+import { generateText, CoreMessage } from 'ai'; 
 import prisma from '@/lib/prisma';
 
-export async function POST(req: Request) {
-  try {
-    const { messages, model = 'gemini', schemaId } = await req.json();
+// Types and interfaces
+interface Message {
+  role: 'user' | 'assistant' | 'system';
+  content: string;
+}
 
+interface Schema {
+  id: number;
+  name: string;
+  schemaText: string;
+}
+
+interface GenerationResult {
+  text: string;
+  finishReason?: string;
+  usage?: {
+    promptTokens?: number;
+    completionTokens?: number;
+  };
+}
+
+interface ApiResponse {
+  messageId: string;
+  userPrompt: string;
+  aiResponse: string;
+  createdAt: string;
+  metadata: {
+    finishReason: string;
+    usage: {
+      promptTokens: number;
+      completionTokens: number;
+    };
+    modelUsed: string;
+    schemaId?: string | string[];
+    schemaIncluded?: boolean;
+    schemaName?: string;
+  };
+}
+
+// Abstract model provider (DIP)
+interface ModelProvider {
+  generateResponse(messages: Message[]): Promise<GenerationResult>;
+  getModelName(): string;
+}
+
+// Concrete model providers (DIP, OCP)
+class DeepseekProvider implements ModelProvider {
+  generateResponse(messages: Message[]): Promise<GenerationResult> {
+    const sdkMessages = messages as CoreMessage[];
+    
+    return generateText({
+      model: deepseek('deepseek-chat'),
+      messages: sdkMessages,
+    });
+  }
+
+  getModelName(): string {
+    return 'deepseek';
+  }
+}
+
+class GeminiProvider implements ModelProvider {
+  generateResponse(messages: Message[]): Promise<GenerationResult> {
+    const sdkMessages = messages as CoreMessage[];
+    
+    return generateText({
+      model: google('gemini-2.0-flash', {
+        useSearchGrounding: true,
+      }),
+      messages: sdkMessages,
+    });
+  }
+
+  getModelName(): string {
+    return 'gemini';
+  }
+}
+
+// Model factory (OCP)
+class ModelFactory {
+  private providers: Record<string, ModelProvider> = {
+    'deepseek': new DeepseekProvider(),
+    'gemini': new GeminiProvider(),
+  };
+
+  getProvider(modelName: string): ModelProvider {
+    return this.providers[modelName] || this.providers['gemini'];
+  }
+
+  registerProvider(name: string, provider: ModelProvider): void {
+    this.providers[name] = provider;
+  }
+}
+
+// Request validator (SRP)
+class RequestValidator {
+  validateMessages(messages: any[]): { isValid: boolean; error?: string } {
     if (!messages || !Array.isArray(messages) || messages.length === 0) {
-      return new Response(JSON.stringify({ error: 'No messages provided' }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' },
-      });
+      return { 
+        isValid: false, 
+        error: 'No messages provided' 
+      };
     }
 
     const invalidMessage = messages.find(
       (msg) => !msg.role || !msg.content || typeof msg.content !== 'string'
     );
+
     if (invalidMessage) {
-      return new Response(JSON.stringify({ error: 'Invalid message format' }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' },
-      });
+      return { 
+        isValid: false, 
+        error: 'Invalid message format' 
+      };
     }
 
-    // Create a copy of messages for potential enhancement
-    let enhancedMessages = [...messages];
-    let schemaName = null;
-    let schemaIncluded = false;
-    
-    // Try to process schemas, but don't let errors stop execution
+    return { isValid: true };
+  }
+}
+
+// NEW: Schema repository (SRP, DIP)
+interface SchemaRepository {
+  getSchemaById(id: number): Promise<Schema | null>;
+}
+
+class PrismaSchemaRepository implements SchemaRepository {
+  async getSchemaById(id: number): Promise<Schema | null> {
     try {
-      // Process schemaId - can be single ID or array
-      let normalizedSchemaId = schemaId;
-      if (schemaId !== undefined && !Array.isArray(schemaId)) {
-        normalizedSchemaId = schemaId;
+      return await prisma.schema.findUnique({
+        where: { id },
+        select: { id: true, name: true, schemaText: true }
+      });
+    } catch (error) {
+      console.error(`Error fetching schema with ID ${id}:`, error);
+      return null;
+    }
+  }
+}
+
+// NEW: Context enhancer (SRP)
+class SchemaContextEnhancer {
+  private repository: SchemaRepository;
+  
+  constructor(repository: SchemaRepository) {
+    this.repository = repository;
+  }
+  
+  async enhanceWithSchemaContext(
+    messages: Message[], 
+    schemaId: string | string[] | undefined
+  ): Promise<{
+    enhancedMessages: Message[],
+    schemaIncluded: boolean,
+    schemaName: string | null
+  }> {
+    // Default values for no enhancement
+    let enhancedMessages = [...messages];
+    let schemaIncluded = false;
+    let schemaName: string | null = null;
+    
+    if (!schemaId) {
+      return { enhancedMessages, schemaIncluded, schemaName };
+    }
+    
+    try {
+      const fetchedSchemas: Schema[] = [];
+      const schemaIds = Array.isArray(schemaId) ? schemaId : [schemaId];
+      
+      // Fetch all schemas
+      for (const id of schemaIds) {
+        const schema = await this.repository.getSchemaById(parseInt(id));
+        if (schema && schema.schemaText) {
+          fetchedSchemas.push(schema);
+        }
       }
       
-      // If a schema ID is provided, fetch and enhance messages with schema context
-      if (normalizedSchemaId !== undefined) {
-        // Change from let to const since it's never reassigned
-        const fetchedSchemas = [];
-        const schemaIds = Array.isArray(normalizedSchemaId) 
-          ? normalizedSchemaId 
-          : [normalizedSchemaId];
+      // If we found schemas, enhance the last user message
+      if (fetchedSchemas.length > 0) {
+        schemaIncluded = true;
+        const lastUserMessageIndex = enhancedMessages.length - 1;
         
-        // Fetch all selected schemas
-        for (const id of schemaIds) {
-          try {
-            const schema = await prisma.schema.findUnique({
-              where: { id: parseInt(id as string) },
-              select: { name: true, schemaText: true }
-            });
-            
-            if (schema && schema.schemaText) {
-              fetchedSchemas.push(schema);
-            }
-          } catch (error) {
-            console.error(`Error fetching schema with ID ${id}:`, error);
-          }
-        }
-        
-        // If any schemas were found, enhance the message
-        if (fetchedSchemas.length > 0) {
-          schemaIncluded = true;
+        if (enhancedMessages[lastUserMessageIndex].role === 'user') {
+          let schemaContext = '';
           
-          const lastUserMessageIndex = enhancedMessages.length - 1;
-          if (enhancedMessages[lastUserMessageIndex].role === 'user') {
-            let schemaContext = '';
-            
-            for (const schema of fetchedSchemas) {
-              schemaName = schemaName ? `${schemaName}, ${schema.name}` : schema.name;
-              schemaContext += `SQL Schema (${schema.name}):\n\`\`\`sql\n${schema.schemaText}\n\`\`\`\n\n`;
-            }
-            
-            // Apply enhanced context
-            enhancedMessages[lastUserMessageIndex].content = 
-              `${schemaContext}User Query: ${enhancedMessages[lastUserMessageIndex].content}`;
+          for (const schema of fetchedSchemas) {
+            schemaName = schemaName ? `${schemaName}, ${schema.name}` : schema.name;
+            schemaContext += `SQL Schema (${schema.name}):\n\`\`\`sql\n${schema.schemaText}\n\`\`\`\n\n`;
           }
+          
+          enhancedMessages[lastUserMessageIndex] = {
+            ...enhancedMessages[lastUserMessageIndex],
+            content: `${schemaContext}User Query: ${enhancedMessages[lastUserMessageIndex].content}`
+          };
         }
       }
+      
+      return { enhancedMessages, schemaIncluded, schemaName };
     } catch (error) {
-      // Log but don't terminate processing
       console.error('Error processing schemas:', error);
-      // Continue with original messages if there's an error
-      enhancedMessages = [...messages]; 
-      schemaName = null;
-      schemaIncluded = false;
+      return {
+        enhancedMessages: [...messages],
+        schemaIncluded: false,
+        schemaName: null
+      };
     }
+  }
+}
 
-    // Generate response with either enhanced or original messages
-    let result;
-    try {
-      switch (model) {
-        case 'deepseek':
-          result = await generateText({
-            model: deepseek('deepseek-chat'),
-            messages: enhancedMessages,
-          });
-          break;
-        case 'gemini':
-        default:
-          result = await generateText({
-            model: google('gemini-2.0-flash', {
-              useSearchGrounding: true,
-            }),
-            messages: enhancedMessages,
-          });
-          break;
-      }
-    } catch (aiError) {
-      console.error('AI generation error:', aiError);
-      return new Response(
-        JSON.stringify({ error: 'Failed to generate response' }), 
-        {
-          status: 500,
-          headers: { 'Content-Type': 'application/json' },
-        }
-      );
-    }
-
-    const response = {
-      messageId: `msg-${Date.now()}`, 
-      userPrompt: messages[messages.length - 1].content, // Return original prompt
-      aiResponse: result.text, 
-      createdAt: new Date().toISOString(), 
+// Response formatter (SRP)
+class ResponseFormatter {
+  formatResponse(
+    result: GenerationResult, 
+    messages: Message[], 
+    modelName: string,
+    schemaId?: string | string[],
+    schemaIncluded?: boolean,
+    schemaName?: string | null
+  ): ApiResponse {
+    return {
+      messageId: `msg-${Date.now()}`,
+      userPrompt: messages[messages.length - 1].content,
+      aiResponse: result.text,
+      createdAt: new Date().toISOString(),
       metadata: {
-        finishReason: result.finishReason || 'stop', 
+        finishReason: result.finishReason || 'stop',
         usage: {
-          promptTokens: result.usage?.promptTokens || 0, 
+          promptTokens: result.usage?.promptTokens || 0,
           completionTokens: result.usage?.completionTokens || 0,
         },
-        modelUsed: model,
+        modelUsed: modelName,
         ...(schemaId !== undefined && { schemaId }),
-        schemaIncluded,
+        ...(schemaIncluded !== undefined && { schemaIncluded }),
         ...(schemaName && { schemaName })
       },
     };
+  }
+}
 
-    return new Response(JSON.stringify(response), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' },
-    });
-  } catch (error) {
+// Error handler (SRP)
+class ErrorHandler {
+  handleError(error: any): Response {
     console.error('Error processing request:', error);
     return new Response(
-      JSON.stringify({ error: 'Failed to generate response' }), 
+      JSON.stringify({ error: 'Failed to generate response' }),
       {
         status: 500,
         headers: { 'Content-Type': 'application/json' },
@@ -153,3 +253,55 @@ export async function POST(req: Request) {
     );
   }
 }
+
+// Main handler (uses all the components)
+export async function POST(req: Request) {
+  const errorHandler = new ErrorHandler();
+  const validator = new RequestValidator();
+  const factory = new ModelFactory();
+  const formatter = new ResponseFormatter();
+  const schemaRepository = new PrismaSchemaRepository();
+  const contextEnhancer = new SchemaContextEnhancer(schemaRepository);
+
+  try {
+    const { messages, model = 'gemini', schemaId } = await req.json();
+    
+    // Validate request
+    const validation = validator.validateMessages(messages);
+    if (!validation.isValid) {
+      return new Response(JSON.stringify({ error: validation.error }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+    
+    // Enhance messages with schema context if applicable
+    const { enhancedMessages, schemaIncluded, schemaName } = 
+      await contextEnhancer.enhanceWithSchemaContext(messages, schemaId);
+    
+    // Get the appropriate model provider
+    const provider = factory.getProvider(model);
+    
+    // Generate response with enhanced messages
+    const result = await provider.generateResponse(enhancedMessages);
+    
+    // Format response with schema metadata
+    const response = formatter.formatResponse(
+      result, 
+      messages, // Original messages for userPrompt
+      provider.getModelName(),
+      schemaId,
+      schemaIncluded,
+      schemaName
+    );
+    
+    return new Response(JSON.stringify(response), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  } catch (error) {
+    return errorHandler.handleError(error);
+  }
+}
+
+export { ModelFactory, SchemaContextEnhancer, ResponseFormatter, RequestValidator };
