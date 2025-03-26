@@ -4,9 +4,13 @@ import schemaService from '../../services/schemaService';
 import { validateSchemaInput } from '../../utils/schemaUtils';
 import { handleError } from '@backend/utils/errorUtils';
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
-    const schemas = await schemaService.findAllSchemas();
+    const url = new URL(req.url);
+    const serviceId = url.searchParams.get("service_id") as (string | undefined);
+
+
+    const schemas = await schemaService.findAllSchemas(serviceId);
     return NextResponse.json(schemas, { status: StatusCodes.OK });
   } catch (error) {
     return handleError(error, "GET Schemas");

@@ -20,10 +20,10 @@ export interface ISchemaService extends IReadSchemaService, IWriteSchemaService,
 
 export interface IReadSchemaService {
   /**
-   * Find all schemas
+   * Find all schemas by service id
    * @returns Promise<Schema[]> Array of schemas
    */
-  findAllSchemas(): Promise<Schema[]>;
+  findAllSchemas(serviceId?: string): Promise<Schema[]>;
 }
 
 

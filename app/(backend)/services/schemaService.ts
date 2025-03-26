@@ -15,9 +15,11 @@ class SchemaService implements ISchemaService {
     });
   }
 
-  async findAllSchemas(): Promise<Schema[]> {
-    return prisma.schema.findMany();
-  }
+  async findAllSchemas(serviceId?: string): Promise<Schema[]> {
+    return prisma.schema.findMany(
+      serviceId ? { where: { serviceId: serviceId } } : {}
+    );
+  }  
 
   async updateSchema(data: UpdateSchemaDto): Promise<Schema> {
     const { id, ...updateFields } = data;
