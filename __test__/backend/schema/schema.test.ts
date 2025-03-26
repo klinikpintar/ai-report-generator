@@ -44,6 +44,7 @@ const validSchemaData = {
   name: "products",
   description: "Table to store products data",
   schemaText: "CREATE TABLE products (id SERIAL PRIMARY KEY, name TEXT);",
+  serviceId: 'db9caeca-aa1a-46f6-84de-adfe0a414c03',
 };
 
 const invalidSchemaData = {
@@ -220,7 +221,7 @@ describe("CRUD of Schema API (Using NextRequest)", () => {
         serviceId: SERVICE_ID,
       },
       {
-        id: 1,
+        id: 2,
         name: "users",
         description: "Table for user info",
         schemaText: "CREATE TABLE users (id SERIAL PRIMARY KEY);",
@@ -228,7 +229,9 @@ describe("CRUD of Schema API (Using NextRequest)", () => {
       },
     ];
   
-    (prisma.schema.findMany as jest.Mock).mockResolvedValue(filteredSchemas);
+    (prisma.schema.findMany as jest.Mock).mockImplementation(({ where }) => {
+      return Promise.resolve(filteredSchemas.filter(schema => schema.serviceId == where.serviceId));
+    });    
   
     const request = new NextRequest(new URL(`http://localhost/api/schema?service_id=${SERVICE_ID}`), {
       method: "GET",

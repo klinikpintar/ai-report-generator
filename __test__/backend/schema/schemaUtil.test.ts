@@ -3,6 +3,7 @@ import { handleError } from '@backend/utils/errorUtils';
 import { ZodError } from 'zod';
 import { StatusCodes } from 'http-status-codes';
 import { Prisma } from '@prisma/client';
+import { validateSchemaInput } from '@backend/utils/schemaUtils';
 
 jest.mock('next/server', () => ({
   NextResponse: {
@@ -34,6 +35,15 @@ const ERROR_CASES = [
     'Instance not found',
   ],
   [
+    'INTERNAL_SERVER_ERROR for unknown PrismaClientKnownRequestError code',
+    new Prisma.PrismaClientKnownRequestError('Some DB issue', {
+      code: 'P9999',
+      clientVersion: '4.0.0',
+    }),
+    StatusCodes.NOT_FOUND,
+    'Database error',
+  ],
+  [
     'INTERNAL_SERVER_ERROR for generic errors',
     new Error('Unexpected error'),
     StatusCodes.INTERNAL_SERVER_ERROR,
@@ -47,14 +57,15 @@ describe('Schema Utils Unit Tests', () => {
       name: 'Test Schema',
       description: 'Valid description',
       schemaText: 'CREATE TABLE test (id SERIAL PRIMARY KEY, name TEXT);',
+      serviceId: 'db9caeca-aa1a-46f6-84de-adfe0a414c03'
     };
 
     it('should validate correct input', () => {
-      expect(CreateSchemaDto.parse(validData)).toEqual(validData);
+      expect(validateSchemaInput(validData)).toEqual(validData);
     });
 
     it('should throw a ZodError for invalid input', () => {
-      expect(() => CreateSchemaDto.parse({})).toThrow(ZodError);
+      expect(() => validateSchemaInput({})).toThrow(ZodError);
     });
 
     it('should throw a ZodError for missing serviceId', () => {
