@@ -4,7 +4,8 @@ import {
   SchemaContextEnhancer, 
   ResponseFormatter, 
   RequestValidator, 
-  ErrorHandler 
+  ErrorHandler,
+  Message 
 } from '../../services/chatServices';
 import { findRelevantContent } from '@/lib/embedding';
 
@@ -33,7 +34,7 @@ export async function POST(req: Request) {
       await contextEnhancer.enhanceWithSchemaContext(messages, schemaId);
 
     // Then add RAG content to the ENHANCED messages
-    const lastUserMessage = messages.findLast(m => m.role === 'user');
+    const lastUserMessage = messages.findLast((m: Message) => m.role === 'user');
     
     if (lastUserMessage) {
       const relevantContent = await findRelevantContent(lastUserMessage.content, resourceIds);
