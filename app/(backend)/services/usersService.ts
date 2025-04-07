@@ -1,23 +1,15 @@
 import prisma from "@/lib/prisma";
+import config from "@backend/config";
 import {
   CreateUserDto,
   IUserCreator,
   User,
 } from "@backend/interfaces/IUsersService";
-import {
-  BadRequestResponse,
-  ConflictResponse,
-} from "@backend/utils/exceptions";
+import { ConflictResponse } from "@backend/utils/exceptions";
 import bcrypt from "bcryptjs";
 
 class UsersService implements IUserCreator {
   async createUser(data: CreateUserDto): Promise<User> {
-    if (data.password !== data.confirmPassword) {
-      throw new BadRequestResponse(
-        "Password and confirm password must be the same"
-      );
-    }
-
     const userCount = await prisma.user.count({ where: { email: data.email } });
     if (userCount > 0) {
       throw new ConflictResponse("Email already exists");
@@ -26,7 +18,7 @@ class UsersService implements IUserCreator {
     const userWithHashedPassword = {
       name: data.name,
       email: data.email,
-      password: await bcrypt.hash(data.password, 10),
+      password: await bcrypt.hash(data.password, config.BCRYPT_SALT_ROUNDS),
       role: data.role,
       isActive: true,
     };
