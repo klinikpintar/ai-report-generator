@@ -282,17 +282,13 @@ export async function POST(req: Request) {
 
     // Then add RAG content to the ENHANCED messages
     const lastUserMessage = messages.findLast(m => m.role === 'user');
-    let ragContent = null;
     
     if (lastUserMessage) {
-      // console.log("Finding content relevant to:", lastUserMessage.content); # Buat debug
       const relevantContent = await findRelevantContent(lastUserMessage.content, resourceIds);
-      // console.log("RAG results:", JSON.stringify(relevantContent)); # Buat debug
       
       if (relevantContent && relevantContent.length > 0) {
-        ragContent = relevantContent;
         const contextPrompt = `You have access to the following information that might be relevant:
-${relevantContent.map((item: any) => `${item.content}`).join('\n\n')}
+${relevantContent.map((item: { content: string; similarity: number }) => `${item.content}`).join('\n\n')}
 
 Use this information if relevant to answer the user's question.`;
         

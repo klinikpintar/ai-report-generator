@@ -1,7 +1,7 @@
 import { embed, embedMany } from 'ai';
 import { google } from '@ai-sdk/google';
 import prisma from './prisma';
-import { PrismaClient, Prisma } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 
 const embeddingModel = google.textEmbeddingModel('text-embedding-004');
 

@@ -35,10 +35,10 @@ export default function ResourceForm() {
       setTitle("");
       setContent("");
       router.refresh();
-    } catch (error: any) {
+    } catch (error) {
       setMessage({ 
         type: "error", 
-        text: error.message || "An error occurred" 
+        text: error instanceof Error ? error.message : "An error occurred" 
       });
     } finally {
       setIsLoading(false);

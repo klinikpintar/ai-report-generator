@@ -1,7 +1,5 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
 import ResourceForm from "./components/resource-form";
 import ResourcesList from "./components/resources-list";
 
