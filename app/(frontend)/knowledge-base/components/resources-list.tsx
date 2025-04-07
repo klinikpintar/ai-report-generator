@@ -23,8 +23,8 @@ export default function ResourcesList() {
         }
         const data = await response.json();
         setResources(data.resources);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "An error occurred");
+      } catch (error: unknown) {
+        setError(error instanceof Error ? error.message : "An error occurred");
       } finally {
         setIsLoading(false);
       }

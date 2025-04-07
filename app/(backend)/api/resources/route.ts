@@ -49,10 +49,12 @@ export async function POST(req: Request) {
       success: true, 
       resourceId: resource.id 
     }, { status: 201 });
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Error creating resource:', error);
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    
     return NextResponse.json(
-      { error: 'Failed to create resource: ' + (error instanceof Error ? error.message : String(error)) },
+      { error: 'Failed to create resource: ' + errorMessage },
       { status: 500 }
     );
   }

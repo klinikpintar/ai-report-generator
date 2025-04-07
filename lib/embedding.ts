@@ -51,9 +51,9 @@ export async function generateChunkEmbeddings(content: string): Promise<Array<{c
       console.error('Error generating embeddings from API:', embeddingError);
       throw embeddingError; // Rethrow API errors
     }
-  } catch (error) {
-    // Only handle non-API errors here
-    if (error.message === 'API error') {
+  } catch (error: unknown) { // Explicitly type as unknown
+    // Type check before accessing properties
+    if (error instanceof Error && error.message === 'API error') {
       throw error; // Let API errors propagate
     }
     

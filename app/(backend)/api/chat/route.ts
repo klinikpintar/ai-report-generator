@@ -10,7 +10,7 @@ import {
 import { findRelevantContent } from '@/lib/embedding';
 
 // Define an interface for the relevant content items
-interface RelevantContentItem {
+export interface RelevantContentItem {
   content: string;
   similarity: number;
 }
@@ -43,17 +43,22 @@ export async function POST(req: Request) {
     const lastUserMessage = messages.findLast((m: Message) => m.role === 'user');
     
     if (lastUserMessage) {
-      // Add type annotation to the relevantContent variable
-      const relevantContent = await findRelevantContent(lastUserMessage.content, resourceIds) as RelevantContentItem[];
-      
-      if (relevantContent && relevantContent.length > 0) {
-        const contextPrompt = `You have access to the following information that might be relevant:
+      try {
+        // Add type annotation to the relevantContent variable
+        const relevantContent = await findRelevantContent(lastUserMessage.content, resourceIds) as RelevantContentItem[];
+        
+        if (relevantContent && relevantContent.length > 0) {
+          const contextPrompt = `You have access to the following information that might be relevant:
 ${relevantContent.map((item: RelevantContentItem) => `${item.content}`).join('\n\n')}
 
 Use this information if relevant to answer the user's question.`;
-        
-        // Add the RAG content to the enhanced messages
-        enhancedMessages.unshift({ role: 'system', content: contextPrompt });
+          
+          // Add the RAG content to the enhanced messages
+          enhancedMessages.unshift({ role: 'system', content: contextPrompt });
+        }
+      } catch (error: unknown) {
+        console.error('Error retrieving relevant content:', error);
+        return errorHandler.handleError(error);
       }
     }
     

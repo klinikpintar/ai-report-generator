@@ -35,7 +35,7 @@ export default function ResourceForm() {
       setTitle("");
       setContent("");
       router.refresh();
-    } catch (error) {
+    } catch (error: unknown) {
       setMessage({ 
         type: "error", 
         text: error instanceof Error ? error.message : "An error occurred" 
