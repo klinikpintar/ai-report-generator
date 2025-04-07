@@ -39,6 +39,8 @@ export interface ApiResponse {
     schemaId?: string | string[];
     schemaIncluded?: boolean;
     schemaName?: string;
+    resourceIds?: number[];
+    warnings?: string[];
   };
 }
 
@@ -186,8 +188,23 @@ export class ResponseFormatter {
     modelName: string,
     schemaId?: string | string[],
     schemaIncluded?: boolean,
-    schemaName?: string | null
+    schemaName?: string | null,
+    resourceIds?: number[],
+    relevantContentFound?: boolean
   ): ApiResponse {
+    // Create warnings array
+    const warnings: string[] = [];
+    
+    // Add schema warning if needed
+    if (schemaId && !schemaIncluded) {
+      warnings.push('Requested schema(s) not found or had no content');
+    }
+    
+    // Add resource warning if needed
+    if (resourceIds && resourceIds.length > 0 && !relevantContentFound) {
+      warnings.push(`No relevant content found for resource IDs: ${resourceIds.join(', ')}`);
+    }
+    
     return {
       messageId: `msg-${Date.now()}`,
       userPrompt: messages[messages.length - 1].content,
@@ -202,7 +219,11 @@ export class ResponseFormatter {
         modelUsed: modelName,
         ...(schemaId !== undefined && { schemaId }),
         ...(schemaIncluded !== undefined && { schemaIncluded }),
-        ...(schemaName && { schemaName })
+        ...(schemaName && { schemaName }),
+        // Include resourceIds in response metadata
+        ...(resourceIds?.length && { resourceIds }),
+        // Only include warnings if there are any
+        ...(warnings.length > 0 && { warnings })
       },
     };
   }

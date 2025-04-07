@@ -42,12 +42,17 @@ export async function POST(req: Request) {
     // Then add RAG content to the ENHANCED messages
     const lastUserMessage = messages.findLast((m: Message) => m.role === 'user');
     
+    // Track if any relevant content was found
+    let relevantContentFound = false;
+
     if (lastUserMessage) {
       try {
         // Add type annotation to the relevantContent variable
         const relevantContent = await findRelevantContent(lastUserMessage.content, resourceIds) as RelevantContentItem[];
         
-        if (relevantContent && relevantContent.length > 0) {
+        relevantContentFound = relevantContent && relevantContent.length > 0;
+
+        if (relevantContentFound) {
           const contextPrompt = `You have access to the following information that might be relevant:
 ${relevantContent.map((item: RelevantContentItem) => `${item.content}`).join('\n\n')}
 
@@ -75,7 +80,9 @@ Use this information if relevant to answer the user's question.`;
       provider.getModelName(),
       schemaId,
       schemaIncluded,
-      schemaName
+      schemaName,
+      resourceIds,
+      relevantContentFound
     );
     
     return new Response(JSON.stringify(response), {

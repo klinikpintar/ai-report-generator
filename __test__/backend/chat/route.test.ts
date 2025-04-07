@@ -711,6 +711,47 @@ describe('RAG integration with chat', () => {
     // Restore console.error
     consoleErrorSpy.mockRestore();
   });
+
+  it('includes warning messages for invalid schemaIds and resourceIds', async () => {
+    // Mock prisma to return null for schema
+    (prisma.schema.findUnique as jest.Mock).mockResolvedValue(null);
+    
+    // Mock findRelevantContent to return empty results
+    const { findRelevantContent } = require('@/lib/embedding');
+    findRelevantContent.mockResolvedValueOnce([]);
+    
+    const req = new NextRequest('http://localhost/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        messages: [{ role: 'user', content: 'What is my favorite food?' }],
+        schemaId: '999',
+        resourceIds: [999, 888]
+      }),
+    });
+
+    const response = await POST(req);
+    expect(response.status).toBe(200);
+    
+    const responseBody = await response.json();
+    
+    // Check that warnings array exists and contains expected messages
+    expect(responseBody.metadata).toHaveProperty('warnings');
+    expect(Array.isArray(responseBody.metadata.warnings)).toBe(true);
+    
+    // Verify schema warning exists
+    expect(responseBody.metadata.warnings).toContainEqual(
+      expect.stringContaining('Requested schema(s) not found')
+    );
+    
+    // Verify resource warning exists
+    expect(responseBody.metadata.warnings).toContainEqual(
+      expect.stringContaining('No relevant content found for resource IDs: 999, 888')
+    );
+    
+    // Verify resourceIds are included in metadata
+    expect(responseBody.metadata).toHaveProperty('resourceIds', [999, 888]);
+  });
 });
 
 describe('Model Providers', () => {

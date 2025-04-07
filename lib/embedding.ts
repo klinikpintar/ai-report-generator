@@ -74,8 +74,8 @@ export async function findRelevantContent(
   console.log("Generating embedding for query:", userQuery);
   const queryEmbedding = await generateEmbedding(userQuery);
   
-  // console.log("Starting vector search for content...");
-  // console.log("Filtering by resources:", resourceIds); # Buat debugging
+  console.log("Starting vector search for content...");
+  console.log("Filtering by resources:", resourceIds); // Buat debugging
   
   let results;
   
@@ -99,6 +99,6 @@ export async function findRelevantContent(
     `;
   }
   
-  // console.log("Vector search results:", results);  // Buat debugging
+  console.log("Vector search results:", results);  // Buat debugging
   return results;
 }
