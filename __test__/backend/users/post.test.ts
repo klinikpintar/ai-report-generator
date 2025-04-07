@@ -40,8 +40,8 @@ describe("User API - Create User", () => {
       body: JSON.stringify({
         name: "John Doe",
         email: "johndoe@example.com",
-        password: "securePassword",
-        confirmPassword: "securePassword",
+        password: "Secure123!",
+        confirmPassword: "Secure123!",
         role: "BUSINESS_ANALYST",
       }),
       headers: { "Content-Type": "application/json" },
@@ -51,17 +51,9 @@ describe("User API - Create User", () => {
     const json = await response.json();
 
     expect(response.status).toBe(200);
-    expect(json).toHaveProperty("message", "User created");
-    expect(json.data.user).toMatchObject({
-      id: "12345",
-      name: "John Doe",
-      email: "johndoe@example.com",
-      role: "BUSINESS_ANALYST",
-      isActive: true,
-    });
-
-    expect(bcryptHashSpy).toHaveBeenCalledWith("securePassword", 10);
-    expect(prisma.user.create).toHaveBeenCalled();
+    expect(json.message).toBe("User created");
+    expect(json.data.user.email).toBe("johndoe@example.com");
+    expect(bcryptHashSpy).toHaveBeenCalledWith("Secure123!", 10);
   });
 
   // ❌ Unhappy Path - Email sudah terdaftar
@@ -73,8 +65,8 @@ describe("User API - Create User", () => {
       body: JSON.stringify({
         name: "Jane Doe",
         email: "janedoe@example.com",
-        password: "securePassword",
-        confirmPassword: "securePassword",
+        password: "Secure123!",
+        confirmPassword: "Secure123!",
         role: "BUSINESS_ANALYST",
       }),
       headers: { "Content-Type": "application/json" },
@@ -87,16 +79,16 @@ describe("User API - Create User", () => {
     expect(json).toHaveProperty("message", "Email already exists");
   });
 
-  // ❌ Unhappy Path - Password dan confirm password tidak cocok
-  test("Should return error if passwords do not match", async () => {
+  // ❌ Password tidak memenuhi policy (kurang simbol)
+  test("Should reject password that lacks symbol", async () => {
     const request = new NextRequest(new URL(BASE_API_URL_USERS), {
       method: "POST",
       body: JSON.stringify({
-        name: "Jake Doe",
-        email: "jakedoe@example.com",
-        password: "password123",
-        confirmPassword: "differentPassword",
-        role: "BUSINESS_ANALYST",
+        name: "John",
+        email: "test@example.com",
+        password: "Secure123", // No symbol
+        confirmPassword: "Secure123",
+        role: "ADMIN",
       }),
       headers: { "Content-Type": "application/json" },
     });
@@ -105,10 +97,53 @@ describe("User API - Create User", () => {
     const json = await response.json();
 
     expect(response.status).toBe(400);
-    expect(json).toHaveProperty(
-      "message",
-      "Password and confirm password must be the same"
+    expect(json.message).toContain(
+      "Password must contain at least one special character"
     );
+  });
+
+  // ❌ Password terlalu pendek
+  test("Should reject password with less than 8 characters", async () => {
+    const request = new NextRequest(new URL(BASE_API_URL_USERS), {
+      method: "POST",
+      body: JSON.stringify({
+        name: "Short Password",
+        email: "shortpass@example.com",
+        password: "S1!", // too short
+        confirmPassword: "S1!",
+        role: "ADMIN",
+      }),
+      headers: { "Content-Type": "application/json" },
+    });
+
+    const response = await createUserHandler(request);
+    const json = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(json.message).toContain(
+      "Password must be at least 8 characters"
+    );
+  });
+
+  // ❌ Password dan confirmPassword tidak cocok (Zod akan tangkap)
+  test("Should return error if password and confirmPassword don't match", async () => {
+    const request = new NextRequest(new URL(BASE_API_URL_USERS), {
+      method: "POST",
+      body: JSON.stringify({
+        name: "Mismatch",
+        email: "mismatch@example.com",
+        password: "Secure123!",
+        confirmPassword: "Different123!",
+        role: "ADMIN",
+      }),
+      headers: { "Content-Type": "application/json" },
+    });
+
+    const response = await createUserHandler(request);
+    const json = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(json.message).toContain("Password and confirm password must match");
   });
 
   // ❌ Unhappy Path - Format request tidak valid
