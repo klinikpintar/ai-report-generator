@@ -1,4 +1,4 @@
-import { validateSchemaInput, handlePrismaError } from '@backend/utils/schemaUtils';
+import { validateSchemaInput, handleError } from '../../../app/(backend)/utils/schemaUtils';
 import { ZodError } from 'zod';
 import { StatusCodes } from 'http-status-codes';
 import { Prisma } from '@prisma/client';
@@ -18,7 +18,7 @@ const ERROR_CASES = [
     'BAD_REQUEST for ZodError',
     new ZodError([{ message: 'Invalid data', path: ['name'], code: 'invalid_type', expected: 'string', received: 'undefined' }]),
     StatusCodes.BAD_REQUEST,
-    'Invalid input',
+    'Test Context: Invalid input',
   ],
   [
     'CONFLICT for P2002 error',
@@ -36,7 +36,7 @@ const ERROR_CASES = [
     'INTERNAL_SERVER_ERROR for generic errors',
     new Error('Unexpected error'),
     StatusCodes.INTERNAL_SERVER_ERROR,
-    'Internal Server Error',
+    'Test Context: Internal Server Error',
   ],
 ];
 
@@ -57,9 +57,9 @@ describe('Schema Utils Unit Tests', () => {
     });
   });
 
-  describe('handlePrismaError', () => {
+  describe('handleError', () => {
     it.each(ERROR_CASES)('should return %s', (_, error, expectedStatus, expectedMessage) => {
-      const response = handlePrismaError(error);
+      const response = handleError(error, 'Test Context');
       expect(response.status).toBe(expectedStatus);
       expect(response.data.error).toBe(expectedMessage);
     });
