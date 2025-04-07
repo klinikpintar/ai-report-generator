@@ -1,4 +1,5 @@
 import { MarkdownExporter } from "@/app/(backend)/services/markdownExporter";
+import { ReportSchema } from "@/app/(backend)/dtos/report.dto";
 
 describe("MarkdownExporter", () => {
   const mockData = {
@@ -26,5 +27,38 @@ describe("MarkdownExporter", () => {
     const exporter = new MarkdownExporter();
     const filename = exporter.getFileName();
     expect(filename).toMatch(/^report-\d+\.md$/);
+  });
+});
+
+describe("ReportSchema Validation", () => {
+  it("should pass with valid report data", () => {
+    const validData = {
+      title: "Valid Title",
+      content: "Valid content",
+      createdAt: "2025-04-07"
+    };
+
+    const parsed = ReportSchema.parse(validData);
+    expect(parsed).toEqual(validData);
+  });
+
+  it("should throw error for empty title", () => {
+    expect(() =>
+      ReportSchema.parse({
+        title: "",
+        content: "isi",
+        createdAt: "2025-04-07"
+      })
+    ).toThrow();
+  });
+
+  it("should throw error for invalid date format", () => {
+    expect(() =>
+      ReportSchema.parse({
+        title: "Laporan",
+        content: "isi",
+        createdAt: "not-a-date"
+      })
+    ).toThrow();
   });
 });
