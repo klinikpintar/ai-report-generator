@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server';
 import { POST } from '@/app/(backend)/api/chat/route';
 import { generateText } from 'ai';
 import prisma from '@/lib/prisma';
-import { ModelFactory } from '@/app/(backend)/api/chat/route';
+import { ModelFactory, DeepseekProvider, GeminiProvider } from '@/app/(backend)/services/chatServices';
 
 // Mock the ai module
 jest.mock('ai', () => ({
@@ -710,5 +710,55 @@ describe('RAG integration with chat', () => {
     
     // Restore console.error
     consoleErrorSpy.mockRestore();
+  });
+});
+
+describe('Model Providers', () => {
+  it('DeepseekProvider calls generateText with correct parameters', async () => {
+    // Re-mock generateText to track calls
+    const generateTextMock = jest.fn().mockResolvedValue({
+      text: 'Test response',
+      finishReason: 'stop'
+    });
+    require('ai').generateText = generateTextMock;
+    
+    // Create an instance of the actual provider
+    const provider = new DeepseekProvider();
+    
+    // Call its methods
+    const messages = [{ role: 'user', content: 'hello' }];
+    await provider.generateResponse(messages);
+    const modelName = provider.getModelName();
+    
+    // Verify behavior
+    expect(modelName).toBe('deepseek');
+    expect(generateTextMock).toHaveBeenCalledWith({
+      model: expect.anything(),
+      messages: messages
+    });
+  });
+
+  it('GeminiProvider calls generateText with correct parameters', async () => {
+    // Re-mock generateText to track calls
+    const generateTextMock = jest.fn().mockResolvedValue({
+      text: 'Test response from Gemini',
+      finishReason: 'stop'
+    });
+    require('ai').generateText = generateTextMock;
+    
+    // Create an instance of the actual provider
+    const provider = new GeminiProvider();
+    
+    // Call its methods
+    const messages = [{ role: 'user', content: 'hello from gemini' }];
+    await provider.generateResponse(messages);
+    const modelName = provider.getModelName();
+    
+    // Verify behavior
+    expect(modelName).toBe('gemini');
+    expect(generateTextMock).toHaveBeenCalledWith({
+      model: expect.anything(),
+      messages: messages
+    });
   });
 });
