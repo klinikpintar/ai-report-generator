@@ -2,6 +2,7 @@ import { google } from '@ai-sdk/google';
 import { deepseek } from '@ai-sdk/deepseek';
 import { generateText, CoreMessage } from 'ai'; 
 import prisma from '@/lib/prisma';
+import { findRelevantContent } from '@/lib/embedding';
 
 // Types and interfaces
 interface Message {
@@ -67,9 +68,7 @@ class GeminiProvider implements ModelProvider {
     const sdkMessages = messages as CoreMessage[];
     
     return generateText({
-      model: google('gemini-2.0-flash', {
-        useSearchGrounding: true,
-      }),
+      model: google('gemini-2.0-flash'),
       messages: sdkMessages,
     });
   }
@@ -266,7 +265,7 @@ export async function POST(req: Request) {
   const contextEnhancer = new SchemaContextEnhancer(schemaRepository);
 
   try {
-    const { messages, model = 'gemini', schemaId } = await req.json();
+    const { messages, model = 'gemini', schemaId, resourceIds = [] } = await req.json();
     
     // Validate request
     const validation = validator.validateMessages(messages);
@@ -280,6 +279,27 @@ export async function POST(req: Request) {
     // Enhance messages with schema context if applicable
     const { enhancedMessages, schemaIncluded, schemaName } = 
       await contextEnhancer.enhanceWithSchemaContext(messages, schemaId);
+
+    // Then add RAG content to the ENHANCED messages
+    const lastUserMessage = messages.findLast(m => m.role === 'user');
+    let ragContent = null;
+    
+    if (lastUserMessage) {
+      // console.log("Finding content relevant to:", lastUserMessage.content); # Buat debug
+      const relevantContent = await findRelevantContent(lastUserMessage.content, resourceIds);
+      // console.log("RAG results:", JSON.stringify(relevantContent)); # Buat debug
+      
+      if (relevantContent && relevantContent.length > 0) {
+        ragContent = relevantContent;
+        const contextPrompt = `You have access to the following information that might be relevant:
+${relevantContent.map((item: any) => `${item.content}`).join('\n\n')}
+
+Use this information if relevant to answer the user's question.`;
+        
+        // Add the RAG content to the enhanced messages
+        enhancedMessages.unshift({ role: 'system', content: contextPrompt });
+      }
+    }
     
     // Get the appropriate model provider
     const provider = factory.getProvider(model);
