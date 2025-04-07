@@ -1,15 +1,16 @@
 import prisma from "@/lib/prisma";
 import {
   CreateUserDto,
+  GetUsersParams,
   IUserCreator,
   IUserFinder,
+  PaginationUser,
   User,
 } from "@backend/interfaces/IUsersService";
 import {
   BadRequestResponse,
   ConflictResponse,
 } from "@backend/utils/exceptions";
-import { Role } from "@prisma/client";
 import bcrypt from "bcryptjs";
 
 class UsersService implements IUserCreator, IUserFinder {
@@ -41,22 +42,18 @@ class UsersService implements IUserCreator, IUserFinder {
     return user;
   }
 
-  async getUsers(
-    page: number = 1,
-    limit: number = 10,
-    role?: string
-  ): Promise<{
+  async getUsers({ page, limit, role }: GetUsersParams): Promise<{
     users: User[];
-    currentPage: number;
-    totalPages: number;
-    totalItems: number;
+    pagination: PaginationUser;
   }> {
-    const where = role ? { role: role as Role } : {};
+    const skip = (page - 1) * limit;
+    const where = role ? { role } : {};
 
-    const [users, totalItems] = await Promise.all([
+    const [totalItems, users] = await Promise.all([
+      prisma.user.count({ where }),
       prisma.user.findMany({
         where,
-        skip: (page - 1) * limit,
+        skip,
         take: limit,
         select: {
           id: true,
@@ -66,14 +63,17 @@ class UsersService implements IUserCreator, IUserFinder {
           isActive: true,
         },
       }),
-      prisma.user.count({ where }),
     ]);
+
+    const totalPages = Math.ceil(totalItems / limit);
 
     return {
       users,
-      currentPage: page,
-      totalPages: Math.ceil(totalItems / limit),
-      totalItems: totalItems,
+      pagination: {
+        currentPage: page,
+        totalPages: totalPages,
+        totalItems: totalItems,
+      },
     };
   }
 }

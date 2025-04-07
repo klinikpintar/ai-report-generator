@@ -20,23 +20,32 @@ export async function POST(req: Request) {
 
 export async function GET(req: Request) {
   try {
-    const rawQuery = Object.fromEntries(
-      new URL(req.url).searchParams.entries()
-    );
-    const parseQuery = UserValidation.GET.safeParse(rawQuery);
-    if (!parseQuery.success) {
-      throw new BadRequestResponse(parseQuery.error.errors[0].message);
-    }
-    const { page, limit, role } = parseQuery.data;
+    const { searchParams } = new URL(req.url);
+    const query = {
+      page: searchParams.get("page") ?? undefined,
+      limit: searchParams.get("limit") ?? undefined,
+      role: searchParams.get("role") ?? undefined,
+    };
 
-    const { users, currentPage, totalItems, totalPages } =
-      await usersService.getUsers(page, limit, role);
+    const parsed = UserValidation.GET.safeParse(query);
+    if (!parsed.success) {
+      throw new BadRequestResponse(parsed.error.errors[0].message);
+    }
+
+    const { page, limit, role } = parsed.data;
+    const { users, pagination } = await usersService.getUsers({
+      page,
+      limit,
+      role,
+    });
+
+    const { totalPages, totalItems } = pagination;
 
     return NextResponse.json({
       message: "Users fetched successfully",
       data: users,
       pagination: {
-        current_page: currentPage,
+        current_page: page,
         total_pages: totalPages,
         total_items: totalItems,
       },

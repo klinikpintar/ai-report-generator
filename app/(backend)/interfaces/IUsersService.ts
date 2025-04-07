@@ -8,6 +8,18 @@ export type CreateUserDto = {
   role: Role;
 };
 
+export type PaginationUser = {
+  currentPage: number;
+  totalPages: number;
+  totalItems: number;
+}
+
+export interface GetUsersParams {
+  page: number;
+  limit: number;
+  role?: "ADMIN" | "BUSINESS_ANALYST";
+}
+
 export type User = {
   id: string;
   name: string;
@@ -34,14 +46,8 @@ export interface IUserFinder {
    * @returns Promise<{ users: User[]; totalPages: number; totalItems: number }>
    * The list of users and pagination info
    * */
-  getUsers(
-    page?: number,
-    limit?: number,
-    role?: Role
-  ): Promise<{
+  getUsers({ page, limit, role }: GetUsersParams): Promise<{
     users: User[];
-    currentPage: number;
-    totalPages: number;
-    totalItems: number;
-  }>; 
+    pagination: PaginationUser;
+  }>;
 }

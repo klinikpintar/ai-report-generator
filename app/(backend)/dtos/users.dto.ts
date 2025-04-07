@@ -18,15 +18,21 @@ export class UserValidation {
     page: z
       .string()
       .optional()
-      .default("1")
-      .transform(Number)
+      .transform((val) => parseInt(val || "1"))
       .refine((val) => val > 0, { message: "Page must be greater than 0" }),
+
     limit: z
       .string()
       .optional()
-      .default("10")
-      .transform(Number)
+      .transform((val) => parseInt(val || "10"))
       .refine((val) => val > 0, { message: "Limit must be greater than 0" }),
-    role: z.enum(["ADMIN", "BUSINESS_ANALYST"]).optional(),
+
+    role: z
+      .string()
+      .optional()
+      .transform((val) => val?.toUpperCase())
+      .refine((val) => !val || ["BUSINESS_ANALYST", "ADMIN"].includes(val), {
+        message: "Role must be either BUSINESS_ANALYST or ADMIN",
+      }) as z.ZodType<"BUSINESS_ANALYST" | "ADMIN" | undefined>,
   });
 }
