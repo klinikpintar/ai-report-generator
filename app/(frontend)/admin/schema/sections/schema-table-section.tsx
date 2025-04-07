@@ -3,8 +3,16 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
-import { ServiceFilter, PlatformFilter, SchemaTable } from "@frontend/admin/schema/components";
-import { fetchPlatforms, fetchSchemas, fetchServices } from "@frontend/admin/schema/utils/api";
+import {
+  ServiceFilter,
+  PlatformFilter,
+  SchemaTable,
+} from "@frontend/admin/schema/components";
+import {
+  fetchPlatforms,
+  fetchSchemas,
+  fetchServices,
+} from "@frontend/admin/schema/utils/api";
 import { Platform, Schema, Service } from "@frontend/admin/schema/types";
 import { Button } from "@/components/ui/button";
 import AddSchemaModal from "@frontend/admin/schema/components/AddSchemaModal";
@@ -103,7 +111,9 @@ export const SchemaTableSection = () => {
         </Button>
       </div>
 
-      {showAddModal && <AddSchemaModal isVisible={showAddModal} onClose={onSchemaModalClose} />}
+      {showAddModal && (
+        <AddSchemaModal isVisible={showAddModal} onClose={onSchemaModalClose} />
+      )}
     </>
   );
 };

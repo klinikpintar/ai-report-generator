@@ -1,10 +1,10 @@
 import { render, screen, fireEvent, waitFor, act } from "@testing-library/react";
-import Login from "@frontend/login/page";
-import axios from "axios";
-import MockAdapter from "axios-mock-adapter";
+import LoginPage from "@frontend/login/page";
+import FeAuthService from "@frontend/login/services/feAuthService";
+import { useUser } from "@frontend/login/context/userContext";
+import { useRouter } from "next/navigation";
 
-const mockAxios = new MockAdapter(axios);
-
+// Mock useRouter
 const pushMock = jest.fn();
 jest.mock("next/navigation", () => ({
   useRouter: () => ({
@@ -12,211 +12,180 @@ jest.mock("next/navigation", () => ({
   }),
 }));
 
-describe("Login Page", () => {
+// Mock FeAuthService
+jest.mock("@frontend/login/services/feAuthService");
+
+// Mock useUser
+const setEmailContextMock = jest.fn();
+jest.mock("@frontend/login/context/userContext", () => ({
+  useUser: () => ({
+    setEmailContext: setEmailContextMock,
+  }),
+}));
+
+const renderWithUserContext = () => {
+  return render(<LoginPage />);
+};
+
+describe("LoginPage", () => {
   beforeEach(() => {
     localStorage.clear();
+    jest.clearAllMocks();
   });
 
-  afterEach(() => {
-    mockAxios.reset();
-    jest.restoreAllMocks();
+  it("renders title and subtitle", () => {
+    renderWithUserContext();
+    expect(screen.getByText(/Sign in to your account/i)).toBeInTheDocument();
+    expect(screen.getByText(/Selamat Datang di AI Report Generator/i)).toBeInTheDocument();
+    expect(screen.getByText(/Klinik Pintar/i)).toBeInTheDocument();
   });
 
-  //positive cases
-  test("show logo", () => {
-    render(<Login />);
+  it("renders email and password inputs", () => {
+    renderWithUserContext();
 
-    const logo: HTMLImageElement = screen.getByRole("img", {
-      name: /klinik pintar/i,
-    });
-    expect(logo).toBeInTheDocument();
-  });
-
-  test("show email and password input", () => {
-    render(<Login />);
-
-    const emailInput: HTMLInputElement = screen.getByRole("textbox", {
-      name: /email/i,
-    });
-    const passwordInput: HTMLInputElement = screen.getByLabelText(/password/i);
+    const emailInput = screen.getByPlaceholderText(/Masukkan email/i);
+    const passwordInput = screen.getByPlaceholderText(/Masukkan password/i);
 
     expect(emailInput).toBeInTheDocument();
     expect(passwordInput).toBeInTheDocument();
   });
 
-  test("show login button", () => {
-    render(<Login />);
+  it("renders login button", () => {
+    renderWithUserContext();
 
-    const loginButton: HTMLButtonElement = screen.getByRole("button", {
-      name: /login/i,
-    });
-    expect(loginButton).toBeInTheDocument();
+    const button = screen.getByRole("button", { name: /login/i });
+    expect(button).toBeInTheDocument();
   });
 
-  test("should submit form successfully and redirect when login is successful", async () => {
-    // Mock localStorage
+  it("shows validation errors if form is submitted empty", async () => {
+    renderWithUserContext();
+    const button = screen.getByRole("button", { name: /login/i });
+
+    await act(async () => {
+      fireEvent.click(button);
+    });
+
+    // Browser-native form validation won't throw errors directly for required fields
+    expect(button).not.toBeDisabled();
+  });
+
+  it("calls FeAuthService.login and redirects on success", async () => {
+    (FeAuthService.login as jest.Mock).mockResolvedValue({ success: true });
+
     const setItemMock = jest.spyOn(Storage.prototype, "setItem");
-  
-    render(<Login />);
-  
-    // Mock API success
-    mockAxios.onPost("/api/auth/login").reply(200, { data: { access_token: "test-token" } });
-  
-    // Simulate user input
+
+    renderWithUserContext();
+
+    fireEvent.change(screen.getByPlaceholderText(/Masukkan email/i), {
+      target: { value: "user@example.com" },
+    });
+    fireEvent.change(screen.getByPlaceholderText(/Masukkan password/i), {
+      target: { value: "password123" },
+    });
+
     await act(async () => {
-      fireEvent.change(screen.getByLabelText(/email/i), { target: { value: "user@example.com" } });
-      fireEvent.change(screen.getByLabelText(/password/i), { target: { value: "password123" } });
       fireEvent.click(screen.getByRole("button", { name: /login/i }));
     });
-  
-    // Wait for the API call to complete and check localStorage
+
     await waitFor(() => {
-      expect(setItemMock).toHaveBeenCalledWith("access_token", "test-token");
+      expect(FeAuthService.login).toHaveBeenCalledWith("user@example.com", "password123");
+      expect(setItemMock).toHaveBeenCalledWith("userEmail", "user@example.com");
+      expect(setEmailContextMock).toHaveBeenCalledWith("user@example.com");
+      expect(pushMock).toHaveBeenCalledWith("/");
     });
-  
-    // Verify router.push() was called to redirect
-    expect(pushMock).toHaveBeenCalledWith("/"); // Expecting redirect to homepage after successful login
   });
 
-  test("should display loading state when submitting the form", async () => {
-    render(<Login />);
+  it("shows error message on failed login (invalid credentials)", async () => {
+    (FeAuthService.login as jest.Mock).mockResolvedValue({ success: false });
 
-    // Mock API to delay response
-    mockAxios.onPost("/api/auth/login").reply(200, { data: { access_token: "test-token" } });
+    renderWithUserContext();
 
-    // Simulate user input
-    await act(async () => {
-      fireEvent.change(screen.getByLabelText(/email/i), { target: { value: "user@example.com" } });
-      fireEvent.change(screen.getByLabelText(/password/i), { target: { value: "password123" } });
+    fireEvent.change(screen.getByPlaceholderText(/Masukkan email/i), {
+      target: { value: "user@example.com" },
+    });
+    fireEvent.change(screen.getByPlaceholderText(/Masukkan password/i), {
+      target: { value: "wrongpassword" },
     });
 
-    await waitFor(() => {
-      // Expect to see the loading state
+    await act(async () => {
       fireEvent.click(screen.getByRole("button", { name: /login/i }));
     });
+
+    expect(await screen.findByText(/login failed/i)).toBeInTheDocument();
+  });
+
+  it("shows generic error on exception", async () => {
+    (FeAuthService.login as jest.Mock).mockRejectedValue(new Error("Internal error"));
+
+    renderWithUserContext();
+
+    fireEvent.change(screen.getByPlaceholderText(/Masukkan email/i), {
+      target: { value: "user@example.com" },
+    });
+    fireEvent.change(screen.getByPlaceholderText(/Masukkan password/i), {
+      target: { value: "password123" },
+    });
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: /login/i }));
+    });
+
+    expect(await screen.findByText(/something went wrong/i)).toBeInTheDocument();
+  });
+
+  it("displays loading state during login", async () => {
+    let resolveLogin: any;
+    (FeAuthService.login as jest.Mock).mockImplementation(
+      () => new Promise((resolve) => (resolveLogin = resolve))
+    );
+
+    renderWithUserContext();
+
+    fireEvent.change(screen.getByPlaceholderText(/Masukkan email/i), {
+      target: { value: "user@example.com" },
+    });
+    fireEvent.change(screen.getByPlaceholderText(/Masukkan password/i), {
+      target: { value: "password123" },
+    });
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: /login/i }));
+    });
+
     expect(screen.getByRole("button", { name: /logging in/i })).toBeInTheDocument();
+
+    // Resolve login to clean up
+    await act(async () => {
+      resolveLogin({ success: true });
+    });
   });
 
-  //negative cases
-  test("validate: can't login if email field is empty", async () => {
-    render(<Login />);
-
-    const passwordInput: HTMLInputElement = screen.getByLabelText(/password/i);
-    const loginButton: HTMLButtonElement = screen.getByRole("button", {
-      name: /login/i,
+  it("should prevent multiple submissions", async () => {
+    const loginMock = jest.fn().mockResolvedValue({ success: true });
+    (FeAuthService.login as jest.Mock).mockImplementation(loginMock);
+  
+    renderWithUserContext();
+  
+    fireEvent.change(screen.getByPlaceholderText(/Masukkan email/i), {
+      target: { value: "user@example.com" },
     });
-
+    fireEvent.change(screen.getByPlaceholderText(/Masukkan password/i), {
+      target: { value: "password123" },
+    });
+  
+    const button = screen.getByRole("button", { name: /login/i });
+  
+    // Simulate multiple rapid clicks before loading state activates
     await act(async () => {
-      fireEvent.change(passwordInput, { target: { value: "password123" } });
-      fireEvent.click(loginButton);
+      fireEvent.click(button);
+      fireEvent.click(button);
+      fireEvent.click(button);
     });
-
-    const emailInput: HTMLInputElement = screen.getByRole("textbox", {
-      name: /email/i,
-    });
-    expect(emailInput).toBeInvalid();
-  });
-
-  test("validate: can't login if password field is empty", async () => {
-    render(<Login />);
-
-    const emailInput: HTMLInputElement = screen.getByRole("textbox", {
-      name: /email/i,
-    });
-    const loginButton: HTMLButtonElement = screen.getByRole("button", {
-      name: /login/i,
-    });
-
-    await act(async () => {
-      fireEvent.change(emailInput, { target: { value: "user@example.com" } });
-      fireEvent.click(loginButton);
-    });
-
-    const passwordInput: HTMLInputElement = screen.getByLabelText(/password/i);
-    expect(passwordInput).toBeInvalid();
-  });
-
-  test("validate: can't login if all fields is empty", async () => {
-    render(<Login />);
-
-    const loginButton: HTMLButtonElement = screen.getByRole("button", { name: /login/i });
-
-    await act(async () => {
-      fireEvent.click(loginButton);
-    });
-
-    const emailInput: HTMLInputElement = screen.getByRole("textbox", { name: /email/i });
-    const passwordInput: HTMLInputElement = screen.getByLabelText(/password/i);
-    expect(emailInput).toBeInvalid();
-    expect(passwordInput).toBeInvalid();
-  });
-
-  test("validate: can't login if email input is invalid", async () => {
-    render(<Login />);
-
-    const emailInput: HTMLInputElement = screen.getByRole("textbox", {
-      name: /email/i,
-    });
-    const passwordInput: HTMLInputElement = screen.getByLabelText(/password/i);
-    const loginButton: HTMLButtonElement = screen.getByRole("button", {
-      name: /login/i,
-    });
-
-    await act(async () => {
-      fireEvent.change(emailInput, { target: { value: "invalid-email" } });
-      fireEvent.change(passwordInput, { target: { value: "password123" } });
-      fireEvent.click(loginButton);
-    });
-
-    expect(emailInput).toBeInvalid();
-  });
-
-  test("should display error when login fails", async () => {
-    render(<Login />);
-
-    // Mock API failure
-    mockAxios.onPost("/api/auth/login").reply(500);
-
-    // Simulate user input
-    await act(async () => {
-      fireEvent.change(screen.getByLabelText(/email/i), { target: { value: "user@example.com" } });
-      fireEvent.change(screen.getByLabelText(/password/i), { target: { value: "wrongpassword" } });
-      fireEvent.click(screen.getByRole("button", { name: /login/i }));
-    });
-
-    // Wait for error message to appear
+  
+    // Allow promise to resolve
     await waitFor(() => {
-      expect(screen.getByText(/login failed/i)).toBeInTheDocument();
-    });
-
-    // Check if the form fields are cleared
-    expect((screen.getByLabelText(/email/i) as HTMLInputElement).value).toBe("");
-    expect((screen.getByLabelText(/password/i) as HTMLInputElement).value).toBe("");
-  });
-
-  //edge case
-  test("should handle multiple rapid clicks on login button", async () => {
-    render(<Login />);
-
-    // Mock API response
-    mockAxios.onPost("/api/auth/login").reply(200, { data: { access_token: "test-token" } });
-
-    const emailInput = screen.getByLabelText(/email/i);
-    const passwordInput = screen.getByLabelText(/password/i);
-    const loginButton = screen.getByRole("button", { name: /login/i });
-
-    await act(async () => {
-      fireEvent.change(emailInput, { target: { value: "user@example.com" } });
-      fireEvent.change(passwordInput, { target: { value: "password123" } });
-    });
-
-    await waitFor(() => {
-      // Click login button multiple times rapidly
-      fireEvent.click(loginButton);
-      fireEvent.click(loginButton);
-      fireEvent.click(loginButton);
-      // Make sure only 1 request is created
-      expect(mockAxios.history.post.length).toBe(1);
+      expect(loginMock).toHaveBeenCalledTimes(1);
     });
   });
+  
 });

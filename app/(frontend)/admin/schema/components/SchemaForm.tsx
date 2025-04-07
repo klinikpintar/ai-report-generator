@@ -1,5 +1,8 @@
 import React, { FormEvent } from "react";
 import Image from "next/image";
+import FormInput from "@frontend/components/form-input";
+import SelectInput from "@frontend/components/select-input";
+import ButtonSubmit from "@frontend/components/button-submit";
 
 interface SchemaFormProps {
   showFileInput?: boolean;
@@ -32,114 +35,46 @@ const SchemaForm: React.FC<SchemaFormProps> = ({
   clearForm,
 }) => {
   return (
-    <form className="md:p-10" onSubmit={handleSubmit}>
+    <form className="md:pr-10 pl-10 pb-10 pt-5" onSubmit={handleSubmit}>
       <div className="grid gap-4 mb-4 grid-cols-2">
-        <div className="col-span-2">
-          <label className="block mb-2 text-[14.74px] font-semibold text-gray-900">
-            Nama Skema
-          </label>
-          <input
-            type="text"
-            name="name"
-            id="name"
-            value={formData.name}
-            onChange={handleChange}
-            className="bg-white border border-gray-300 text-gray-900 text-[16px] rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5"
-            placeholder="Masukkan nama skema"
-            required
-          />
-        </div>
-        <div className="col-span-2">
-          <label className="block mb-2 text-[14.74px] font-semibold text-gray-900">
-            Deskripsi Skema
-          </label>
-          <textarea
-            name="description"
-            value={formData.description}
-            onChange={handleChange}
-            className="block p-2.5 w-full text-[16px] text-gray-900 bg-white rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500"
-            placeholder="Masukkan deskripsi skema"
-            required
-          ></textarea>
-        </div>
-        <div className="col-span-2 sm:col-span-1">
-          <label className="block mb-2 text-[14.74px] font-semibold text-gray-900">
-            Platform Skema
-          </label>
-          <select
-            id="platform"
-            defaultValue=""
-            className="bg-[#00B0EB] text-white text-[16.44px] font-bold rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-3 cursor-pointer"
-          >
-            <option
-              value=""
-              className="bg-white text-[16.44px] font-bold"
-              disabled
-            >
-              Pilih Platform
-            </option>
-            <option
-              value="PostgreSQL"
-              className="bg-white text-[#00B0EB] text-[16.44px] font-bold"
-            >
-              PostgreSQL
-            </option>
-            <option
-              value="MySQL"
-              className="bg-white text-[#00B0EB] text-[16.44px] font-bold"
-            >
-              MySQL
-            </option>
-            <option
-              value="MongoDB"
-              className="bg-white text-[#00B0EB] text-[16.44px] font-bold"
-            >
-              MongoDB
-            </option>
-          </select>
-        </div>
-        <div className="col-span-2 sm:col-span-1">
-          <label className="block mb-2 text-[14.74px] font-semibold text-gray-900">
-            Service Skema
-          </label>
-          <select
-            id="service"
-            defaultValue=""
-            className="bg-[#00B0EB] text-white text-[16.44px] font-bold rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-3 cursor-pointer"
-          >
-            <option
-              value=""
-              className="bg-white text-[16.44px] font-bold"
-              disabled
-            >
-              Pilih Service
-            </option>
-            <option
-              value="Reservasi"
-              className="bg-white text-[#00B0EB] text-[16.44px] font-bold"
-            >
-              Reservasi
-            </option>
-            <option
-              value="Kesehatan"
-              className="bg-white text-[#00B0EB] text-[16.44px] font-bold"
-            >
-              Kesehatan
-            </option>
-            <option
-              value="Keuangan"
-              className="bg-white text-[#00B0EB] text-[16.44px] font-bold"
-            >
-              Keuangan
-            </option>
-            <option
-              value="Inventaris"
-              className="bg-white text-[#00B0EB] text-[16.44px] font-bold"
-            >
-              Inventaris
-            </option>
-          </select>
-        </div>
+        <FormInput
+          label="Nama Skema"
+          name="name"
+          value={formData.name}
+          placeholder="Masukkan nama skema"
+          required
+          onChange={handleChange}
+        />
+        <FormInput
+          label="Deskripsi Skema"
+          name="description"
+          type="textarea"
+          value={formData.description}
+          placeholder="Masukkan deskripsi skema"
+          required
+          onChange={handleChange}
+        />
+        {/* Dropdown Pilih Platform */}
+        <SelectInput
+          label="Platform"
+          name="platform"
+          options={[
+            { value: "PostgreSQL", label: "PostgreSQL" },
+            { value: "MySQL", label: "MySQL" },
+            { value: "MongoDB", label: "MongoDB" },
+          ]}
+        />
+
+        <SelectInput
+          label="Service"
+          name="service"
+          options={[
+            { value: "Reservasi", label: "Reservasi" },
+            { value: "Kesehatan", label: "Kesehatan" },
+            { value: "Keuangan", label: "Keuangan" },
+            { value: "Inventaris", label: "Inventaris" },
+          ]}
+        />
         {showFileInput && (
           <div className="col-span-2">
             <label className="block mb-2 text-[14.74px] font-semibold text-gray-900">
@@ -186,23 +121,24 @@ const SchemaForm: React.FC<SchemaFormProps> = ({
           </div>
         )}
       </div>
-      <div className="flex justify-center items-center">
-        <button
-          type="button"
-          className="flex-1 text-[#00B0EB] text-[18px] font-bold inline-flex items-center mr-2 ml-5 bg-white hover:text-[#13A1DE] focus:ring-4 focus:outline-none focus:ring-blue-300 rounded-full px-5 py-2.5 text-center justify-center border-2 border-[#00B0EB]"
-          onClick={() => {
+      <div className="flex justify-center items-center mt-8">
+        {/* Tombol Batal */}
+        <ButtonSubmit
+          variant="secondary"
+          className="mr-2 ml-5"
+          onClick={(event) => {
+            event.preventDefault(); // Mencegah validasi form
             onClose();
             clearForm();
           }}
         >
           Batal
-        </button>
-        <button
-          type="submit"
-          className="flex-1 text-white text-[18px] font-bold inline-flex items-center mr-5 ml-2 bg-[#00B0EB] hover:bg-[#13A1DE] focus:ring-4 focus:outline-none focus:ring-blue-300 rounded-full px-5 py-2.5 text-center justify-center border-2 border-[#00B0EB]"
-        >
+        </ButtonSubmit>
+
+        {/* Tombol Simpan */}
+        <ButtonSubmit type="submit" className="mr-5 ml-2">
           Simpan
-        </button>
+        </ButtonSubmit>
       </div>
     </form>
   );
