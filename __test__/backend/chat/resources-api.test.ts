@@ -105,6 +105,26 @@ describe('Resources API Routes', () => {
       
       expect(response.status).toBe(500);
     });
+
+    it('should handle non-Error objects in error handling', async () => {
+      // Mock prisma to throw a string instead of an Error
+      (prisma.resource.create as jest.Mock).mockRejectedValue('Database connection failed');
+      
+      const request = new NextRequest(
+        'http://localhost:3000/api/resources',
+        {
+          method: 'POST',
+          body: JSON.stringify({ title: 'Test', content: 'Test content' }),
+          headers: { 'Content-Type': 'application/json' }
+        }
+      );
+      
+      const response = await POST(request);
+      const data = await response.json();
+      
+      expect(response.status).toBe(500);
+      expect(data.error).toBe('Failed to create resource: Database connection failed');
+    });
   });
 
   describe('GET /api/resources', () => {
