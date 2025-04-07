@@ -1,10 +1,10 @@
 import { IExporter } from "@/app/(backend)/interfaces/IExporter";
 import { ReportDTO } from "@/app/(backend)/dtos/report.dto";
+import { generateReportContent } from "@/app/(backend)/utils/generateReportContent";
 
 export class MarkdownExporter implements IExporter {
   async export(reportData: ReportDTO): Promise<Buffer> {
-    const { title, content, createdAt } = reportData;
-    const markdown = `# ${title}\n\nCreated at: ${createdAt}\n\n---\n\n${content}`;
+    const markdown = generateReportContent(reportData); // gunakan struktur standar
     return Buffer.from(markdown, "utf-8");
   }
 
