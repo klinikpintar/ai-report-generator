@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-async function verifyAccessToken(req: NextRequest, token: string) {
+async function verifyAccessToken(req: NextRequest, accessToken: string) {
   try {
     const apiResponse = await fetch(
       `${req.nextUrl.origin}/api/auth/token/verify`,
@@ -9,15 +9,15 @@ async function verifyAccessToken(req: NextRequest, token: string) {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+          Cookie: `access_token=${accessToken}`,
         },
+        credentials: "include",
       }
     );
 
     if (!apiResponse.ok) throw new Error("Token verification failed");
 
     const data = await apiResponse.json();
-    console.log(data.data.user);
     return data.data.user;
   } catch {
     return null;
@@ -34,13 +34,13 @@ async function refreshAccessToken(req: NextRequest, refreshToken: string) {
           "Content-Type": "application/json",
           Cookie: `refresh_token=${refreshToken}`,
         },
+        credentials: "include",
       }
     );
 
     if (!apiResponse.ok) throw new Error("Failed to refresh token");
 
     const data = await apiResponse.json();
-    console.log(data.data.access_token);
     return data.data.access_token;
   } catch {
     return null;
@@ -54,6 +54,13 @@ function getRedirectURL(role: string, pathname: string) {
 }
 
 export async function middleware(req: NextRequest) {
+  if (
+    req.url.includes("api/auth/login") ||
+    req.url.includes("api/auth/token/verify") ||
+    req.url.includes("api/auth/token/refresh")
+  )
+    return NextResponse.next();
+
   let accessToken = req.cookies.get("access_token")?.value ?? null;
   const refreshToken = req.cookies.get("refresh_token")?.value ?? null;
   let decodedAccess = accessToken
@@ -70,6 +77,8 @@ export async function middleware(req: NextRequest) {
   if (!decodedAccess)
     return NextResponse.redirect(new URL("/login", req.nextUrl.origin));
 
+  if (req.url.includes("/api/")) return NextResponse.next();
+
   const redirectURL = getRedirectURL(decodedAccess.role, req.nextUrl.pathname);
   if (redirectURL)
     return NextResponse.redirect(new URL(redirectURL, req.nextUrl.origin));
@@ -79,5 +88,5 @@ export async function middleware(req: NextRequest) {
 
 // ditambahkan url path yang lainnya
 export const config = {
-  matcher: ["/", "/admin/:path*"],
+  matcher: ["/", "/admin/:path*", "/api/:path*"],
 };
