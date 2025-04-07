@@ -9,6 +9,12 @@ import {
 } from '../../services/chatServices';
 import { findRelevantContent } from '@/lib/embedding';
 
+// Define an interface for the relevant content items
+interface RelevantContentItem {
+  content: string;
+  similarity: number;
+}
+
 export async function POST(req: Request) {
   const errorHandler = new ErrorHandler();
   const validator = new RequestValidator();
@@ -37,11 +43,12 @@ export async function POST(req: Request) {
     const lastUserMessage = messages.findLast((m: Message) => m.role === 'user');
     
     if (lastUserMessage) {
-      const relevantContent = await findRelevantContent(lastUserMessage.content, resourceIds);
+      // Add type annotation to the relevantContent variable
+      const relevantContent = await findRelevantContent(lastUserMessage.content, resourceIds) as RelevantContentItem[];
       
       if (relevantContent && relevantContent.length > 0) {
         const contextPrompt = `You have access to the following information that might be relevant:
-${relevantContent.map((item: { content: string; similarity: number }) => `${item.content}`).join('\n\n')}
+${relevantContent.map((item: RelevantContentItem) => `${item.content}`).join('\n\n')}
 
 Use this information if relevant to answer the user's question.`;
         
