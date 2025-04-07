@@ -13,4 +13,20 @@ export class UserValidation {
     name: z.string().min(1, { message: "Name cannot be empty" }),
     role: z.enum(["BUSINESS_ANALYST", "ADMIN"]),
   });
+
+  static readonly GET = z.object({
+    page: z
+      .string()
+      .optional()
+      .default("1")
+      .transform(Number)
+      .refine((val) => val > 0, { message: "Page must be greater than 0" }),
+    limit: z
+      .string()
+      .optional()
+      .default("10")
+      .transform(Number)
+      .refine((val) => val > 0, { message: "Limit must be greater than 0" }),
+    role: z.enum(["ADMIN", "BUSINESS_ANALYST"]).optional(),
+  });
 }

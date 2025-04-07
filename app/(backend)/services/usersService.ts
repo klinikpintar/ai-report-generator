@@ -2,15 +2,17 @@ import prisma from "@/lib/prisma";
 import {
   CreateUserDto,
   IUserCreator,
+  IUserFinder,
   User,
 } from "@backend/interfaces/IUsersService";
 import {
   BadRequestResponse,
   ConflictResponse,
 } from "@backend/utils/exceptions";
+import { Role } from "@prisma/client";
 import bcrypt from "bcryptjs";
 
-class UsersService implements IUserCreator {
+class UsersService implements IUserCreator, IUserFinder {
   async createUser(data: CreateUserDto): Promise<User> {
     if (data.password !== data.confirmPassword) {
       throw new BadRequestResponse(
@@ -37,6 +39,42 @@ class UsersService implements IUserCreator {
     });
 
     return user;
+  }
+
+  async getUsers(
+    page: number = 1,
+    limit: number = 10,
+    role?: string
+  ): Promise<{
+    users: User[];
+    currentPage: number;
+    totalPages: number;
+    totalItems: number;
+  }> {
+    const where = role ? { role: role as Role } : {};
+
+    const [users, totalItems] = await Promise.all([
+      prisma.user.findMany({
+        where,
+        skip: (page - 1) * limit,
+        take: limit,
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true,
+          isActive: true,
+        },
+      }),
+      prisma.user.count({ where }),
+    ]);
+
+    return {
+      users,
+      currentPage: page,
+      totalPages: Math.ceil(totalItems / limit),
+      totalItems: totalItems,
+    };
   }
 }
 
