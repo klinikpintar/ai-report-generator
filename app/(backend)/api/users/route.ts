@@ -21,18 +21,13 @@ export async function POST(req: Request) {
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
-    const query = {
-      page: searchParams.get("page") ?? undefined,
-      limit: searchParams.get("limit") ?? undefined,
-      role: searchParams.get("role") ?? undefined,
-    };
-
-    const parsed = UserValidation.GET.safeParse(query);
-    if (!parsed.success) {
-      throw new BadRequestResponse(parsed.error.errors[0].message);
+    const params = Object.fromEntries(searchParams.entries());
+    const parseQuery = UserValidation.GET.safeParse(params);
+    if (!parseQuery.success) {
+      throw new BadRequestResponse(parseQuery.error.errors[0].message);
     }
 
-    const { page, limit, role } = parsed.data;
+    const { page, limit, role } = parseQuery.data;
     const { users, pagination } = await usersService.getUsers({
       page,
       limit,
