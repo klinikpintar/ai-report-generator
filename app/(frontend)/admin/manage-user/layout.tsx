@@ -4,9 +4,11 @@ import Navbar from "../../components/navbar";
 const Layout = ({ children }: { children: React.ReactNode }) => {
   return (
     <main className="min-h-screen">
-      <div className="flex flex-col bg-white pt-[35px]">
+      <div className="flex flex-col bg-white pt-14">
         <Navbar />
-        <Suspense fallback={<div>Loading...</div>}>{children}</Suspense>
+        <div className="mt-5">
+          <Suspense fallback={<div>Loading...</div>}>{children}</Suspense>
+        </div>
       </div>
     </main>
   );

@@ -16,8 +16,8 @@ export const UserManagementSection = () => {
   };
 
   return (
-    <div className="py-2 px-12">
-      <div className="mb-8 flex items-center gap-3">
+    <div className="py-8 px-12">
+      <div className="mb-10 flex items-center gap-3">
         <Button
           onClick={handleBackClick}
           disabled={!router}
@@ -34,7 +34,7 @@ export const UserManagementSection = () => {
         </Button>
         <p className='text-black-10 text-base font-semibold'>Kembali</p>
       </div>
-      <h1 className="text-3xl font-bold text-blue-6 mb-4">
+      <h1 className="text-3xl font-bold text-blue-6 mb-6">
         Kelola dan Atur Akses Pengguna <br />
         dengan Mudah
       </h1>
