@@ -127,22 +127,44 @@ export default function ChatBox() {
             {messages.map((msg) => (
               <div
                 key={msg.id}
-                className={`p-3 rounded-lg max-w-[90%] ${
-                  msg.sender === "user"
-                    ? "bg-[#E4F6FC] text-[#00B0EB] self-end"
-                    : "bg-gray-200 text-black self-start"
-                }`}
+                className={`max-w-[90%] ${
+                  msg.sender === "user" ? "self-end" : "self-start"
+                } flex flex-col gap-1`}
               >
-                {/* Gunakan ReactMarkdown agar AI Response bisa dirender dengan format Markdown */}
-                {msg.sender === "assistant" ? (
-                  <ReactMarkdown
-                    remarkPlugins={[remarkGfm]}
-                    rehypePlugins={[rehypeRaw]}
+                {/* Bubble Message */}
+                <div
+                  className={`p-3 rounded-lg ${
+                    msg.sender === "user"
+                      ? "bg-[#E4F6FC] text-[#00B0EB]"
+                      : "bg-gray-200 text-black"
+                  }`}
+                >
+                  {msg.sender === "assistant" ? (
+                    <ReactMarkdown
+                      remarkPlugins={[remarkGfm]}
+                      rehypePlugins={[rehypeRaw]}
+                    >
+                      {msg.content}
+                    </ReactMarkdown>
+                  ) : (
+                    <p className="whitespace-pre-wrap">{msg.content}</p>
+                  )}
+                </div>
+
+                {/* Icon export hanya untuk assistant */}
+                {msg.sender === "assistant" && (
+                  <button
+                    onClick={() => alert("Export logic here")}
+                    className="mt-1 self-start"
+                    title="Export response"
                   >
-                    {msg.content}
-                  </ReactMarkdown>
-                ) : (
-                  <p className="whitespace-pre-wrap">{msg.content}</p>
+                    <Image
+                      src="/icon-download.svg"
+                      width={18}
+                      height={18}
+                      alt="Export"
+                    />
+                  </button>
                 )}
               </div>
             ))}
@@ -198,8 +220,8 @@ export default function ChatBox() {
             </button>
           </div>
           <p className="text-xs text-gray-600 text-center">
-          This AI Report Generator can make mistakes. Check important info.
-        </p>
+            This AI Report Generator can make mistakes. Check important info.
+          </p>
         </div>
       </div>
     </div>
