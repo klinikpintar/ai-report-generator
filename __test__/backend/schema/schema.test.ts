@@ -44,10 +44,7 @@ const validSchemaData = {
   name: "products",
   description: "Table to store products data",
   schemaText: "CREATE TABLE products (id SERIAL PRIMARY KEY, name TEXT);",
-};
-
-const updatedSchemaData = {
-  description: "Updated table description",
+  serviceId: 'db9caeca-aa1a-46f6-84de-adfe0a414c03',
 };
 
 const invalidSchemaData = {
@@ -77,7 +74,7 @@ describe("CRUD of Schema API (Using NextRequest)", () => {
   
   
     expect(response.status).toBe(StatusCodes.INTERNAL_SERVER_ERROR);
-    expect(json.error).toBe("Failed to fetch schemas");
+    expect(json.error).toBe("GET Schemas: Internal Server Error");
   });
   
 
@@ -124,7 +121,7 @@ describe("CRUD of Schema API (Using NextRequest)", () => {
   
   
     expect(response.status).toBe(StatusCodes.NOT_FOUND);
-    expect(json.error).toBe("Schema not found");
+    expect(json.error).toBe("Instance not found");
   });
   
   it("should update a schema successfully", async () => {
@@ -210,4 +207,46 @@ describe("CRUD of Schema API (Using NextRequest)", () => {
 
     expect(json.some((schema: any) => schema.name === validSchemaData.name)).toBe(false);
   });
+
+  it("should return schemas filtered by service_id (UUID)", async () => {
+    const SERVICE_ID = "bd7a4c7a-1234-4c5e-b123-df12345abcd1";
+    const SERVICE_ID_2 = "bd7a4c7a-1234-4c5e-b123-df12345abcd2";
+  
+    const filteredSchemas = [
+      {
+        id: 1,
+        name: "products",
+        description: "Table for product info",
+        schemaText: "CREATE TABLE products (id SERIAL PRIMARY KEY);",
+        serviceId: SERVICE_ID,
+      },
+      {
+        id: 2,
+        name: "users",
+        description: "Table for user info",
+        schemaText: "CREATE TABLE users (id SERIAL PRIMARY KEY);",
+        serviceId: SERVICE_ID_2,
+      },
+    ];
+  
+    (prisma.schema.findMany as jest.Mock).mockImplementation(({ where }) => {
+      return Promise.resolve(filteredSchemas.filter(schema => schema.serviceId == where.serviceId));
+    });    
+  
+    const request = new NextRequest(new URL(`http://localhost/api/schema?service_id=${SERVICE_ID}`), {
+      method: "GET",
+    });
+  
+    const response = await GET(request);
+    const json = await response.json();
+
+    expect(prisma.schema.findMany).toHaveBeenCalledWith({
+      where: { serviceId: SERVICE_ID },
+    });
+  
+    expect(response.status).toBe(StatusCodes.OK);
+    expect(json.length).toBe(1);
+    expect(json[0].serviceId).toBe(SERVICE_ID);
+  });
+  
 });

@@ -15,9 +15,11 @@ class SchemaService implements ISchemaService {
     });
   }
 
-  async findAllSchemas(): Promise<Schema[]> {
-    return prisma.schema.findMany();
-  }
+  async findAllSchemas(serviceId?: string): Promise<Schema[]> {
+    return prisma.schema.findMany(
+      serviceId ? { where: { serviceId: serviceId } } : {}
+    );
+  }  
 
   async updateSchema(data: UpdateSchemaDto): Promise<Schema> {
     const { id, ...updateFields } = data;
@@ -34,19 +36,5 @@ class SchemaService implements ISchemaService {
   }
 }
 
-// Singleton Instance
-class SchemaServiceSingleton {
-  private static instance: SchemaService;
-
-  private constructor() {}
-
-  public static getInstance(): SchemaService {
-    if (!SchemaServiceSingleton.instance) {
-      SchemaServiceSingleton.instance = new SchemaService();
-    }
-    return SchemaServiceSingleton.instance;
-  }
-}
-
-const schemaService = SchemaServiceSingleton.getInstance();
+const schemaService = new SchemaService();
 export default schemaService;
