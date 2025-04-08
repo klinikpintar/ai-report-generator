@@ -1,14 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { StatusCodes } from 'http-status-codes';
-import schemaService from '@backend/services/schemaService';
-import { validateSchemaInput, handlePrismaError, handleInternalServerError } from '@backend/utils/schemaUtils';
+import schemaService from '../../services/schemaService';
+import { validateSchemaInput, handleError } from '../../utils/schemaUtils';
 
 export async function GET() {
   try {
     const schemas = await schemaService.findAllSchemas();
     return NextResponse.json(schemas, { status: StatusCodes.OK });
-  } catch {
-    return handleInternalServerError();
+  } catch (error) {
+    return handleError(error, "GET Schemas");
   }
 }
 
@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json(newSchema, { status: StatusCodes.CREATED });
   } catch (error) {
-    return handlePrismaError(error);
+    return handleError(error, "POST Schemas");
   }
 }
 
@@ -37,7 +37,7 @@ export async function PATCH(req: NextRequest) {
 
     return NextResponse.json(updatedSchema, { status: StatusCodes.OK });
   } catch (error) {
-    return handlePrismaError(error);
+    return handleError(error, "PATCH Schemas");
   }
 }
 
@@ -53,6 +53,6 @@ export async function DELETE(req: NextRequest) {
 
     return NextResponse.json({ message: 'Schema deleted successfully' }, { status: StatusCodes.OK });
   } catch (error) {
-    return handlePrismaError(error);
+    return handleError(error, "DELETE Schemas");
   }
 }

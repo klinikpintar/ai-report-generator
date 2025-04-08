@@ -34,19 +34,5 @@ class SchemaService implements ISchemaService {
   }
 }
 
-// Singleton Instance
-class SchemaServiceSingleton {
-  private static instance: SchemaService;
-
-  private constructor() {}
-
-  public static getInstance(): SchemaService {
-    if (!SchemaServiceSingleton.instance) {
-      SchemaServiceSingleton.instance = new SchemaService();
-    }
-    return SchemaServiceSingleton.instance;
-  }
-}
-
-const schemaService = SchemaServiceSingleton.getInstance();
+const schemaService = new SchemaService();
 export default schemaService;
