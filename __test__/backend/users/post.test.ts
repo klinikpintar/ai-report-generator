@@ -2,6 +2,7 @@ import prisma from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { POST as createUserHandler } from "@backend/api/users/route";
 import { NextRequest } from "next/server";
+import config from "@backend/config";
 
 jest.mock("@/lib/prisma", () => ({
   user: {
@@ -53,7 +54,7 @@ describe("User API - Create User", () => {
     expect(response.status).toBe(200);
     expect(json.message).toBe("User created");
     expect(json.data.user.email).toBe("johndoe@example.com");
-    expect(bcryptHashSpy).toHaveBeenCalledWith("Secure123!", 10);
+    expect(bcryptHashSpy).toHaveBeenCalledWith("Secure123!", config.BCRYPT_SALT_ROUNDS);
   });
 
   // ❌ Unhappy Path - Email sudah terdaftar
