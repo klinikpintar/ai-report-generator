@@ -4,11 +4,21 @@ import { ReportSchema } from "@/app/(backend)/dtos/report.dto";
 import { ZodError } from "zod";
 
 export async function POST(req: NextRequest) {
+  const authHeader = req.headers.get("Authorization");
+  const token = authHeader?.replace("Bearer ", "");
+
+  // OWASP A2 – Broken Authentication: Cek apakah token ada
+  if (!token) {
+    return NextResponse.json({ message: "Missing token" }, { status: 401 });
+  }
+
   try {
     const { searchParams } = new URL(req.url);
     const isPreview = searchParams.get("preview") === "true";
 
     const body = await req.json();
+
+    // OWASP A1 – Injection: Validasi input terhadap skema
     const parsed = ReportSchema.parse(body.reportData);
 
     const exporter = new PdfExporter();
