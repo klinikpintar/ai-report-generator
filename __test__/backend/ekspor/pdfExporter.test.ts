@@ -2,12 +2,26 @@ import { POST } from "@/app/(backend)/api/ekspor/pdf/route";
 import { NextRequest } from "next/server";
 import { ReportDTO } from "@/app/(backend)/dtos/report.dto";
 
-function createMockRequest(data: any, preview = false): NextRequest {
+// Mock token & verifyAccessToken
+jest.mock("@/middleware", () => ({
+  verifyAccessToken: jest.fn(() => ({ email: "user@example.com" })) // Always returns a user
+}));
+
+const mockToken = "mocked-valid-token";
+
+function createMockRequest(data: any, preview = false, withToken = true): NextRequest {
   const url = new URL(`http://localhost/api/ekspor/pdf${preview ? "?preview=true" : ""}`);
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json"
+  };
+  if (withToken) {
+    headers["Authorization"] = `Bearer ${mockToken}`;
+  }
+
   return new NextRequest(url.toString(), {
     method: "POST",
     body: JSON.stringify(data),
-    headers: { "Content-Type": "application/json" },
+    headers,
   });
 }
 
@@ -35,6 +49,15 @@ describe("POST /api/ekspor/pdf (handler)", () => {
     expect(res.headers.get("content-disposition")).toContain("attachment");
   });
 
+  it("should return 401 if token is missing", async () => {
+    const req = createMockRequest({ reportData: validData }, false, false);
+    const res = await POST(req);
+    const json = await res.json();
+
+    expect(res.status).toBe(401);
+    expect(json.message).toBe("Missing token");
+  });
+
   it("should return 400 for invalid input", async () => {
     const invalid = {
       reportData: {
@@ -52,38 +75,71 @@ describe("POST /api/ekspor/pdf (handler)", () => {
     expect(json.errors).toBeDefined();
   });
 
+  it("should return 400 if title/content is empty or too short", async () => {
+    const invalidData = {
+      reportData: {
+        title: "  ", // will be trimmed to empty string
+        content: " ", // will be trimmed to empty string
+        createdAt: "2025-04-07"
+      }
+    };
+  
+    const req = createMockRequest(invalidData);
+    const res = await POST(req);
+    const json = await res.json();
+  
+    expect(res.status).toBe(400);
+    const messages = json.errors.map((e: any) => e.message);
+    expect(messages).toContain("Judul minimal 3 karakter");
+    expect(messages).toContain("Isi laporan tidak boleh kosong");
+  });
+
+  it("should return 400 if createdAt is invalid date format", async () => {
+    const invalidDate = {
+      reportData: {
+        title: "Laporan mingguan",
+        content: "Ada isinya",
+        createdAt: "not-a-date"
+      }
+    };
+  
+    const req = createMockRequest(invalidDate);
+    const res = await POST(req);
+    const json = await res.json();
+  
+    expect(res.status).toBe(400);
+    const messages = json.errors.map((e: any) => e.message);
+    expect(messages).toContain("Format tanggal tidak valid");
+  });  
+
   it("should return 500 if export fails unexpectedly", async () => {
-    jest.resetModules(); // pastikan fresh
+    jest.resetModules();
     const mockPdfExporter = {
       export: jest.fn(() => { throw new Error("Simulated failure"); }),
       getMimeType: () => "application/pdf",
       getFileName: () => "mock.pdf"
     };
-  
+
     jest.doMock("@/app/(backend)/services/pdfExporter", () => ({
       PdfExporter: jest.fn(() => mockPdfExporter)
     }));
-  
-    const { POST } = await import("@/app/(backend)/api/ekspor/pdf/route"); // import ulang setelah mock
-  
-    const req = new NextRequest("http://localhost/api/ekspor/pdf", {
-      method: "POST",
-      body: JSON.stringify({
-        reportData: {
-          title: "Test",
-          content: "Should fail",
-          createdAt: "2025-04-07"
-        }
-      }),
-      headers: { "Content-Type": "application/json" }
+
+    const { POST } = await import("@/app/(backend)/api/ekspor/pdf/route");
+
+    const req = createMockRequest({
+      reportData: {
+        title: "Test",
+        content: "Should fail",
+        createdAt: "2025-04-07"
+      }
     });
-  
+
     const res = await POST(req);
     const json = await res.json();
-  
+
     expect(res.status).toBe(500);
     expect(json.message).toBe("Gagal mengekspor laporan");
-  
-    jest.dontMock("@/app/(backend)/services/pdfExporter"); // restore default
-  });   
+
+    jest.dontMock("@/app/(backend)/services/pdfExporter");
+  });
 });
