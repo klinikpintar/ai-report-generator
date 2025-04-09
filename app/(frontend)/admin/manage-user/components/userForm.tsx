@@ -82,8 +82,8 @@ const UserForm: React.FC<UserFormProps> = ({
                   <input
                     type="radio"
                     name="role"
-                    value="admin"
-                    checked={formData.role === "admin"}
+                    value="ADMIN"
+                    checked={formData.role === "ADMIN"}
                     onChange={handleChange}
                     className="mr-2"
                     aria-label="Admin"
@@ -94,8 +94,8 @@ const UserForm: React.FC<UserFormProps> = ({
                   <input
                     type="radio"
                     name="role"
-                    value="business_analyst"
-                    checked={formData.role === "business_analyst"}
+                    value="BUSINESS_ANALYST"
+                    checked={formData.role === "BUSINESS_ANALYST"}
                     onChange={handleChange}
                     className="mr-2"
                     aria-label="Business Analyst"
