@@ -2,13 +2,16 @@ import prisma from "@/lib/prisma";
 import config from "@backend/config";
 import {
   CreateUserDto,
+  GetUsersParams,
   IUserCreator,
+  IUserFinder,
+  PaginationUser,
   User,
 } from "@backend/interfaces/IUsersService";
 import { ConflictResponse } from "@backend/utils/exceptions";
 import bcrypt from "bcryptjs";
 
-class UsersService implements IUserCreator {
+class UsersService implements IUserCreator, IUserFinder {
   async createUser(data: CreateUserDto): Promise<User> {
     const userCount = await prisma.user.count({ where: { email: data.email } });
     if (userCount > 0) {
@@ -29,6 +32,41 @@ class UsersService implements IUserCreator {
     });
 
     return user;
+  }
+
+  async getUsers({ page, limit, role }: GetUsersParams): Promise<{
+    users: User[];
+    pagination: PaginationUser;
+  }> {
+    const skip = (page - 1) * limit;
+    const where = role ? { role } : {};
+
+    const [totalItems, users] = await Promise.all([
+      prisma.user.count({ where }),
+      prisma.user.findMany({
+        where,
+        skip,
+        take: limit,
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true,
+          isActive: true,
+        },
+      }),
+    ]);
+
+    const totalPages = Math.ceil(totalItems / limit);
+
+    return {
+      users,
+      pagination: {
+        currentPage: page,
+        totalPages: totalPages,
+        totalItems: totalItems,
+      },
+    };
   }
 }
 
