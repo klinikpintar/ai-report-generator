@@ -8,6 +8,7 @@ import rehypeRaw from "rehype-raw";
 import Dropdown from "./components/dropdown";
 import { useService } from "./context/serviceContext"; // Import context
 import Bantuan from "./components/bantuan";
+import ExportModal from "@/app/(frontend)/(chat)/components/ekspor/modal";
 
 // Definisikan tipe data pesan
 interface Message {
@@ -39,6 +40,11 @@ export default function ChatBox() {
   const [isLoading, setIsLoading] = useState(false);
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const { selectedService } = useService(); // Ambil service dari context
+  const [isExportModalVisible, setIsExportModalVisible] = useState(false);
+  const [exportModalData, setExportModalData] = useState<{
+    id: string;
+    content: string;
+  } | null>(null);
 
   // Auto-scroll ke pesan terbaru setiap kali messages diperbarui
   useEffect(() => {
@@ -151,23 +157,32 @@ export default function ChatBox() {
                   )}
                 </div>
 
-                {/* Icon export hanya untuk assistant */}
                 {msg.sender === "assistant" && (
                   <button
-                    onClick={() => alert("Export logic here")}
-                    className="mt-1 self-start"
-                    title="Export response"
+                    onClick={() => {
+                      setIsExportModalVisible(true);
+                      setExportModalData({ id: msg.id, content: msg.content });
+                    }}
                   >
                     <Image
                       src="/icon-download.svg"
-                      width={18}
-                      height={18}
-                      alt="Export"
+                      width={20}
+                      height={20}
+                      alt="Download"
+                      className="cursor-pointer"
                     />
                   </button>
                 )}
               </div>
             ))}
+            {exportModalData && (
+              <ExportModal
+                isVisible={!!exportModalData}
+                onClose={() => setExportModalData(null)}
+                content={exportModalData.content}
+                title={`Laporan-${exportModalData.id}`}
+              />
+            )}
             {isLoading && (
               <div className="p-3 rounded-lg max-w-[90%] bg-gray-200 text-black self-start">
                 AI is typing...
