@@ -27,7 +27,7 @@ describe("Service Management Test", () => {
     await userEvent.click(kelolaServiceButton);
 
     expect(
-      screen.getByText(/Daftar Service Klinik Pintar/i)
+      screen.queryByText(/Daftar Service Klinik Pintar/i)
     ).toBeInTheDocument();
   });
 
