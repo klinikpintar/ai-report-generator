@@ -1,4 +1,4 @@
-import React, { FormEvent } from "react";
+import React, { FormEvent, useEffect, useState } from "react";
 import Image from "next/image";
 
 interface SchemaFormProps {
@@ -9,6 +9,7 @@ interface SchemaFormProps {
     description: string;
     schemaText: string;
     fileName?: string;
+    serviceId: string;
   };
   handleSubmit: (event: FormEvent<HTMLFormElement>) => void;
   handleChange: (
@@ -19,6 +20,12 @@ interface SchemaFormProps {
   handleFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onClose: () => void;
   clearForm: () => void;
+}
+
+interface Service {
+  id: string;
+  name: string;
+  platformCode: string;
 }
 
 const SchemaForm: React.FC<SchemaFormProps> = ({
@@ -32,7 +39,27 @@ const SchemaForm: React.FC<SchemaFormProps> = ({
   clearForm,
 }) => {
   const platforms = ["PostgreSQL", "MySQL", "MongoDB"];
-  const services = ["Reservasi", "Kesehatan", "Keuangan", "Inventaris"];
+  const [services, setServices] = useState<Service[]>([]);
+
+  useEffect(() => {
+    const fetchServices = async () => {
+      try {
+        const response = await fetch("/api/service");
+        const data: Service[] = await response.json();
+        setServices(
+          data.map((item) => ({
+            id: item.id,
+            name: item.name,
+            platformCode: item.platformCode,
+          }))
+        );
+      } catch (error) {
+        console.error("Failed to fetch services:", error);
+      }
+    };
+
+    fetchServices();
+  }, []);
 
   return (
     <form className="p-10" onSubmit={handleSubmit}>
@@ -111,7 +138,9 @@ const SchemaForm: React.FC<SchemaFormProps> = ({
           </label>
           <select
             id="service"
-            defaultValue=""
+            name="serviceId"
+            value={formData.serviceId}
+            onChange={handleChange}
             className="bg-[#00B0EB] text-white text-[16.44px] font-bold rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-3 cursor-pointer"
           >
             <option
@@ -121,13 +150,13 @@ const SchemaForm: React.FC<SchemaFormProps> = ({
             >
               Pilih Service
             </option>
-            {services.map((service) => (
+            {services.map((item) => (
               <option
-                key={service}
-                value={service}
+                key={item.id}
+                value={item.id}
                 className="bg-white text-[#00B0EB] text-[16.44px] font-bold"
               >
-                {service}
+                {item.name}
               </option>
             ))}
           </select>

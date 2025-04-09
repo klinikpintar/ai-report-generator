@@ -14,7 +14,7 @@ export async function fetchSchemas(params: FetchSchemasParams = {}) {
 
   const schemas = data.map((schema, index) => ({
     ...schema,
-    service: dummyServices[index % dummyServices.length],
+    platform: dummyPlatforms[index % dummyPlatforms.length],
   })) as Schema[];
 
   return schemas;

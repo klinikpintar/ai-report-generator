@@ -44,7 +44,9 @@ export const SchemaTable: React.FC<SchemaTableProps> = ({
   onFinishedAction = () => {},
 }) => {
   const [schemaToEdit, setSchemaToEdit] = React.useState<Schema | null>(null);
-  const [schemaToDelete, setSchemaToDelete] = React.useState<Schema | null>(null);
+  const [schemaToDelete, setSchemaToDelete] = React.useState<Schema | null>(
+    null
+  );
   const [schemaToRead, setSchemaToRead] = React.useState<Schema | null>(null);
   const pages = generatePagination(currentPage, lastPage);
 
@@ -110,7 +112,7 @@ export const SchemaTable: React.FC<SchemaTableProps> = ({
             </TableRow>
           )}
           {schemas.map((schema) => {
-            const platform = schema.service!.platform;
+            const platform = schema.platform!;
             return (
               <TableRow key={schema.id}>
                 <TableCell>{schema.name}</TableCell>
@@ -161,14 +163,19 @@ export const SchemaTable: React.FC<SchemaTableProps> = ({
       <Pagination className="w-full flex justify-between">
         <PaginationContent>
           <PaginationItem>
-            <PaginationPrevious href={currentPage > 1 ? `?page=${currentPage - 1}` : ""} />
+            <PaginationPrevious
+              href={currentPage > 1 ? `?page=${currentPage - 1}` : ""}
+            />
           </PaginationItem>
         </PaginationContent>
         <PaginationContent>
           {pages.map((page, index) => (
             <PaginationItem key={index}>
               {typeof page === "number" ? (
-                <PaginationLink href={`?page=${page}`} isActive={page === currentPage}>
+                <PaginationLink
+                  href={`?page=${page}`}
+                  isActive={page === currentPage}
+                >
                   {page}
                 </PaginationLink>
               ) : (
@@ -179,7 +186,9 @@ export const SchemaTable: React.FC<SchemaTableProps> = ({
         </PaginationContent>
         <PaginationContent>
           <PaginationItem>
-            <PaginationNext href={currentPage < lastPage ? `?page=${currentPage + 1}` : ""} />
+            <PaginationNext
+              href={currentPage < lastPage ? `?page=${currentPage + 1}` : ""}
+            />
           </PaginationItem>
         </PaginationContent>
       </Pagination>
@@ -201,6 +210,7 @@ export const SchemaTable: React.FC<SchemaTableProps> = ({
           description: schemaToEdit?.description ?? "",
           schemaText: schemaToEdit?.schemaText ?? "",
           fileName: schemaToEdit?.name ?? "",
+          serviceId: schemaToEdit?.serviceId ?? "",
         }}
       />
 

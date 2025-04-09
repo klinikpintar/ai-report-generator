@@ -109,6 +109,9 @@ describe('SchemaService Unit Tests', () => {
   
     expect(prisma.schema.findMany).toHaveBeenCalledWith({
       where: { serviceId: SERVICE_ID },
+      include: {
+        service: true,
+      },
     });
     expect(result).toEqual([filteredSchemas[0]]);
   });

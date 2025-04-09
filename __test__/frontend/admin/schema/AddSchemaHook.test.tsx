@@ -25,6 +25,7 @@ describe("AddSchemaHook Test", () => {
       description: "",
       schemaText: "",
       fileName: "",
+      serviceId: "",
     });
   });
 
@@ -83,6 +84,7 @@ describe("AddSchemaHook Test", () => {
       description: "",
       schemaText: "",
       fileName: "",
+      serviceId: "",
     });
   });
 
@@ -105,6 +107,11 @@ describe("AddSchemaHook Test", () => {
       result.current.formData.schemaText = "CREATE TABLE users;";
     });
 
+    act(() => {
+      result.current.formData.serviceId =
+        "095d95b8-c646-4ff6-bf02-397819e507e9";
+    });
+
     await act(async () => {
       await result.current.handleSubmit({ preventDefault: jest.fn() } as any);
     });
@@ -113,6 +120,7 @@ describe("AddSchemaHook Test", () => {
       name: result.current.formData.name,
       description: result.current.formData.description,
       schemaText: "CREATE TABLE users;",
+      serviceId: "095d95b8-c646-4ff6-bf02-397819e507e9",
     });
     expect(toast.success).toHaveBeenCalledWith("Schema successfully added");
     expect(onCloseMock).toHaveBeenCalled();
@@ -166,6 +174,7 @@ describe("AddSchemaHook Test", () => {
       description: "auth-2 purpose",
       schemaText: "create",
       fileName: "skema.sql",
+      serviceId: "095d95b8-c646-4ff6-bf02-397819e507e9",
     };
 
     (axios.patch as jest.Mock).mockResolvedValue({ data: initialData });
@@ -182,6 +191,7 @@ describe("AddSchemaHook Test", () => {
       id: 1,
       name: "users-2",
       description: "auth-2 purpose",
+      serviceId: "095d95b8-c646-4ff6-bf02-397819e507e9",
     });
 
     expect(onCloseMock).toHaveBeenCalled();
@@ -194,6 +204,7 @@ describe("AddSchemaHook Test", () => {
       description: "auth-2 purpose",
       schemaText: "create",
       fileName: "skema.sql",
+      serviceId: "095d95b8-c646-4ff6-bf02-397819e507e9",
     };
 
     (axios.patch as jest.Mock).mockRejectedValue({

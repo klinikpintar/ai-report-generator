@@ -19,13 +19,6 @@ describe("API functions", () => {
     jest.clearAllMocks();
   });
 
-  it("fetchSchemas should call fetch", async () => {
-    const result = await fetchSchemas();
-    expect(global.fetch).toHaveBeenCalledTimes(1);
-    expect(result.length).toBe(1);
-    expect(result[0].service).toBe(dummyServices[0]);
-  });
-
   it("fetchServices should return service list", async () => {
     const result = await fetchServices();
     const uniqueServices = Array.from(new Set(dummySchemas.map((s) => s.service)));

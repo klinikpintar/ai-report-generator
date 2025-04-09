@@ -8,6 +8,7 @@ interface SchemaData {
   description: string;
   schemaText: string;
   fileName: string;
+  serviceId: string;
 }
 
 export const AddSchemaHook = (
@@ -22,6 +23,7 @@ export const AddSchemaHook = (
     description: "",
     schemaText: "",
     fileName: "",
+    serviceId: "",
     ...initialData,
   });
 
@@ -75,6 +77,7 @@ export const AddSchemaHook = (
         description: "",
         schemaText: "",
         fileName: "",
+        serviceId: "",
       }));
     }
   };
@@ -93,6 +96,7 @@ export const AddSchemaHook = (
           name: formData.name,
           description: formData.description,
           schemaText: formData.schemaText,
+          serviceId: formData.serviceId,
         });
 
         toast.success("Schema successfully added");
@@ -112,6 +116,7 @@ export const AddSchemaHook = (
           id: initialData.id,
           name: formData.name,
           description: formData.description,
+          serviceId: formData.serviceId,
         });
 
         toast.success("Schema successfully updated");

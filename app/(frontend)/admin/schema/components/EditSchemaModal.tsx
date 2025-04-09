@@ -12,6 +12,7 @@ interface Props {
     description: string;
     schemaText: string;
     fileName: string;
+    serviceId: string;
   } | null;
 }
 

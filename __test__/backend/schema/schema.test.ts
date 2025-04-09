@@ -242,6 +242,9 @@ describe("CRUD of Schema API (Using NextRequest)", () => {
 
     expect(prisma.schema.findMany).toHaveBeenCalledWith({
       where: { serviceId: SERVICE_ID },
+      include: {
+        service: true,
+      },
     });
   
     expect(response.status).toBe(StatusCodes.OK);
