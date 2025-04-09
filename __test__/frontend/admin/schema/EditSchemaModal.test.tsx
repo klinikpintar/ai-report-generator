@@ -33,7 +33,7 @@ describe("Edit Schema Modal Test", () => {
   it("Should not appear when first rendered", () => {
     render(<EditSchemaModal isVisible={false} onClose={() => {}} />);
 
-    expect(screen.getByText("Edit Skema Database")).toHaveAttribute("aria-hidden", "true");
+    expect(screen.queryByText(/Edit Skema Database/i)).not.toBeInTheDocument()
   });
 
   it("Should call the 'handleClose' function when 'Batal' button is clicked", () => {

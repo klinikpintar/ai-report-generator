@@ -112,7 +112,7 @@ export const SchemaTable: React.FC<SchemaTableProps> = ({
             </TableRow>
           )}
           {schemas.map((schema) => {
-            const platform = schema.service!.platform;
+            const platform = schema.platform!;
             return (
               <TableRow key={schema.id}>
                 <TableCell>{schema.name}</TableCell>
@@ -201,35 +201,32 @@ export const SchemaTable: React.FC<SchemaTableProps> = ({
         description="Apakah Anda yakin ingin menghapus skema ini?"
       />
 
-      {schemaToEdit && (
-        <EditSchemaModal
-          isVisible={schemaToEdit !== null}
-          onClose={handleCloseEditModal}
-          schema={{
-            id: schemaToEdit.id,
-            name: schemaToEdit.name,
-            description: schemaToEdit.description || "",
-            schemaText: schemaToEdit.schemaText,
-            fileName: schemaToEdit.name,
-          }}
-        />
-      )}
+      <EditSchemaModal
+        isVisible={schemaToEdit !== null}
+        onClose={handleCloseEditModal}
+        schema={{
+          id: schemaToEdit?.id ?? 0,
+          name: schemaToEdit?.name ?? "",
+          description: schemaToEdit?.description ?? "",
+          schemaText: schemaToEdit?.schemaText ?? "",
+          fileName: schemaToEdit?.name ?? "",
+          serviceId: schemaToEdit?.serviceId ?? "",
+        }}
+      />
 
-      {schemaToRead && (
-        <Modal
-          title={schemaToRead.name}
-          subtitle=""
-          onClose={handleCloseReadModal}
-          isVisible={schemaToRead !== null}
-          onClearForm={() => {}}
-        >
-          <div className="p-8">
-            <code className="block h-[500px] overflow-y-scroll">
-              {schemaToRead.schemaText}
-            </code>
-          </div>
-        </Modal>
-      )}
+      <Modal
+        title={schemaToRead?.name ?? ""}
+        subtitle=""
+        onClose={handleCloseReadModal}
+        isVisible={schemaToRead !== null}
+        isForm={false}
+      >
+        <div className="p-8">
+          <code className="block h-[500px] overflow-y-scroll">
+            {schemaToRead?.schemaText ?? ""}
+          </code>
+        </div>
+      </Modal>
     </div>
   );
 };

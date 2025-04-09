@@ -111,9 +111,7 @@ export const SchemaTableSection = () => {
         </Button>
       </div>
 
-      {showAddModal && (
-        <AddSchemaModal isVisible={showAddModal} onClose={onSchemaModalClose} />
-      )}
+      <AddSchemaModal isVisible={showAddModal} onClose={onSchemaModalClose} />
     </>
   );
 };

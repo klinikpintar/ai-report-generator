@@ -7,7 +7,7 @@ import { handleError } from '@backend/utils/errorUtils';
 export async function GET(req: NextRequest) {
   try {
     const url = new URL(req.url);
-    const serviceId = url.searchParams.get("service_id") as (string | undefined);
+    const serviceId = url.searchParams.getAll("serviceIds")
 
 
     const schemas = await schemaService.findAllSchemas(serviceId);

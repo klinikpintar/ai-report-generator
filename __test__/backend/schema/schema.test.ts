@@ -208,8 +208,8 @@ describe("CRUD of Schema API (Using NextRequest)", () => {
     expect(json.some((schema: any) => schema.name === validSchemaData.name)).toBe(false);
   });
 
-  it("should return schemas filtered by service_id (UUID)", async () => {
-    const SERVICE_ID = "bd7a4c7a-1234-4c5e-b123-df12345abcd1";
+  it("should return schemas filtered by serviceIds (UUIDs)", async () => {
+    const SERVICE_ID_1 = "bd7a4c7a-1234-4c5e-b123-df12345abcd1";
     const SERVICE_ID_2 = "bd7a4c7a-1234-4c5e-b123-df12345abcd2";
   
     const filteredSchemas = [
@@ -218,7 +218,7 @@ describe("CRUD of Schema API (Using NextRequest)", () => {
         name: "products",
         description: "Table for product info",
         schemaText: "CREATE TABLE products (id SERIAL PRIMARY KEY);",
-        serviceId: SERVICE_ID,
+        serviceId: SERVICE_ID_1,
       },
       {
         id: 2,
@@ -230,23 +230,36 @@ describe("CRUD of Schema API (Using NextRequest)", () => {
     ];
   
     (prisma.schema.findMany as jest.Mock).mockImplementation(({ where }) => {
-      return Promise.resolve(filteredSchemas.filter(schema => schema.serviceId == where.serviceId));
-    });    
-  
-    const request = new NextRequest(new URL(`http://localhost/api/schema?service_id=${SERVICE_ID}`), {
-      method: "GET",
+      return Promise.resolve(
+        filteredSchemas.filter((schema) =>
+          where.serviceId.in.includes(schema.serviceId)
+        )
+      );
     });
+  
+    const request = new NextRequest(
+      new URL(
+        `http://localhost/api/schema?serviceIds=${SERVICE_ID_1}&serviceIds=${SERVICE_ID_2}`
+      ),
+      {
+        method: "GET",
+      }
+    );
   
     const response = await GET(request);
     const json = await response.json();
-
+  
     expect(prisma.schema.findMany).toHaveBeenCalledWith({
-      where: { serviceId: SERVICE_ID },
+      where: { serviceId: { in: [SERVICE_ID_1, SERVICE_ID_2] } },
+      include: {
+        service: true,
+      },
     });
   
     expect(response.status).toBe(StatusCodes.OK);
-    expect(json.length).toBe(1);
-    expect(json[0].serviceId).toBe(SERVICE_ID);
+    expect(json.length).toBe(2);
+    expect(json[0].serviceId).toBe(SERVICE_ID_1);
+    expect(json[1].serviceId).toBe(SERVICE_ID_2);
   });
   
 });

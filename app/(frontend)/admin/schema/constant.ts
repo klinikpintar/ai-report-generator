@@ -70,6 +70,7 @@ export const dummySchemas: Schema[] = [
       tgl_checkin DATE,
       tgl_checkout DATE
     )`,
+    platform: dummyPlatforms[0],
   },
   {
     id: 2,
@@ -87,6 +88,7 @@ export const dummySchemas: Schema[] = [
       diagnosa TEXT,
       resep_obat TEXT
     )`,
+    platform: dummyPlatforms[1],
   },
   {
     id: 3,
@@ -101,6 +103,7 @@ export const dummySchemas: Schema[] = [
       jenis_transaksi VARCHAR(50),
       total DECIMAL(10, 2)
     )`,
+    platform: dummyPlatforms[0],
   },
   {
     id: 4,
@@ -115,5 +118,6 @@ export const dummySchemas: Schema[] = [
       harga DECIMAL(10, 2),
       stok INT
     )`,
+    platform: dummyPlatforms[1],
   },
 ]

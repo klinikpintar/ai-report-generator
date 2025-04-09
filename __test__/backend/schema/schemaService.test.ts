@@ -80,8 +80,8 @@ describe('SchemaService Unit Tests', () => {
     await expect(schemaService.deleteSchema(9999)).rejects.toThrow('Instance not found');
   });
 
-  it('should retrieve schemas filtered by serviceId', async () => {
-    const SERVICE_ID = "bd7a4c7a-1234-4c5e-b123-df12345abcd1";
+  it('should retrieve schemas filtered by serviceIds', async () => {
+    const SERVICE_ID_1 = "bd7a4c7a-1234-4c5e-b123-df12345abcd1";
     const SERVICE_ID_2 = "bd7a4c7a-1234-4c5e-b123-df12345abcd2";
   
     const filteredSchemas = [
@@ -90,10 +90,10 @@ describe('SchemaService Unit Tests', () => {
         name: "products",
         description: "Table for product info",
         schemaText: "CREATE TABLE products (id SERIAL PRIMARY KEY);",
-        serviceId: SERVICE_ID,
+        serviceId: SERVICE_ID_1,
       },
       {
-        id: 1,
+        id: 2,
         name: "users",
         description: "Table for user info",
         schemaText: "CREATE TABLE users (id SERIAL PRIMARY KEY);",
@@ -102,15 +102,25 @@ describe('SchemaService Unit Tests', () => {
     ];
   
     (prisma.schema.findMany as jest.Mock).mockImplementation(({ where }) => {
-      return Promise.resolve(filteredSchemas.filter(schema => schema.serviceId == where.serviceId));
+      return Promise.resolve(
+        filteredSchemas.filter((schema) =>
+          where.serviceId.in.includes(schema.serviceId)
+        )
+      );
     });
   
-    const result = await schemaService.findAllSchemas(SERVICE_ID);
+    const result = await schemaService.findAllSchemas([SERVICE_ID_1, SERVICE_ID_2]);
   
     expect(prisma.schema.findMany).toHaveBeenCalledWith({
-      where: { serviceId: SERVICE_ID },
+      where: {
+        serviceId: { in: [SERVICE_ID_1, SERVICE_ID_2] },
+      },
+      include: {
+        service: true,
+      },
     });
-    expect(result).toEqual([filteredSchemas[0]]);
+  
+    expect(result).toEqual(filteredSchemas);
   });
   
 });

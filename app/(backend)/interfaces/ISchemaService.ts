@@ -23,7 +23,7 @@ export interface IReadSchemaService {
    * Find all schemas by service id
    * @returns Promise<Schema[]> Array of schemas
    */
-  findAllSchemas(serviceId?: string): Promise<Schema[]>;
+  findAllSchemas(serviceIds?: string[]): Promise<Schema[]>;
 }
 
 

@@ -1,4 +1,4 @@
-import { dummyPlatforms, dummyServices } from "../constant"
+import { dummyPlatforms } from "../constant"
 import { Schema } from "../types"
 
 export interface FetchSchemasParams {
@@ -9,20 +9,30 @@ export interface FetchSchemasParams {
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function fetchSchemas(params: FetchSchemasParams = {}) {
-  const response = await fetch(`${window.location.origin}/api/schema`);
+  const queryParams = new URLSearchParams();
+
+  Object.entries(params).forEach(([key, value]) => {
+    if (Array.isArray(value)) {
+      value.forEach((v) => queryParams.append(key, String(v)));
+    }
+  });
+
+  const response = await fetch(`${window.location.origin}/api/schema?${queryParams.toString()}`);
   const data = await response.json() as Schema[];
 
   const schemas = data.map((schema, index) => ({
     ...schema,
-    service: dummyServices[index % dummyServices.length],
+    platform: dummyPlatforms[index % dummyPlatforms.length],
   })) as Schema[];
 
   return schemas;
 }
 
 export async function fetchServices() {
-  const services = dummyServices
-  return Promise.resolve(services)
+  const response = await fetch(`${window.location.origin}/api/service`);
+
+  const services = await response.json();
+  return services;
 }
 
 export async function fetchPlatforms() {
