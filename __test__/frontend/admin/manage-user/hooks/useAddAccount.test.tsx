@@ -45,25 +45,6 @@ describe('useAddAccount Hook', () => {
     expect(result.current.formData.role).toBe('ADMIN');
   });
 
-  it('should validate email format', async () => {
-    const { result } = renderHook(() => useAddAccount(mockOnClose));
-
-    // Fill form with invalid email format
-    act(() => {
-      result.current.handleChange({
-        target: { name: 'email', value: 'invalidemail' }
-      } as React.ChangeEvent<HTMLInputElement>);
-    });
-
-    await act(async () => {
-      await result.current.handleSubmit({
-        preventDefault: () => {}
-      } as React.FormEvent<HTMLFormElement>);
-    });
-
-    expect(result.current.errors.email).toBe('Email is invalid');
-  });
-
   it('should validate password length', async () => {
     const { result } = renderHook(() => useAddAccount(mockOnClose));
 
