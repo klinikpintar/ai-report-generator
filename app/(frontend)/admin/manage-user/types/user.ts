@@ -1,4 +1,9 @@
-export type UserRole = "BUSINESS_ANALYST" | "ADMIN";
+export const UserRole = {
+  ADMIN: "ADMIN",
+  BUSINESS_ANALYST: "BUSINESS_ANALYST",
+} as const;
+
+export type UserRole = typeof UserRole[keyof typeof UserRole];
 
 export type User = {
   id: string;
