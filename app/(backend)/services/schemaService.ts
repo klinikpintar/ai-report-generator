@@ -11,6 +11,7 @@ class SchemaService implements ISchemaService {
         name: parsedData.name,
         description: parsedData.description,
         schemaText: parsedData.schemaText,
+        serviceId: parsedData.serviceId
       },
     });
   }
