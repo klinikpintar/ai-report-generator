@@ -1,5 +1,4 @@
-import React, { ReactNode} from "react";
-import { MouseEvent } from "react";
+import React, {ReactNode, MouseEvent} from "react";
 import { Inter } from "next/font/google";
 
 const inter = Inter({
@@ -39,7 +38,7 @@ const Modal: React.FC<PlainModalProps> = (props) => {
         onClick={handleClose}
       >
         <div
-          className={`bg-white w-full pt-1 pb-1 pl-5 pr-5 max-w-[560px] max-h-full rounded-lg shadow transition-all ${
+          className={`bg-white w-full pt-1 pb-1 pl-5 pr-5 max-w-[560px] max-h-full rounded-lg shadow ${
             isVisible ? "scale-100 opacity-100" : "scale-105 opacity-0"
           }`}
         >
