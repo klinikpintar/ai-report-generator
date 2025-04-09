@@ -1,46 +1,37 @@
 import { ZodError } from 'zod';
 import { StatusCodes } from 'http-status-codes';
 import { NextResponse } from 'next/server';
-import { CreateSchemaDto } from '../dtos/schema.dtos';
 import { Prisma } from '@prisma/client';
+import { CreateSchemaDto } from '../dtos/schema.dtos';
+
+type AppError = ZodError | Prisma.PrismaClientKnownRequestError | Error | unknown;
 
 export const validateSchemaInput = (body: unknown) => {
   return CreateSchemaDto.parse(body);
 }
 
-export const handlePrismaError = (error: unknown) => {
+export const handleError = (error: AppError, context: string) => {
   if (error instanceof ZodError) {
     return NextResponse.json(
-      { error: 'Invalid input', details: error.errors },
+      { error: `${context}: Invalid input`, details: error.errors },
       { status: StatusCodes.BAD_REQUEST }
     );
   }
 
   if (error instanceof Prisma.PrismaClientKnownRequestError) {
-    if (error.code === 'P2002') {
-      return NextResponse.json(
-        { error: 'Schema with this name already exists' },
-        { status: StatusCodes.CONFLICT }
-      );
-    }
+    const errorMessages: Record<string, string> = {
+      'P2002': 'Schema with this name already exists',
+      'P2025': 'Schema not found',
+    };
 
-    if (error.code === 'P2025') {
-      return NextResponse.json(
-        { error: 'Schema not found' },
-        { status: StatusCodes.NOT_FOUND }
-      );
-    }
+    return NextResponse.json(
+      { error: errorMessages[error.code] || 'Database error' },
+      { status: error.code === 'P2002' ? StatusCodes.CONFLICT : StatusCodes.NOT_FOUND }
+    );
   }
 
   return NextResponse.json(
-    { error: 'Internal Server Error' },
+    { error: `${context}: Internal Server Error` },
     { status: StatusCodes.INTERNAL_SERVER_ERROR }
   );
-}
-
-export const handleInternalServerError = () => {
-  return NextResponse.json(
-    { error: 'Failed to fetch schemas' }, 
-    { status: StatusCodes.INTERNAL_SERVER_ERROR }
-  );
-}
+};
