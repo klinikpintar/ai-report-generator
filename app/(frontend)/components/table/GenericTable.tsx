@@ -12,7 +12,7 @@ export interface GenericTableColumn<T> {
   key: string;
   header: string;
   renderCell: (item: T) => React.ReactNode;
-  width?: string;
+  width?: React.CSSProperties["width"];
 }
 
 export interface GenericTableProps<T> {
@@ -54,7 +54,10 @@ export function GenericTable<T>({
           data.map((item) => (
             <TableRow key={keyExtractor(item)}>
               {columns.map((column) => (
-                <TableCell key={`${keyExtractor(item)}-${column.key}`}>
+                <TableCell
+                  key={`${keyExtractor(item)}-${column.key}`}
+                  style={{ width: column.width }}
+                >
                   {column.renderCell(item)}
                 </TableCell>
               ))}
