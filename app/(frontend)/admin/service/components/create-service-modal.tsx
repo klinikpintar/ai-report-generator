@@ -12,7 +12,7 @@ interface Props {
 interface Service {
   id: string;
   name: string;
-  db: string;
+  platformCode: string;
 }
 
 const CreateServiceModal = ({ isVisible, onClose }: Props) => {
@@ -24,12 +24,12 @@ const CreateServiceModal = ({ isVisible, onClose }: Props) => {
     const fetchServices = async () => {
       try {
         const response = await fetch("/api/service");
-        const data = await response.json();
+        const data: Service[] = await response.json();
         setServices(
-          data.map((item: any) => ({
+          data.map((item) => ({
             id: item.id,
             name: item.name,
-            db: item.platformCode,
+            platformCode: item.platformCode,
           }))
         );
       } catch (error) {
@@ -98,7 +98,7 @@ const CreateServiceModal = ({ isVisible, onClose }: Props) => {
           {
             id: newService.id,
             name: newService.name,
-            db: newService.platformCode,
+            platformCode: newService.platformCode,
           },
         ]);
         setFormData({ name: "", platform: "" });
@@ -128,7 +128,7 @@ const CreateServiceModal = ({ isVisible, onClose }: Props) => {
             >
               <span className="text-gray-700 flex-1">{item.name}</span>
               <span className="text-gray-700 min-w-[100px] text-right">
-                {item.db}
+                {item.platformCode}
               </span>
               <button
                 data-testid="delete-service-button"
