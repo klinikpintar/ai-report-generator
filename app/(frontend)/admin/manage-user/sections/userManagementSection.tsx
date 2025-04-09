@@ -5,6 +5,7 @@ import React from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
+import { HeaderSection } from '@frontend/components/header-section';
 
 export const UserManagementSection = () => {
   const router = useRouter();
@@ -34,14 +35,13 @@ export const UserManagementSection = () => {
         </Button>
         <p className='text-black-10 text-base font-semibold'>Kembali</p>
       </div>
-      <h1 className="text-3xl font-bold text-blue-6 mb-6">
-        Kelola dan Atur Akses Pengguna <br />
-        dengan Mudah
-      </h1>
-      <p className="mt-2 text-lg text-black-10">
-        Melihat daftar akun yang terdaftar, mengubah peran pengguna, memperbarui<br />
-        informasi akun, atau menonaktifkan akses jika diperlukan.
-      </p>
+      <HeaderSection
+        title=""
+        subtitle="Kelola dan Atur Akses Pengguna dengan Mudah"
+        description="Melihat daftar akun yang terdaftar, mengubah peran pengguna, memperbarui
+        informasi akun, atau menonaktifkan akses jika diperlukan."
+        align="left"
+      />
     </div>
   );
 };
