@@ -1,5 +1,5 @@
 import "@testing-library/jest-dom";
-import { fetchServices, fetchPlatforms, deleteSchema } from "@frontend/admin/schema/utils/api";
+import { fetchServices, fetchPlatforms, deleteSchema, fetchSchemas } from "@frontend/admin/schema/utils/api";
 import { dummySchemas, } from "@frontend/admin/schema/constant";
 
 describe("API functions", () => {
@@ -46,5 +46,52 @@ describe("API functions", () => {
     const schemaId = 1;
     await deleteSchema(schemaId);
     expect(global.fetch).toHaveBeenCalledTimes(1);
+  });
+
+  it("should fetch schemas with correct query parameters", async () => {
+    const mockSchemas = [
+      {
+        id: 1,
+        name: "Schema A",
+        description: "Description A",
+        schemaText: "CREATE TABLE schema_a (id SERIAL PRIMARY KEY);",
+        serviceId: 1,
+        platform: {
+          id: 1,
+          name: "PostgreSQL",
+          color: "#013F59",
+        },
+      },
+      {
+        id: 2,
+        name: "Schema B",
+        description: "Description B",
+        schemaText: "CREATE TABLE schema_b (id SERIAL PRIMARY KEY);",
+        serviceId: 2,
+        platform: {
+          id: 2,
+          name: "MySQL",
+          color: "#FF9500",
+        },
+      },
+    ];
+
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      json: jest.fn().mockResolvedValue(mockSchemas),
+    });
+
+    const params = {
+      serviceIds: [1, 2],
+      platformIds: [1, 2],
+    };
+
+    const result = await fetchSchemas(params);
+
+    expect(global.fetch).toHaveBeenCalledWith(
+      `${window.location.origin}/api/schema?serviceIds=1&serviceIds=2&platformIds=1&platformIds=2`
+    );
+
+    expect(result).toEqual(mockSchemas);
   });
 });

@@ -14,8 +14,6 @@ export async function fetchSchemas(params: FetchSchemasParams = {}) {
   Object.entries(params).forEach(([key, value]) => {
     if (Array.isArray(value)) {
       value.forEach((v) => queryParams.append(key, String(v)));
-    } else if (value !== undefined) {
-      queryParams.append(key, String(value));
     }
   });
 

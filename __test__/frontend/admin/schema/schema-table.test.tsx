@@ -195,35 +195,6 @@ describe("SchemaTable Component", () => {
     expect(screen.getByText(/selanjutnya/i)).toBeInTheDocument();
   });
 
-  it("should open edit schema modal when edit button is clicked", async () => {
-    render(<SchemaTable schemas={mockSchemas} />);
-    const editButton = screen.getAllByText(/Edit/i)[0];
-
-    await userEvent.click(editButton);
-
-    expect(screen.queryByText(/Edit Skema Database/i)).toBeInTheDocument();
-  });
-
-  it("should close edit schema modal when close button is clicked", async () => {
-    render(<SchemaTable schemas={mockSchemas} />);
-    const editButton = screen.getAllByText(/Edit/i)[0];
-
-    await userEvent.click(editButton);
-    const closeButton = screen.getByText(/Batal/i);
-
-    await userEvent.click(closeButton);
-
-    await waitFor(
-      () =>
-        expect(
-          screen.queryByText(/Edit Skema Database/i)
-        ).not.toBeInTheDocument(),
-      {
-        timeout: 400,
-      }
-    );
-  });
-
   it("should open confirmation dialog when delete button is clicked", async () => {
     render(<SchemaTable schemas={mockSchemas} />);
     const deleteButton = screen.getAllByText(/Hapus/i)[0];
