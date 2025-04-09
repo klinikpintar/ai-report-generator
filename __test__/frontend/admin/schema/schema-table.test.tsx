@@ -29,6 +29,7 @@ const mockSchemas: Schema[] = [
         img_url: "https://via.placeholder.com/150",
         createdAt: new Date(),
         modifiedAt: new Date(),
+        color: "Blue",
       },
     },
     platform: {
@@ -57,6 +58,7 @@ const mockSchemas: Schema[] = [
         img_url: "https://via.placeholder.com/150",
         createdAt: new Date(),
         modifiedAt: new Date(),
+        color: "Teal",
       },
     },
     platform: {
@@ -198,7 +200,8 @@ describe("SchemaTable Component", () => {
     const editButton = screen.getAllByText(/Edit/i)[0];
 
     await userEvent.click(editButton);
-    expect(screen.getByText(/Edit Skema Database/i)).toBeInTheDocument();
+
+    expect(screen.queryByText(/Edit Skema Database/i)).toBeInTheDocument();
   });
 
   it("should close edit schema modal when close button is clicked", async () => {

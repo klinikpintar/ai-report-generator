@@ -144,4 +144,19 @@ describe("Dropdown Component with Context", () => {
 
     expect(screen.getByTestId("selected-service")).toHaveTextContent("Reservasi and 2 more");
   });
+
+  it("closes the dropdown when clicking outside", () => {
+    setup();
+    
+    // Klik tombol untuk membuka dropdown
+    fireEvent.click(screen.getByText("Select a Service"));
+    expect(screen.getByText("Select All")).toBeInTheDocument(); // Pastikan dropdown terbuka
+  
+    // Klik di luar dropdown (simulasi klik pada body)
+    fireEvent.mouseDown(document.body);
+    
+    // Pastikan dropdown tertutup
+    expect(screen.queryByText("Select All")).not.toBeInTheDocument();
+  });
+  
 });

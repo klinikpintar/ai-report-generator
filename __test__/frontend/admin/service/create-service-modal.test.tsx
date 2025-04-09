@@ -68,7 +68,7 @@ describe("Create Service Modal Test", () => {
     fireEvent.change(screen.getByPlaceholderText("Masukkan nama service"), {
       target: { value: "Kesehatan" },
     });
-    fireEvent.change(screen.getByTestId("platform-select"), {
+    fireEvent.change(screen.getByText("Pilih Platform Service"), {
       target: { value: "MongoDB" },
     });
     fireEvent.click(screen.getByText("Tambah"));
@@ -93,7 +93,7 @@ describe("Create Service Modal Test", () => {
     fireEvent.change(screen.getByPlaceholderText("Masukkan nama service"), {
       target: { value: "Reservasi" },
     });
-    fireEvent.change(screen.getByTestId("platform-select"), {
+    fireEvent.change(screen.getByText("Pilih Platform Service"), {
       target: { value: "MongoDB" },
     });
     fireEvent.click(screen.getByText("Tambah"));
@@ -118,6 +118,7 @@ describe("Create Service Modal Test", () => {
     });
 
     fireEvent.click(screen.getAllByTestId("delete-service-button")[0]);
+    fireEvent.click(screen.getByText("Konfirmasi"));
 
     await waitFor(() => {
       expect(screen.queryByText("Reservasi")).not.toBeInTheDocument();

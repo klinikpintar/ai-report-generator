@@ -26,9 +26,15 @@ describe("Service Management Test", () => {
     const kelolaServiceButton = screen.getByText(/kelola service sekarang/i);
     await userEvent.click(kelolaServiceButton);
 
-    expect(
-      screen.queryByText(/Daftar Service Klinik Pintar/i)
-    ).toBeInTheDocument();
+    await waitFor(
+      () =>
+        expect(
+          screen.getByText(/Daftar Service Klinik Pintar/i)
+        ).toBeInTheDocument(),
+      {
+        timeout: 400,
+      }
+    );
   });
 
   it("should close create service modal when click button Batal", async () => {

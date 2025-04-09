@@ -98,8 +98,8 @@ export default function ChatBox() {
   };
 
   return (
-    <div className="ml-64 flex flex-col h-screen">
-      <div className="flex justify-between items-center p-4">
+    <div className="ml-64 flex flex-col h-screen pt-[72px]">
+      <div className="flex justify-between items-center py-3">
         {/* Container untuk Select a Service */}
         <div className="flex flex-col">
           <Dropdown />
@@ -107,14 +107,12 @@ export default function ChatBox() {
 
         {/* Container untuk Bantuan */}
         <div className="flex items-center space-x-2">
-        <Bantuan/>
+          <Bantuan />
         </div>
       </div>
 
       {!hasChatted && (
-        <h1
-          className="text-3xl font-bold text-center flex items-center justify-center h-full pb-24 text-blue-6"
-        >
+        <h1 className="text-3xl font-bold text-center flex items-center justify-center h-full pb-24 text-blue-6">
           Hello, Virgillia Yeala !!
         </h1>
       )}
@@ -123,7 +121,7 @@ export default function ChatBox() {
       {hasChatted && (
         <div
           ref={chatContainerRef}
-          className="flex-1 overflow-y-auto p-4 bg-white pb-24"
+          className="flex-1 overflow-y-auto p-4 bg-white"
         >
           <div className="ml-2 mt-4 flex flex-col mr-4 gap-y-6">
             {messages.map((msg) => (
@@ -144,7 +142,7 @@ export default function ChatBox() {
                     {msg.content}
                   </ReactMarkdown>
                 ) : (
-                  msg.content
+                  <p className="whitespace-pre-wrap">{msg.content}</p>
                 )}
               </div>
             ))}
@@ -157,45 +155,52 @@ export default function ChatBox() {
         </div>
       )}
 
-      {/* Chat Input */}
-      <div className="sticky bottom-3 w-full bg-white py-4 px-6">
-        <p className="text-sm text-gray-600 absolute left-6 top-2">
-          Service: {selectedService}
-        </p>
+      <div className="w-full flex justify-center pb-5 pt-3">
+        {/* Container utama dengan max-width */}
+        <div className="w-full flex flex-col">
+          {/* Teks di atas container input */}
+          <div className="mb-1">
+            <p className="text-sm text-gray-600">Service: {selectedService}</p>
+          </div>
 
-        <div className="relative w-full flex items-center mx-auto mt-5">
-          <input
-            type="text"
-            className="w-full border rounded-3xl p-3 pr-12 text-black"
-            placeholder="Type a message..."
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && input.trim() === "") {
-                e.preventDefault();
-                return;
-              }
-              if (e.key === "Enter") sendMessage();
-            }}
-            disabled={isLoading}
-          />
-          <button
-            className="absolute right-2 top-1/2 transform -translate-y-1/2"
-            onClick={sendMessage}
-            disabled={isLoading || !input.trim()}
-          >
-            <Image
-              src="/icon-send.svg"
-              width={40}
-              height={40}
-              alt="Send Icon"
+          {/* Container untuk input dan button */}
+          <div className="flex items-center p-1 gap-2">
+            {/* Textarea */}
+            <textarea
+              className="flex-1 border border-gray-300 rounded-xl p-4 text-black resize-none outline-none"
+              placeholder="Type a message..."
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  if (input.trim()) {
+                    sendMessage();
+                  }
+                }
+              }}
+              rows={1}
+              disabled={isLoading}
             />
-          </button>
-        </div>
 
-        <p className="text-xs text-gray-600 mt-2 text-center">
+            {/* Button di sebelah kanan textarea */}
+            <button
+              className="flex items-center justify-center transition disabled:opacity-50"
+              onClick={sendMessage}
+              disabled={isLoading || !input.trim()}
+            >
+              <Image
+                src="/icon-send.svg"
+                width={45}
+                height={45}
+                alt="Send Icon"
+              />
+            </button>
+          </div>
+          <p className="text-xs text-gray-600 text-center">
           This AI Report Generator can make mistakes. Check important info.
         </p>
+        </div>
       </div>
     </div>
   );
