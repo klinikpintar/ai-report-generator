@@ -69,7 +69,6 @@ export const SchemaTableSection = () => {
           isOpen={true}
           onClose={() => setSchemaToDelete(null)}
           onConfirm={handleConfirmDelete}
-          title="Hapus Skema"
           description="Apakah Anda yakin ingin menghapus skema ini?"
         />
       )}
