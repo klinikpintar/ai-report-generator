@@ -1,34 +1,28 @@
-import React, { ReactNode } from "react";
-import { MouseEvent } from "react";
+import React, {ReactNode, MouseEvent} from "react";
 import { Inter } from "next/font/google";
 
 const inter = Inter({
   subsets: ["latin"],
 });
 
-interface BaseModalProps {
+interface PlainModalProps {
   isVisible: boolean;
   title: string;
   subtitle: string;
   children: ReactNode;
+  isForm: boolean;
   onClose: () => void;
+  onClearForm?: () => void;
 }
 
-interface FormModalProps extends BaseModalProps {
-  onClearForm: () => void;
-}
-
-type ModalProps = BaseModalProps | FormModalProps;
-
-const Modal: React.FC<ModalProps> = (props) => {
-  const { isVisible, title, subtitle, children, onClose } = props;
+const Modal: React.FC<PlainModalProps> = (props) => {
+  const { isVisible, title, subtitle, children, isForm, onClose } = props;
 
   const handleClose = (event: MouseEvent<HTMLDivElement>) => {
     const target = event.target as HTMLDivElement;
     if (target.id === "wrapper") {
-      onClose();
-      if ("onClearForm" in props) {
-        props.onClearForm();
+      if (!isForm) {
+        onClose();
       }
     }
   };
@@ -40,17 +34,17 @@ const Modal: React.FC<ModalProps> = (props) => {
           isVisible ? "visible bg-black/50" : "invisible"
         }`}
         id="wrapper"
-        data-testid="wrapper"
+        data-testid="modal-wrapper"
         onClick={handleClose}
       >
         <div
-          className={`bg-white w-full pt-1 pb-1 pl-5 pr-5 max-w-[560px] max-h-full rounded-lg shadow transition-all ${
+          className={`bg-white w-full pt-1 pb-1 pl-5 pr-5 max-w-[560px] max-h-full rounded-lg shadow ${
             isVisible ? "scale-100 opacity-100" : "scale-105 opacity-0"
           }`}
         >
           <div className="flex items-center justify-center p-7 pb-1 rounded-t border-gray-200 ">
             <p
-              className="text-[28px] font-bold text-[#00B0EB]"
+              className="text-[28px] font-bold text-blue-6"
               aria-hidden={isVisible ? "false" : "true"}
             >
               {title}
