@@ -1,43 +1,47 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import Modal from "@frontend/components/Modal";
 
-describe("Modal Component", () => {
+describe("Modal Test", () => {
   const onCloseMock = jest.fn();
   const onClearFormMock = jest.fn();
 
-  const baseProps = {
-    title: "Contoh Modal",
-    subtitle: "Ini subtitle modal",
-    children: <p>Isi konten modal</p>,
+  const defaultProps = {
+    isVisible: true,
+    title: "Modal",
+    subtitle: "Ini adalah Modal",
     onClose: onCloseMock,
+    children: <p>Modal Content</p>,
   };
 
-  it("should render modal with title, subtitle, and children", () => {
-    render(<Modal {...baseProps} />);
-
-    expect(screen.getByText("Contoh Modal")).toBeInTheDocument();
-    expect(screen.getByText("Ini subtitle modal")).toBeInTheDocument();
-    expect(screen.getByText("Isi konten modal")).toBeInTheDocument();
-
-    const wrapper = screen.getByTestId("wrapper");
-    expect(wrapper).toBeInTheDocument();
-    expect(wrapper).toHaveClass("bg-black/50");
+  beforeEach(() => {
+    jest.clearAllMocks();
   });
 
-  it("should render with onClearForm prop without throwing error", () => {
-    render(<Modal {...baseProps} onClearForm={onClearFormMock} />);
-    expect(screen.getByText("Contoh Modal")).toBeInTheDocument();
-    // Hanya memastikan tidak error saat onClearForm diberikan
-    expect(onClearFormMock).not.toHaveBeenCalled();
-  });
-
-  it("should apply expected base classes", () => {
-    render(<Modal {...baseProps} />);
+  it("Should call 'onClose' if click outside modal", () => {
+    render(<Modal {...defaultProps} />);
 
     const wrapper = screen.getByTestId("wrapper");
-    const inner = wrapper.querySelector("div.bg-white");
+    fireEvent.click(wrapper);
 
-    expect(wrapper).toHaveClass("fixed", "inset-0", "bg-black/50");
-    expect(inner).toHaveClass("bg-white", "rounded-lg", "shadow");
+    expect(onCloseMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("Should not call 'onClose' if the click is inside the modal", () => {
+    render(<Modal {...defaultProps} />);
+
+    const modalContent = screen.getByText("Modal Content");
+    fireEvent.click(modalContent);
+
+    expect(onCloseMock).not.toHaveBeenCalled();
+  });
+
+  it("Should call 'onClearForm' if given as props and click outside modal", () => {
+    render(<Modal {...defaultProps} onClearForm={onClearFormMock} />);
+
+    const wrapper = screen.getByTestId("wrapper");
+    fireEvent.click(wrapper);
+
+    expect(onCloseMock).toHaveBeenCalledTimes(1);
+    expect(onClearFormMock).toHaveBeenCalledTimes(1);
   });
 });
