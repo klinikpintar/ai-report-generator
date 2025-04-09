@@ -49,26 +49,14 @@ describe('AddAccountModal', () => {
     expect(screen.getByLabelText('Nama Lengkap')).toHaveValue('');
   });
 
-  it('should show validation errors when submitting empty form', async () => {
+  it('should show validate required field that is not handled by HTML form validation', async () => {
     render(<AddAccountModal isVisible={true} onClose={mockOnClose} />);
 
-    const form = screen.getByRole('form');
-
-    // Submit empty form directly
-    fireEvent.submit(form);
-
-    await waitFor(() => {
-      expect(screen.getByText('Nama Lengkap is required')).toBeInTheDocument();
-    });
-    await waitFor(() => {
-      expect(screen.getByText('Email is required')).toBeInTheDocument();
-    });
-    await waitFor(() => {
-      expect(screen.getByText('Password is required')).toBeInTheDocument();
-    });
-    await waitFor(() => {
-      expect(screen.getByText('Confirm Password is required')).toBeInTheDocument();
-    });
+    const button = screen.getByRole('button', { name: /simpan/i });
+    const form = button.closest('form');
+    if (form) {
+      fireEvent.submit(form);
+    }
     await waitFor(() => {
       expect(screen.getByText('Role is required')).toBeInTheDocument();
     });
@@ -83,11 +71,14 @@ describe('AddAccountModal', () => {
     await userEvent.type(screen.getByLabelText('Password'), 'short');
     await userEvent.type(screen.getByLabelText('Confirm Password'), 'short');
 
-
     const adminRadio = screen.getByLabelText('Admin');
     fireEvent.click(adminRadio);
 
-    fireEvent.submit(screen.getByRole('form'));
+    const button = screen.getByRole('button', { name: /simpan/i });
+    const form = button.closest('form');
+    if (form) {
+      fireEvent.submit(form);
+    }
 
     await waitFor(() => {
       expect(screen.getByText('Password must be at least 8 characters long')).toBeInTheDocument();
@@ -106,7 +97,11 @@ describe('AddAccountModal', () => {
     const adminRadio = screen.getByLabelText('Admin');
     fireEvent.click(adminRadio);
 
-    fireEvent.submit(screen.getByRole('form'));
+    const button = screen.getByRole('button', { name: /simpan/i });
+    const form = button.closest('form');
+    if (form) {
+      fireEvent.submit(form);
+    }
 
     await waitFor(() => {
       expect(screen.getByText('Password and confirm password must match')).toBeInTheDocument();
