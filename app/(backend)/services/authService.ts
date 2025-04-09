@@ -142,12 +142,14 @@ class AuthService implements IAuthService, IGenerateToken, IVerifyToken {
     response.cookies.set("access_token", accessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
       path: "/",
       maxAge: accessToken ? config.JWT_ACCESS_EXPIRES : 0,
     });
     response.cookies.set("refresh_token", refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
       path: "/",
       maxAge: refreshToken ? config.JWT_REFRESH_EXPIRES : 0,
     });
