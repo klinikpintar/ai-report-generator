@@ -143,26 +143,34 @@ const CreateServiceModal = ({ isVisible, onClose }: Props) => {
         subtitle="Berikut adalah service yang sudah terdaftar di sistem AI Report Generator:"
       >
         <div className="px-10 pt-10">
-          <ul className="border border-gray-300 rounded-lg max-h-48 overflow-y-auto">
-            {services.map((item) => (
-              <li
-                key={item.id}
-                className="flex items-center py-2 px-4 gap-4 hover:bg-gray-100"
-              >
-                <span className="text-gray-700 flex-1">{item.name}</span>
-                <span className="text-gray-700 min-w-[100px] text-right">
-                  {item.platformCode}
-                </span>
-                <button
-                  data-testid="delete-service-button"
-                  className="text-red-500 hover:text-red-700 ml-auto flex items-center justify-center w-10"
-                  onClick={() => openDeleteConfirmation(item.id)}
-                >
-                  <CircleMinus size={30} />
-                </button>
-              </li>
-            ))}
-          </ul>
+          <div className="border border-gray-300 rounded-lg max-h-48 overflow-y-auto">
+            {services.length > 0 ? (
+              <ul>
+                {services.map((item) => (
+                  <li
+                    key={item.id}
+                    className="flex items-center py-2 px-4 gap-4 hover:bg-gray-100"
+                  >
+                    <span className="text-gray-700 flex-1">{item.name}</span>
+                    <span className="text-gray-700 min-w-[100px] text-right">
+                      {item.platformCode}
+                    </span>
+                    <button
+                      data-testid="delete-service-button"
+                      className="text-red-500 hover:text-red-700 ml-auto flex items-center justify-center w-10"
+                      onClick={() => openDeleteConfirmation(item.id)}
+                    >
+                      <CircleMinus size={30} />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <div className="py-4 px-4 text-gray-500 text-center">
+                Tidak ada service ditemukan
+              </div>
+            )}
+          </div>
         </div>
         <form className="px-10 pb-10 pt-4" onSubmit={handleSubmit}>
           <div className="grid gap-4 mb-4 grid-cols-2">
