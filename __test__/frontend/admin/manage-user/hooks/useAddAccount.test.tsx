@@ -38,11 +38,11 @@ describe('useAddAccount Hook', () => {
     
     act(() => {
       result.current.handleChange({
-        target: { name: 'role', value: 'admin' }
+        target: { name: 'role', value: 'ADMIN' }
       } as React.ChangeEvent<HTMLInputElement>);
     });
     
-    expect(result.current.formData.role).toBe('admin');
+    expect(result.current.formData.role).toBe('ADMIN');
   });
 
   it('should validate email format', async () => {
@@ -102,7 +102,7 @@ describe('useAddAccount Hook', () => {
       } as React.FormEvent<HTMLFormElement>);
     });
 
-    expect(result.current.errors.confirmPassword).toBe('Passwords do not match');
+    expect(result.current.errors.confirmPassword).toBe('Password and confirm password must match');
   });
 
   it('should clear errors after user fill/fix the input of the error fields', () => {
