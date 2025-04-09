@@ -14,7 +14,7 @@ describe('ServiceService Unit Tests', () => {
   const mockService: Service = {
     id: 'uuid-1234',
     name: 'OpenAI',
-    platformCode: 'PLATFORM_X',
+    platformCode: 'PostgreSQL',
     createdAt: new Date(),
   };
 
@@ -27,7 +27,7 @@ describe('ServiceService Unit Tests', () => {
 
     const result = await serviceService.createService({
       name: 'OpenAI',
-      platformCode: 'PLATFORM_X',
+      platformCode: 'PostgreSQL',
     });
 
     expect(prisma.service.create).toHaveBeenCalledTimes(1);
@@ -56,7 +56,7 @@ describe('ServiceService Unit Tests', () => {
 
     await expect(serviceService.createService({
       name: 'OpenAI',
-      platformCode: 'PLATFORM_X',
+      platformCode: 'PostgreSQL',
     })).rejects.toThrow('Duplicate');
   });
 
