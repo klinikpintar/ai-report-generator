@@ -1,5 +1,5 @@
 "use client";
-import { GenericTable, GenericTableColumn } from "@frontend/components/table";
+import { GenericTable, GenericTableColumn, TablePagination } from "@frontend/components/table";
 import React from "react";
 import { User, UserRole } from "../types/user";
 import { Chip } from "@/components/ui/chip";
@@ -11,9 +11,7 @@ interface UserTableProps {
   users?: User[];
 }
 
-export const UserTable = ({
-  users = mockUsers,
-}: UserTableProps) => {
+export const UserTable = ({ users = mockUsers }: UserTableProps) => {
   const getRoleColor = (role: UserRole) => {
     switch (role) {
       case "BUSINESS_ANALYST":
@@ -46,7 +44,10 @@ export const UserTable = ({
       header: "Role",
       width: "20%",
       renderCell: (user) => (
-        <Chip variant={"ghost"} className={cn("w-full lg:w-4/5 cursor-default", getRoleColor(user.role))}>
+        <Chip
+          variant={"ghost"}
+          className={cn("w-full lg:w-4/5 cursor-default", getRoleColor(user.role))}
+        >
           {user.role === "BUSINESS_ANALYST" ? "Business Analyst" : "Admin"}
         </Chip>
       ),
@@ -103,6 +104,7 @@ export const UserTable = ({
         loadingMessage="Sedang memuat..."
         keyExtractor={(user) => user.id}
       />
+      <TablePagination currentPage={1} lastPage={1} onPageChange={() => {}} />
     </div>
   );
 };
