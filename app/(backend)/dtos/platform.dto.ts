@@ -1,0 +1,1 @@
+export const PLATFORM_CODES = ['PostgreSQL', 'MySQL', 'MongoDB'] as const
