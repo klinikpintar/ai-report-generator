@@ -29,6 +29,7 @@ const mockSchemas: Schema[] = [
         img_url: "https://via.placeholder.com/150",
         createdAt: new Date(),
         modifiedAt: new Date(),
+        color: "Blue"
       },
     },
   },
@@ -50,6 +51,7 @@ const mockSchemas: Schema[] = [
         img_url: "https://via.placeholder.com/150",
         createdAt: new Date(),
         modifiedAt: new Date(),
+        color: "Teal"
       },
     },
   },
