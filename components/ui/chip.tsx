@@ -14,6 +14,9 @@ const chipVariants = cva(
         ghost: "hover:bg-accent hover:text-accent-foreground",
         orange: "bg-[#FF9B2D] text-white hover:bg-[#FF9B2D]/90",
         pink: "bg-[#E64D91] text-white hover:bg-[#E64D91]/90",
+        yellow: "bg-[#FFF8CC] text-[#FFA500] hover:bg-[#FFF8CC]/90",
+        green: "bg-[#4BE38B] text-white hover:bg-[#4BE38B]/90",
+        red: "bg-[#C30046] text-white hover:bg-[#C30046]/90",
       },
       size: {
         default: "h-8 px-4 py-2",
