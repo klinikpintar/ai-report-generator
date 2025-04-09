@@ -26,7 +26,9 @@ describe("Service Management Test", () => {
     const kelolaServiceButton = screen.getByText(/kelola service sekarang/i);
     await userEvent.click(kelolaServiceButton);
 
-    await screen.findByText(/Daftar Service Klinik Pintar/i);
+    expect(
+      screen.getByText(/Daftar Service Klinik Pintar/i)
+    ).toBeInTheDocument();
   });
 
   it("should close create service modal when click button Batal", async () => {
