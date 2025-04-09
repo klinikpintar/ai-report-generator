@@ -1,11 +1,14 @@
 import { useState, FormEvent } from "react";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import axios, { AxiosError } from "axios";
 
 interface FormData {
   fullName: string;
   email: string;
   password: string;
   confirmPassword: string;
-  role: "admin" | "business_analyst" | "";
+  role: "ADMIN" | "BUSINESS_ANALYST" | "";
 }
 
 interface FormErrors {
@@ -51,7 +54,7 @@ export const useAddAccount = (onClose: () => void) => {
     if (!formData.confirmPassword) {
       newErrors.confirmPassword = "Confirm Password is required";
     } else if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = "Passwords do not match";
+      newErrors.confirmPassword = "Password and confirm password must match";
     }
 
     if (!formData.role) {
@@ -64,15 +67,15 @@ export const useAddAccount = (onClose: () => void) => {
 
   const handleChange = (e: InputChangeEvent) => {
     const { name, value } = e.target;
-    
+
     // Type guard to ensure role value is correct for radio inputs
-    if (name === 'role' && value !== 'admin' && value !== 'business_analyst') {
+    if (name === 'role' && value !== 'ADMIN' && value !== 'BUSINESS_ANALYST') {
       return;
     }
-    
-    setFormData((prev) => ({ 
-      ...prev, 
-      [name]: value 
+
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value
     }));
 
     // Clear error when user starts typing
@@ -86,6 +89,54 @@ export const useAddAccount = (onClose: () => void) => {
 
     if (!validateForm()) {
       return;
+    }
+    try {
+      const userData = {
+        name: formData.fullName,
+        email: formData.email,
+        password: formData.password,
+        confirmPassword: formData.confirmPassword,
+        role: formData.role
+      };
+
+      await axios.post("/api/users", userData);
+      toast.success("Registration successful! New account has been created", {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      })
+      clearForm();
+      onClose();
+      
+    } catch (error) {
+      const axiosError = error as AxiosError<{ message?: string }>;
+      const errorMessage = axiosError.response?.data?.message ?? "Unexpected error occurred. Please try again";
+
+      if (errorMessage.toLowerCase().includes("email")) {
+        setErrors((prev) => ({
+          ...prev,
+          email: errorMessage
+        }));
+      }
+
+      if (errorMessage.toLowerCase().includes("password")) {
+        setErrors((prev) => ({
+          ...prev,
+          password: errorMessage
+        }));
+      }
+
+      toast.error(`Registration failed: ${errorMessage}`, {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
     }
   };
 
