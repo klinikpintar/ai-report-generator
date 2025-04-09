@@ -175,10 +175,13 @@ export default function ChatBox() {
                 )}
               </div>
             ))}
-            {exportModalData && (
+            {isExportModalVisible && exportModalData && (
               <ExportModal
                 isVisible={!!exportModalData}
-                onClose={() => setExportModalData(null)}
+                onClose={() => {
+                  setExportModalData(null);
+                  setIsExportModalVisible(false);
+                }}                
                 content={exportModalData.content}
                 title={`Laporan-${exportModalData.id}`}
               />
