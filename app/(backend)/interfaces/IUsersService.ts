@@ -8,6 +8,18 @@ export type CreateUserDto = {
   role: Role;
 };
 
+export type PaginationUser = {
+  currentPage: number;
+  totalPages: number;
+  totalItems: number;
+}
+
+export interface GetUsersParams {
+  page: number;
+  limit: number;
+  role?: "ADMIN" | "BUSINESS_ANALYST";
+}
+
 export type User = {
   id: string;
   name: string;
@@ -23,4 +35,19 @@ export interface IUserCreator {
    * @returns Promise<User> The created user
    */
   createUser(data: CreateUserDto): Promise<User>;
+}
+
+export interface IUserFinder {
+  /**
+   * Get users with pagination and optional role filter
+   * @param page - The page number (default: 1)
+   * @param limit - The number of items per page (default: 10)
+   * @param role - Optional role filter
+   * @returns Promise<{ users: User[]; totalPages: number; totalItems: number }>
+   * The list of users and pagination info
+   * */
+  getUsers({ page, limit, role }: GetUsersParams): Promise<{
+    users: User[];
+    pagination: PaginationUser;
+  }>;
 }

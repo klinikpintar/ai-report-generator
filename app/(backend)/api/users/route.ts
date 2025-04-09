@@ -17,3 +17,35 @@ export async function POST(req: Request) {
     return (error as ErrorResponse).generate();
   }
 }
+
+export async function GET(req: Request) {
+  try {
+    const { searchParams } = new URL(req.url);
+    const params = Object.fromEntries(searchParams.entries());
+    const parseQuery = UserValidation.GET.safeParse(params);
+    if (!parseQuery.success) {
+      throw new BadRequestResponse(parseQuery.error.errors[0].message);
+    }
+
+    const { page, limit, role } = parseQuery.data;
+    const { users, pagination } = await usersService.getUsers({
+      page,
+      limit,
+      role,
+    });
+
+    const { totalPages, totalItems } = pagination;
+
+    return NextResponse.json({
+      message: "Users fetched successfully",
+      data: users,
+      pagination: {
+        current_page: page,
+        total_pages: totalPages,
+        total_items: totalItems,
+      },
+    });
+  } catch (error) {
+    return (error as ErrorResponse).generate();
+  }
+}
