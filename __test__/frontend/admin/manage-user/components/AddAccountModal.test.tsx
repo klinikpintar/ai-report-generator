@@ -1,5 +1,5 @@
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import AddAccountModal from "@frontend/admin/manage-user/components/addAccountModal1";
+import AddAccountModal from "@frontend/admin/manage-user/components/addAccountModal";
 import userEvent from "@testing-library/user-event";
 
 describe('AddAccountModal', () => {
