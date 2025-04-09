@@ -5,7 +5,7 @@ import Image from "next/image";
 export default function Sidebar() {
   return (
     <aside
-      className="bg-white border-r-2 text-black h-screen fixed left-0 top-16.3 w-64 px-4 py-4 border-teal-7"
+      className="bg-white border-r-2 text-black h-screen fixed left-0 top-[72px] w-64 px-4 py-4 border-teal-7"
     >
       <button className="flex items-center gap-3 p-2 hover:bg-gray-200 w-full text-left">
         <Image
@@ -26,7 +26,7 @@ export default function Sidebar() {
             height={20}
             alt="Rekomendasi Icon"
           />
-          <p className="text-sm font-medium">Rekomendasi Query <br /> Rekam Media</p>
+          <p className="text-sm font-medium leading-tight">Rekomendasi Query <br /> Rekam Media</p>
         </div>
       </div>
     </aside>

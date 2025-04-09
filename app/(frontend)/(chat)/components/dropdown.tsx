@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import { useService } from "../context/serviceContext"; // Import context
 
@@ -8,6 +8,7 @@ export default function Dropdown() {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
   const { selectedService, setSelectedService } = useService(); // Gunakan context
+  const dropdownRef = useRef<HTMLDivElement>(null); // Ref untuk mendeteksi klik di luar
 
   // Daftar layanan dengan platformnya
   const options = [
@@ -19,22 +20,20 @@ export default function Dropdown() {
   ];
 
   // Cek apakah semua layanan sudah dipilih
-  const allSelected = selectedOptions.length === options.length - 1; // -1 karena "Select All" tidak dihitung sebagai layanan
+  const allSelected = selectedOptions.length === options.length - 1;
 
   const toggleOption = (service: string) => {
     if (service === "Select All") {
-      // Jika "Select All" diklik, toggle semua layanan
       if (allSelected) {
         setSelectedOptions([]);
         setSelectedService("Pilih Service");
       } else {
-        setSelectedOptions(options.slice(1).map((opt) => opt.service)); // Pilih semua layanan kecuali "Select All"
+        setSelectedOptions(options.slice(1).map((opt) => opt.service));
         setSelectedService("Select All");
       }
       return;
     }
 
-    // Tambah/hapus layanan dari daftar pilihan
     const newSelection = selectedOptions.includes(service)
       ? selectedOptions.filter((item) => item !== service)
       : [...selectedOptions, service];
@@ -52,8 +51,22 @@ export default function Dropdown() {
     }
   };
 
+  // ✅ **Tutup dropdown jika klik di luar**
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
   return (
-    <div className="relative w-72 pt-3 pl-5">
+    <div className="relative w-full" ref={dropdownRef}>
       <button
         className="w-full text-left flex items-center gap-5 font-bold text-lg text-blue-6"
         onClick={() => setIsOpen(!isOpen)}
@@ -68,12 +81,11 @@ export default function Dropdown() {
         />
       </button>
 
-      {/* Teks di bawah dropdown menunjukkan service yang dipilih */}
-      <p className="text-gray-700 text-base"> {selectedService} </p>
+      <p className="text-gray-700 text-base">{selectedService}</p>
 
       {/* Dropdown Menu */}
       {isOpen && (
-        <div className="absolute w-full mt-2 border rounded-lg bg-white shadow-lg p-3 border-blue-6">
+        <div className="absolute w-[300px] min-w-[250px] mt-2 border rounded-lg bg-white shadow-lg p-3 border-blue-6">
           {options.map((option, index) => (
             <label key={index} className="flex items-center justify-between py-1 cursor-pointer">
               <div className="flex items-center space-x-3">
@@ -84,7 +96,7 @@ export default function Dropdown() {
                   }
                   onChange={() => toggleOption(option.service)}
                   className="form-checkbox h-5 w-5 text-red-500 border-gray-300 rounded focus:ring-red-500"
-                  aria-label={option.service} 
+                  aria-label={option.service}
                 />
                 <span className="text-gray-700">{option.service}</span>
               </div>

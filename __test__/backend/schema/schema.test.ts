@@ -46,10 +46,6 @@ const validSchemaData = {
   schemaText: "CREATE TABLE products (id SERIAL PRIMARY KEY, name TEXT);",
 };
 
-const updatedSchemaData = {
-  description: "Updated table description",
-};
-
 const invalidSchemaData = {
   name: "invalid_schema",
 };
@@ -77,7 +73,7 @@ describe("CRUD of Schema API (Using NextRequest)", () => {
   
   
     expect(response.status).toBe(StatusCodes.INTERNAL_SERVER_ERROR);
-    expect(json.error).toBe("Failed to fetch schemas");
+    expect(json.error).toBe("GET Schemas: Internal Server Error");
   });
   
 

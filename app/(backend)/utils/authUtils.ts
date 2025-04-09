@@ -1,28 +1,14 @@
 import { UnauthenticatedResponse } from "./exceptions";
 
 /**
- * Extract JWT Token from Authorization Header
- * @param authHeader - Authorization header
- * @returns JWT token or null if not found
- */
-export const extractToken = (authHeader: string) => {
-  const token = authHeader?.split(" ")[1] || null;
-  if (!token) {
-    throw new UnauthenticatedResponse("Unauthorized");
-  }
-  return token;
-};
-
-/**
  * Extract Refresh Token from Cookie
  * @param cookie - Cookie header
  * @returns Refresh token or null if not found
  */
-export const extractRefreshToken = (cookie: string) => {
-  const refreshToken =
-    cookie?.split("refresh_token=")[1]?.split(";")[0] || null;
+export const extractToken = (cookie: string, key: string) => {
+  const refreshToken = cookie?.split(`${key}=`)[1]?.split(";")[0] || null;
   if (!refreshToken) {
-    throw new UnauthenticatedResponse("No refresh token");
+    throw new UnauthenticatedResponse("Unauthorized");
   }
   return refreshToken;
 };
