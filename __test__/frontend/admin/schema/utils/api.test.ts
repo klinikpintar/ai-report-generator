@@ -1,6 +1,6 @@
 import "@testing-library/jest-dom";
-import { fetchSchemas, fetchServices, fetchPlatforms, deleteSchema } from "@frontend/admin/schema/utils/api";
-import { dummySchemas, dummyServices } from "@frontend/admin/schema/constant";
+import { fetchServices, fetchPlatforms, deleteSchema } from "@frontend/admin/schema/utils/api";
+import { dummySchemas, } from "@frontend/admin/schema/constant";
 
 describe("API functions", () => {
   beforeEach(() => {
@@ -20,9 +20,20 @@ describe("API functions", () => {
   });
 
   it("fetchServices should return service list", async () => {
+    const mockServices = [
+      { id: "1", name: "Service A", platformCode: "PostgreSQL" },
+      { id: "2", name: "Service B", platformCode: "MySQL" },
+    ];
+  
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      json: jest.fn().mockResolvedValue(mockServices),
+    });
+  
     const result = await fetchServices();
-    const uniqueServices = Array.from(new Set(dummySchemas.map((s) => s.service)));
-    expect(result).toEqual(uniqueServices);
+  
+    expect(global.fetch).toHaveBeenCalledWith(`${window.location.origin}/api/service`);
+    expect(result).toEqual(mockServices);
   });
 
   it("fetchPlatforms should return platform list", async () => {
