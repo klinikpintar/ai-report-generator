@@ -6,7 +6,7 @@ describe('serviceUtils', () => {
     it('should validate correct input', () => {
       const data = {
         name: 'OpenAI',
-        platformCode: 'PLATFORM_X',
+        platformCode: 'MongoDB',
       };
 
       expect(validateServiceInput(data)).toEqual(data);
@@ -14,7 +14,7 @@ describe('serviceUtils', () => {
 
     it('should throw ZodError for missing name', () => {
       const data = {
-        platformCode: 'PLATFORM_X',
+        platformCode: 'MongoDB',
       };
 
       expect(() => validateServiceInput(data)).toThrow(ZodError);
@@ -32,6 +32,15 @@ describe('serviceUtils', () => {
       const data = {
         name: '',
         platformCode: '',
+      };
+
+      expect(() => validateServiceInput(data)).toThrow(ZodError);
+    });
+
+    it('should throw ZodError for invalid platform code', () => {
+      const data = {
+        name: 'Gemini',
+        platformCode: 'not_valid',
       };
 
       expect(() => validateServiceInput(data)).toThrow(ZodError);
