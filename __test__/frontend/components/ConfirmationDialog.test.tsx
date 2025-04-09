@@ -8,7 +8,6 @@ describe("ConfirmationDialog Component", () => {
     isOpen: true,
     onClose: jest.fn(),
     onConfirm: jest.fn(),
-    title: "Confirmation Dialog",
     description: "Are you sure you want to delete this item?",
   };
 
@@ -16,25 +15,20 @@ describe("ConfirmationDialog Component", () => {
     render(<ConfirmationDialog {...componentProps} />);
   };
 
-  // TC1 : should display dialog title
-  it("should display dialog title", () => {
-    setup();
-    expect(screen.getByText(defaultProps.title)).toBeInTheDocument();
-  });
 
-  // TC2 : should display dialog description
+  // TC : should display dialog description
   it("should display dialog description", () => {
     setup();
     expect(screen.getByText(defaultProps.description)).toBeInTheDocument();
   });
 
-  // TC3 : should display cancel button text
+  // TC : should display cancel button text
   it("should display cancel button text", () => {
     setup();
     expect(screen.getByText("Batal")).toBeInTheDocument();
   });
 
-  // TC4 : should display confirm button text
+  // TC : should display confirm button text
   it("should display confirm button text", () => {
     setup();
     expect(screen.getByText("Konfirmasi")).toBeInTheDocument();
