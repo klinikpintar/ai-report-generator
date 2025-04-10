@@ -47,6 +47,8 @@ const PaginationLink = ({
 }: PaginationLinkProps) => (
   <a
     aria-current={isActive ? "page" : undefined}
+    role="link"
+    data-state={isActive ? "active" : undefined}
     className={cn(
       buttonVariants({
         variant: "ghost",
@@ -67,8 +69,9 @@ const PaginationPrevious = ({
   ...props
 }: React.ComponentProps<typeof PaginationLink>) => (
   <PaginationLink
-    aria-label="Go to previous page"
+    aria-label="Sebelumnya"
     size="default"
+    role="button"
     className={cn("gap-1 pl-2.5", className)}
     {...props}
   >
@@ -83,8 +86,9 @@ const PaginationNext = ({
   ...props
 }: React.ComponentProps<typeof PaginationLink>) => (
   <PaginationLink
-    aria-label="Go to next page"
+    aria-label="Selanjutnya"
     size="default"
+    role="button"
     className={cn("gap-1 pr-2.5", className)}
     {...props}
   >
