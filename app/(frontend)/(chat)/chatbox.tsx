@@ -8,6 +8,8 @@ import rehypeRaw from "rehype-raw";
 import Dropdown from "./components/dropdown";
 import { useService } from "./context/serviceContext"; // Import context
 import Bantuan from "./components/bantuan";
+import { Service, Schema } from "@frontend/common/types";
+import { toast } from "react-toastify";
 
 // Definisikan tipe data pesan
 interface Message {
@@ -47,6 +49,18 @@ export default function ChatBox() {
     }
   }, [messages]);
 
+  const getRelatedSchemaIds = async (services: Service[]) => {
+    if (services.length === 0) return [];
+
+    const serviceIds = services.map((service) => service.id);
+    const queryParams = new URLSearchParams();
+    serviceIds.forEach((id) => queryParams.append("serviceIds", id.toString()));
+    const response = await fetch(`/api/schema?${queryParams.toString()}`);
+    if (!response.ok) throw new Error("Failed to fetch schemas");
+    const data = (await response.json()) as Schema[];
+    return data.map((schema) => schema.id);
+  };
+
   const sendMessage = async () => {
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -60,11 +74,13 @@ export default function ChatBox() {
     setIsLoading(true);
 
     try {
+      const schemaIds = await getRelatedSchemaIds(selectedService);
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           messages: [{ role: "user", content: input.trim() }],
+          schemaId: schemaIds,
         }),
       });
 
