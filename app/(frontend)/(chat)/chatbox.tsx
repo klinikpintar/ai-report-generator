@@ -151,16 +151,11 @@ export default function ChatBox() {
                 {/* Bubble Message */}
                 <div
                   className={`p-3 rounded-lg ${
-                    msg.sender === "user"
-                      ? "bg-[#E4F6FC] text-[#00B0EB]"
-                      : "bg-gray-200 text-black"
+                    msg.sender === "user" ? "bg-[#E4F6FC] text-[#00B0EB]" : "bg-gray-200 text-black"
                   }`}
                 >
                   {msg.sender === "assistant" ? (
-                    <ReactMarkdown
-                      remarkPlugins={[remarkGfm]}
-                      rehypePlugins={[rehypeRaw]}
-                    >
+                    <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]}>
                       {msg.content}
                     </ReactMarkdown>
                   ) : (
@@ -192,7 +187,7 @@ export default function ChatBox() {
                 onClose={() => {
                   setExportModalData(null);
                   setIsExportModalVisible(false);
-                }}                
+                }}
                 content={exportModalData.content}
                 title={`Laporan-${exportModalData.id}`}
               />
