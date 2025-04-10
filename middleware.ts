@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-async function verifyAccessToken(req: NextRequest, accessToken: string) {
+export async function verifyAccessToken(req: NextRequest, accessToken: string) {
   try {
     const apiResponse = await fetch(
       `${req.nextUrl.origin}/api/auth/token/verify`,
