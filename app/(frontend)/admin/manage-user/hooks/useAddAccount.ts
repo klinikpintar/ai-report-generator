@@ -21,6 +21,7 @@ interface FormErrors {
 
 type InputChangeEvent = React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>;
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export const useAddAccount = (onClose: () => void) => {
   const [formData, setFormData] = useState<FormData>({
     fullName: "",
