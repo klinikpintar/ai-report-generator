@@ -34,7 +34,7 @@ const renderComponent = () => {
       <SchemaTableSection />
     </SchemaProvider>
   );
-}
+};
 
 const setup = () => {
   (fetchPlatforms as jest.Mock).mockResolvedValueOnce(mockPlatforms);
@@ -76,7 +76,7 @@ describe("Integration between table and filter dropdowns", () => {
 
     // click the first option
     const firstOption = await screen.findByRole("menuitemcheckbox", {
-      name: mockPlatforms[0].name,
+      name: mockPlatforms[0],
     });
     await userEvent.click(firstOption);
 
@@ -132,7 +132,7 @@ describe("Integration between action button and modal", () => {
     await userEvent.click(addButton);
 
     // Simulate clicking the cancel button
-    const cancelButton = screen.getByRole("button", { name: /Batal/i });
+    const cancelButton = screen.getByText(/Batal/i);
     await userEvent.click(cancelButton);
 
     // Check if the modal is closed
@@ -163,7 +163,7 @@ describe("Integration between action button and modal", () => {
     await userEvent.click(editButton[0]);
 
     // Simulate clicking the cancel button
-    const cancelButton = screen.getByRole("button", { name: /Batal/i });
+    const cancelButton = screen.getByText(/Batal/i);
     await userEvent.click(cancelButton);
 
     // Check if the modal is closed

@@ -3,9 +3,22 @@ import { Button } from "@/components/ui/button";
 import { FileIcon } from "lucide-react";
 import type React from "react";
 import { Chip } from "@/components/ui/chip";
-import type { Schema } from "../types";
+import type { Platform, Schema } from "@frontend/common/types";
 import { GenericTable, type GenericTableColumn, TablePagination } from "@frontend/components/table";
 import { useSchemaTable } from "@frontend/admin/schema/hooks";
+
+const getPlatformColor = (platform: Platform) => {
+  switch (platform.toUpperCase()) {
+    case "POSTGRESQL":
+      return "#013F59";
+    case "MYSQL":
+      return "#FF9500";
+    case "MONGODB":
+      return "#009951";
+    default:
+      return "#000000";
+  }
+};
 
 type SchemaTableProps = {
   onEditSchema: (schema: Schema) => void;
@@ -33,9 +46,9 @@ export const SchemaTable: React.FC<SchemaTableProps> = ({
         <Chip
           variant="default"
           className="w-full cursor-default text-white"
-          style={{ backgroundColor: schema.service?.platform.color }}
+          style={{ backgroundColor: getPlatformColor(schema.service.platformCode) }}
         >
-          {schema.service?.platform.name}
+          {schema.service.platformCode}
         </Chip>
       ),
     },

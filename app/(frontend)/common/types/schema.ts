@@ -1,10 +1,11 @@
 import { Service } from "./service";
 
 export type Schema = {
-  id: string;
-  createdAt: string;
+  id: number;
   name: string;
   description: string;
   schemaText: string;
-  service: Service
+  createdAt: string;
+  serviceId: Service["id"];
+  service: Service;
 }

@@ -1,22 +1,9 @@
+import { mockSchemas } from "@/__mocks__/schema-data";
 import { SchemaTable } from "@frontend/admin/schema/components";
-import { Schema } from "@frontend/admin/schema/types";
+import { Schema } from "@frontend/common/types";
 import { render, screen } from "@testing-library/react";
 
-const mockSchema: Schema = {
-  id: 1,
-  name: "Pasien Portal V1",
-  description: "Test Description",
-  schemaText: "Test Schema Text",
-  service: {
-    id: 1,
-    name: "patient",
-    platform: {
-      id: 1,
-      name: "PostgreSQL",
-      color: "#000000",
-    },
-  },
-};
+const mockSchema: Schema = mockSchemas[0];
 
 jest.mock("@frontend/admin/schema/hooks", () => ({
   useSchemaTable: jest.fn(() => ({
@@ -63,7 +50,7 @@ describe("SchemaTable", () => {
   });
   it("should display column data of platform", () => {
     setup();
-    expect(screen.getByText(mockSchema.service?.platform?.name || "")).toBeInTheDocument();
+    expect(screen.getByText(mockSchema.service.platformCode)).toBeInTheDocument();
   });
 
   it("should display column title of service", () => {

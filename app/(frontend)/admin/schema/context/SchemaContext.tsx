@@ -1,4 +1,4 @@
-import { Platform, Schema, Service } from "../types";
+import { Platform, Schema, Service } from "@frontend/common/types";
 import { createTableContext, createTableProvider, createUseTableContext, TableState } from "@frontend/components/table/TableContext";
 
 type SchemaFilters = {

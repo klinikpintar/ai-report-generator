@@ -1,5 +1,5 @@
 import { FilterDropdown } from "@frontend/components/FilterDropdown";
-import { Platform, Service } from "../types";
+import { Platform, Service } from "@frontend/common/types";
 import { useSchemaFilters } from "../hooks";
 
 export function SchemaFilters() {
@@ -26,9 +26,9 @@ export function SchemaFilters() {
         items={platforms}
         selectedItems={selectedPlatforms}
         onSelectionChange={handlePlatformChange}
-        getKey={(platform) => platform.id}
+        getKey={(platform) => platform}
         buttonText="Filter by Platforms"
-        renderItem={(platform) => platform.name}
+        renderItem={(platform) => platform}
       />
     </div>
   );

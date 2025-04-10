@@ -3,7 +3,7 @@ import { SchemaProvider } from "@frontend/admin/schema/context/SchemaContext";
 import { useSchemaTable } from "@frontend/admin/schema/hooks";
 import { fetchSchemas } from "@frontend/admin/schema/utils/api";
 import type { ReactNode } from "react";
-import type { Platform, Schema, Service } from "@frontend/admin/schema/types";
+import { mockSchemas } from "@/__mocks__/schema-data";
 
 jest.mock("next/navigation", () => ({
   useRouter: jest.fn(() => ({
@@ -27,31 +27,6 @@ jest.mock("react-toastify", () => ({
   },
 }));
 
-const mockPlatforms: Platform[] = [
-  {
-    id: 1,
-    name: "PostgreSQL",
-    color: "#000000",
-  },
-];
-
-const mockServices: Service[] = [
-  {
-    id: 1,
-    name: "patient",
-    platform: mockPlatforms[0],
-  },
-];
-
-const mockSchemas: Schema[] = [
-  {
-    id: 1,
-    name: "Pasien Portal V1",
-    description: "Test Description",
-    schemaText: "Test Schema Text",
-    service: mockServices[0],
-  },
-];
 
 const TestWrapper = ({ children }: { children: ReactNode }) => {
   return <SchemaProvider>{children}</SchemaProvider>;
