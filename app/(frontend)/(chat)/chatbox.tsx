@@ -9,7 +9,6 @@ import Dropdown from "./components/dropdown";
 import { useService } from "./context/serviceContext"; // Import context
 import Bantuan from "./components/bantuan";
 import { Service, Schema } from "@frontend/common/types";
-import { toast } from "react-toastify";
 
 // Definisikan tipe data pesan
 interface Message {
