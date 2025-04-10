@@ -12,6 +12,13 @@ const renderWithServiceProvider = (ui) => {
   return render(<ServiceProvider>{ui}</ServiceProvider>);
 };
 
+// mock Dropdown component
+jest.mock("@frontend/(chat)/components/Dropdown", () => {
+  return function MockDropdown({ children }) {
+    return <div data-testid="mock-dropdown">{children}</div>;
+  };
+});
+
 describe("ChatBox Component", () => {
   it("should display a welcome message before chatting", () => {
     renderWithServiceProvider(<ChatBox />);
