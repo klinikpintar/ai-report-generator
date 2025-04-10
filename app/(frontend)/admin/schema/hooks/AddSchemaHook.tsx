@@ -1,5 +1,6 @@
 import axios, { AxiosError } from "axios";
 import { useState, useRef, FormEvent, useEffect } from "react";
+import { toast } from "react-toastify";
 
 interface SchemaData {
   id: number;
@@ -7,6 +8,7 @@ interface SchemaData {
   description: string;
   schemaText: string;
   fileName: string;
+  serviceId: string;
 }
 
 export const AddSchemaHook = (
@@ -21,6 +23,7 @@ export const AddSchemaHook = (
     description: "",
     schemaText: "",
     fileName: "",
+    serviceId: "",
     ...initialData,
   });
 
@@ -46,7 +49,7 @@ export const AddSchemaHook = (
     if (!file) return;
 
     if (!allowedFormat.includes(file.name.slice(file.name.lastIndexOf(".")))) {
-      alert("File format not allowed!");
+      toast.error("File format not allowed!");
       e.target.value = "";
       return;
     }
@@ -74,6 +77,7 @@ export const AddSchemaHook = (
         description: "",
         schemaText: "",
         fileName: "",
+        serviceId: "",
       }));
     }
   };
@@ -83,7 +87,7 @@ export const AddSchemaHook = (
 
     if (isAddSchema) {
       if (!formData.schemaText) {
-        alert("Please upload schema");
+        toast.error("Please upload schema");
         return;
       }
 
@@ -92,16 +96,17 @@ export const AddSchemaHook = (
           name: formData.name,
           description: formData.description,
           schemaText: formData.schemaText,
+          serviceId: formData.serviceId,
         });
 
-        alert("Schema successfully added");
+        toast.success("Schema successfully added");
         clearForm();
         onClose();
       } catch (error) {
         const axiosError = error as AxiosError<{ error: string }>;
         const errorMessage = axiosError.response?.data?.error;
 
-        alert(errorMessage);
+        toast.error(errorMessage);
       }
     } else {
       if (!initialData) return;
@@ -111,16 +116,17 @@ export const AddSchemaHook = (
           id: initialData.id,
           name: formData.name,
           description: formData.description,
+          serviceId: formData.serviceId,
         });
 
-        alert("Schema successfully updated");
+        toast.success("Schema successfully updated");
         clearForm();
         onClose();
       } catch (error) {
         const axiosError = error as AxiosError<{ error: string }>;
         const errorMessage = axiosError.response?.data?.error;
 
-        alert(errorMessage);
+        toast.error(errorMessage);
       }
     }
   }

@@ -12,6 +12,7 @@ interface Props {
     description: string;
     schemaText: string;
     fileName: string;
+    serviceId: string;
   } | null;
 }
 
@@ -29,10 +30,10 @@ const EditSchemaModal = ({ isVisible, onClose, schema }: Props) => {
     <Modal
       isVisible={isVisible}
       onClose={onClose}
-      onClearForm={() => {}}
       title={"Edit Skema Database"}
       subtitle="Sesuaikan informasi skema database agar tetap relevan dengan kebutuhan
           sistem"
+      isForm={true}
     >
       <SchemaForm
         showFileInput={false}

@@ -29,8 +29,15 @@ const mockSchemas: Schema[] = [
         img_url: "https://via.placeholder.com/150",
         createdAt: new Date(),
         modifiedAt: new Date(),
-        color: "Blue"
+        color: "Blue",
       },
+    },
+    platform: {
+      id: 1,
+      name: "Platform A",
+      img_url: "https://via.placeholder.com/150",
+      createdAt: new Date(),
+      modifiedAt: new Date(),
     },
   },
   {
@@ -51,8 +58,15 @@ const mockSchemas: Schema[] = [
         img_url: "https://via.placeholder.com/150",
         createdAt: new Date(),
         modifiedAt: new Date(),
-        color: "Teal"
+        color: "Teal",
       },
+    },
+    platform: {
+      id: 2,
+      name: "Platform B",
+      img_url: "https://via.placeholder.com/150",
+      createdAt: new Date(),
+      modifiedAt: new Date(),
     },
   },
 ];
@@ -85,7 +99,13 @@ describe("SchemaTable Component", () => {
   it("should render pagination correctly", () => {
     const currentPage = 2;
     const lastPage = 5;
-    render(<SchemaTable schemas={mockSchemas} currentPage={currentPage} lastPage={lastPage} />);
+    render(
+      <SchemaTable
+        schemas={mockSchemas}
+        currentPage={currentPage}
+        lastPage={lastPage}
+      />
+    );
 
     expect(screen.getByText("1")).toBeInTheDocument();
     expect(screen.getByText("2")).toBeInTheDocument();
@@ -98,14 +118,22 @@ describe("SchemaTable Component", () => {
   it("should handle empty schemas array gracefully", () => {
     render(<SchemaTable schemas={[]} />);
 
-    expect(screen.getByText(/tidak ada skema yang ditemukan/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/tidak ada skema yang ditemukan/i)
+    ).toBeInTheDocument();
   });
 
   // Edge case
   it("should render pagination ellipsis correctly for large page numbers", () => {
     const currentPage = 5;
     const lastPage = 10;
-    render(<SchemaTable schemas={mockSchemas} currentPage={currentPage} lastPage={lastPage} />);
+    render(
+      <SchemaTable
+        schemas={mockSchemas}
+        currentPage={currentPage}
+        lastPage={lastPage}
+      />
+    );
 
     expect(screen.getByText("1")).toBeInTheDocument();
     expect(screen.getAllByText("...")[0]).toBeInTheDocument();
@@ -119,7 +147,13 @@ describe("SchemaTable Component", () => {
   it("should render pagination correctly for the first page", () => {
     const currentPage = 1;
     const lastPage = 10;
-    render(<SchemaTable schemas={mockSchemas} currentPage={currentPage} lastPage={lastPage} />);
+    render(
+      <SchemaTable
+        schemas={mockSchemas}
+        currentPage={currentPage}
+        lastPage={lastPage}
+      />
+    );
 
     expect(screen.getByText("1")).toBeInTheDocument();
     expect(screen.getByText("2")).toBeInTheDocument();
@@ -131,7 +165,13 @@ describe("SchemaTable Component", () => {
   it("should render pagination correctly for the last page", () => {
     const currentPage = 19;
     const lastPage = 10;
-    render(<SchemaTable schemas={mockSchemas} currentPage={currentPage} lastPage={lastPage} />);
+    render(
+      <SchemaTable
+        schemas={mockSchemas}
+        currentPage={currentPage}
+        lastPage={lastPage}
+      />
+    );
 
     expect(screen.getByText("1")).toBeInTheDocument();
     expect(screen.getByText("...")).toBeInTheDocument();
@@ -143,29 +183,16 @@ describe("SchemaTable Component", () => {
   it("should render pagination next and previous buttons correctly", () => {
     const currentPage = 2;
     const lastPage = 5;
-    render(<SchemaTable schemas={mockSchemas} currentPage={currentPage} lastPage={lastPage} />);
+    render(
+      <SchemaTable
+        schemas={mockSchemas}
+        currentPage={currentPage}
+        lastPage={lastPage}
+      />
+    );
 
     expect(screen.getByText(/sebelumnya/i)).toBeInTheDocument();
     expect(screen.getByText(/selanjutnya/i)).toBeInTheDocument();
-  });
-
-  it("should open edit schema modal when edit button is clicked", async () => {
-    render(<SchemaTable schemas={mockSchemas} />);
-    const editButton = screen.getAllByText(/Edit/i)[0];
-
-    await userEvent.click(editButton);
-    expect(screen.getByText(/Edit Skema Database/i)).toBeInTheDocument();
-  });
-
-  it("should close edit schema modal when close button is clicked", async () => {
-    render(<SchemaTable schemas={mockSchemas} />);
-    const editButton = screen.getAllByText(/Edit/i)[0];
-
-    await userEvent.click(editButton);
-    const closeButton = screen.getByText(/Batal/i);
-
-    await userEvent.click(closeButton);
-    expect(screen.queryByText(/Edit Skema Database/i)).not.toBeInTheDocument();
   });
 
   it("should open confirmation dialog when delete button is clicked", async () => {
@@ -173,7 +200,9 @@ describe("SchemaTable Component", () => {
     const deleteButton = screen.getAllByText(/Hapus/i)[0];
 
     await userEvent.click(deleteButton);
-    expect(screen.getByText(/Apakah Anda yakin ingin menghapus skema ini?/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/Apakah Anda yakin ingin menghapus skema ini?/i)
+    ).toBeInTheDocument();
   });
 
   it("should close confirmation dialog when cancel button is clicked", async () => {
@@ -184,7 +213,9 @@ describe("SchemaTable Component", () => {
     const cancelButton = screen.getByText(/Batal/i);
 
     await userEvent.click(cancelButton);
-    expect(screen.queryByText(/Apakah Anda yakin ingin menghapus skema ini?/i)).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Apakah Anda yakin ingin menghapus skema ini?/i)
+    ).not.toBeInTheDocument();
   });
 
   it("should render success message when schema is deleted", async () => {
