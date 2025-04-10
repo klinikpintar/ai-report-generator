@@ -22,7 +22,7 @@ const AddSchemaModal = ({ isVisible, onClose }: Props) => {
     <Modal
       isVisible={isVisible}
       onClose={onClose}
-      onClearForm={clearForm}
+      isForm={true}
       title="Form Upload Skema Database"
       subtitle="Tambahkan skema baru ke sistem dengan mudah"
     >

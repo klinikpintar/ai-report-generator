@@ -1,4 +1,4 @@
-import { BaseModel, Service } from ".";
+import { BaseModel, Service, Platform } from ".";
 
 
 export interface Schema extends BaseModel {
@@ -6,4 +6,6 @@ export interface Schema extends BaseModel {
   service?: Service;
   description: string | null;
   schemaText: string;
+  platform?: Platform;
+  serviceId?: string;
 }

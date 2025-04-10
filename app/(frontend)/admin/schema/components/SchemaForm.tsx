@@ -1,4 +1,4 @@
-import React, { FormEvent } from "react";
+import React, { FormEvent, useEffect, useState } from "react";
 import Image from "next/image";
 import FormInput from "@frontend/components/form-input";
 import SelectInput from "@frontend/components/select-input";
@@ -12,6 +12,7 @@ interface SchemaFormProps {
     description: string;
     schemaText: string;
     fileName?: string;
+    serviceId: string;
   };
   handleSubmit: (event: FormEvent<HTMLFormElement>) => void;
   handleChange: (
@@ -24,6 +25,12 @@ interface SchemaFormProps {
   clearForm: () => void;
 }
 
+interface Service {
+  id: string;
+  name: string;
+  platformCode: string;
+}
+
 const SchemaForm: React.FC<SchemaFormProps> = ({
   showFileInput,
   fileInputRef,
@@ -34,8 +41,30 @@ const SchemaForm: React.FC<SchemaFormProps> = ({
   onClose,
   clearForm,
 }) => {
+  const [services, setServices] = useState<Service[]>([]);
+
+  useEffect(() => {
+    const fetchServices = async () => {
+      try {
+        const response = await fetch("/api/service");
+        const data: Service[] = await response.json();
+        setServices(
+          data.map((item) => ({
+            id: item.id,
+            name: item.name,
+            platformCode: item.platformCode,
+          }))
+        );
+      } catch (error) {
+        console.error("Failed to fetch services:", error);
+      }
+    };
+
+    fetchServices();
+  }, []);
+
   return (
-    <form className="md:pr-10 pl-10 pb-10 pt-5" onSubmit={handleSubmit}>
+    <form className="p-10" onSubmit={handleSubmit}>
       <div className="grid gap-4 mb-4 grid-cols-2">
         <FormInput
           label="Nama Skema"
@@ -64,23 +93,28 @@ const SchemaForm: React.FC<SchemaFormProps> = ({
             { value: "MongoDB", label: "MongoDB" },
           ]}
         />
-
         <SelectInput
-          label="Service"
-          name="service"
-          options={[
-            { value: "Reservasi", label: "Reservasi" },
-            { value: "Kesehatan", label: "Kesehatan" },
-            { value: "Keuangan", label: "Keuangan" },
-            { value: "Inventaris", label: "Inventaris" },
-          ]}
+          label="Service Skema"
+          name="serviceId"
+          value={formData.serviceId}
+          onChange={handleChange}
+          options={services.map((item) => ({
+            value: item.id,
+            label: item.name,
+          }))}
         />
         {showFileInput && (
           <div className="col-span-2">
-            <label className="block mb-2 text-[14.74px] font-semibold text-gray-900">
+            <label
+              htmlFor="dropzone-file"
+              className="block mb-2 text-[14.74px] font-semibold text-gray-900"
+            >
               File Skema
             </label>
-            <label className="flex items-center p-2 justify-center border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-white hover:bg-gray-100">
+            <label
+              htmlFor="dropzone-file"
+              className="flex items-center p-2 justify-center border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-white hover:bg-gray-100"
+            >
               <div className="flex items-center justify-center">
                 <Image
                   aria-hidden

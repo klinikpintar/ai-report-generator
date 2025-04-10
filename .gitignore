@@ -49,4 +49,7 @@ next-env.d.ts
 .swc
 .scannerwork
 
+# sonar local config
+sonar-project-local.properties
+
 devcontainer.json
