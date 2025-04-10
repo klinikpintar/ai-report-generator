@@ -166,6 +166,14 @@ describe("Schema Table Section", () => {
     const cancelButton = screen.getByText(/batal/i);
     await userEvent.click(cancelButton);
 
-    expect(screen.queryByText(/form upload skema database/i)).not.toBeInTheDocument();
+    await waitFor(
+      () =>
+        expect(
+          screen.queryByText(/form upload skema database/i)
+        ).not.toBeInTheDocument(),
+      {
+        timeout: 400,
+      }
+    );
   });
 });

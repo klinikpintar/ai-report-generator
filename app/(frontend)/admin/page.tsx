@@ -3,6 +3,7 @@
 
 import React, { useRef } from "react";
 import SchemaModule from "@frontend/admin/schema";
+import ServiceModule from "./service";
 import Shortcut from "@frontend/admin/shortcut";
 
 const AdminDashboardPage = () => {
@@ -20,6 +21,7 @@ const AdminDashboardPage = () => {
       <div ref={configRef} className="mt-12 ">
         {/* Konten konfigurasi AI */}
       </div>
+      <ServiceModule />
       <div ref={schemaRef} className="mt-12">
         <SchemaModule />
       </div>  

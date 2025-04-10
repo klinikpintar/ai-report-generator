@@ -8,6 +8,7 @@ import rehypeRaw from "rehype-raw";
 import Dropdown from "./components/dropdown";
 import { useService } from "./context/serviceContext"; // Import context
 import Bantuan from "./components/bantuan";
+import { Service, Schema } from "@frontend/common/types";
 import ExportModal from "@/app/(frontend)/(chat)/components/ekspor/modal";
 
 // Definisikan tipe data pesan
@@ -39,7 +40,7 @@ export default function ChatBox() {
   const [hasChatted, setHasChatted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const chatContainerRef = useRef<HTMLDivElement>(null);
-  const { selectedService } = useService(); // Ambil service dari context
+  const { selectedService, services, getServiceRepresentation } = useService(); // Ambil service dari context
   const [isExportModalVisible, setIsExportModalVisible] = useState(false);
   const [exportModalData, setExportModalData] = useState<{
     id: string;
@@ -49,10 +50,21 @@ export default function ChatBox() {
   // Auto-scroll ke pesan terbaru setiap kali messages diperbarui
   useEffect(() => {
     if (chatContainerRef.current) {
-      chatContainerRef.current.scrollTop =
-        chatContainerRef.current.scrollHeight;
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
     }
   }, [messages]);
+
+  const getRelatedSchemaIds = async (services: Service[]) => {
+    if (services.length === 0) return [];
+
+    const serviceIds = services.map((service) => service.id);
+    const queryParams = new URLSearchParams();
+    serviceIds.forEach((id) => queryParams.append("serviceIds", id.toString()));
+    const response = await fetch(`/api/schema?${queryParams.toString()}`);
+    if (!response.ok) throw new Error("Failed to fetch schemas");
+    const data = (await response.json()) as Schema[];
+    return data.map((schema) => schema.id);
+  };
 
   const sendMessage = async () => {
     const userMessage: Message = {
@@ -67,11 +79,13 @@ export default function ChatBox() {
     setIsLoading(true);
 
     try {
+      const schemaIds = await getRelatedSchemaIds(selectedService);
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           messages: [{ role: "user", content: input.trim() }],
+          schemaId: schemaIds,
         }),
       });
 
@@ -125,10 +139,7 @@ export default function ChatBox() {
 
       {/* Bagian Chat Scrollable */}
       {hasChatted && (
-        <div
-          ref={chatContainerRef}
-          className="flex-1 overflow-y-auto p-4 bg-white"
-        >
+        <div ref={chatContainerRef} className="flex-1 overflow-y-auto p-4 bg-white">
           <div className="ml-2 mt-4 flex flex-col mr-4 gap-y-6">
             {messages.map((msg) => (
               <div
@@ -140,16 +151,11 @@ export default function ChatBox() {
                 {/* Bubble Message */}
                 <div
                   className={`p-3 rounded-lg ${
-                    msg.sender === "user"
-                      ? "bg-[#E4F6FC] text-[#00B0EB]"
-                      : "bg-gray-200 text-black"
+                    msg.sender === "user" ? "bg-[#E4F6FC] text-[#00B0EB]" : "bg-gray-200 text-black"
                   }`}
                 >
                   {msg.sender === "assistant" ? (
-                    <ReactMarkdown
-                      remarkPlugins={[remarkGfm]}
-                      rehypePlugins={[rehypeRaw]}
-                    >
+                    <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]}>
                       {msg.content}
                     </ReactMarkdown>
                   ) : (
@@ -181,7 +187,7 @@ export default function ChatBox() {
                 onClose={() => {
                   setExportModalData(null);
                   setIsExportModalVisible(false);
-                }}                
+                }}
                 content={exportModalData.content}
                 title={`Laporan-${exportModalData.id}`}
               />
@@ -200,7 +206,13 @@ export default function ChatBox() {
         <div className="w-full flex flex-col">
           {/* Teks di atas container input */}
           <div className="mb-1">
-            <p className="text-sm text-gray-600">Service: {selectedService}</p>
+            <p className="text-sm text-gray-600">
+              Service:{" "}
+              {getServiceRepresentation(
+                selectedService,
+                selectedService.length === services.length
+              )}
+            </p>
           </div>
 
           {/* Container untuk input dan button */}
@@ -229,12 +241,7 @@ export default function ChatBox() {
               onClick={sendMessage}
               disabled={isLoading || !input.trim()}
             >
-              <Image
-                src="/icon-send.svg"
-                width={45}
-                height={45}
-                alt="Send Icon"
-              />
+              <Image src="/icon-send.svg" width={45} height={45} alt="Send Icon" />
             </button>
           </div>
           <p className="text-xs text-gray-600 text-center">
