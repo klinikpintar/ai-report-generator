@@ -8,6 +8,7 @@ import rehypeRaw from "rehype-raw";
 import Dropdown from "./components/dropdown";
 import { useService } from "./context/serviceContext"; // Import context
 import Bantuan from "./components/bantuan";
+import ExportModal from "@/app/(frontend)/(chat)/components/ekspor/modal";
 
 // Definisikan tipe data pesan
 interface Message {
@@ -39,6 +40,11 @@ export default function ChatBox() {
   const [isLoading, setIsLoading] = useState(false);
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const { selectedService } = useService(); // Ambil service dari context
+  const [isExportModalVisible, setIsExportModalVisible] = useState(false);
+  const [exportModalData, setExportModalData] = useState<{
+    id: string;
+    content: string;
+  } | null>(null);
 
   // Auto-scroll ke pesan terbaru setiap kali messages diperbarui
   useEffect(() => {
@@ -127,25 +133,59 @@ export default function ChatBox() {
             {messages.map((msg) => (
               <div
                 key={msg.id}
-                className={`p-3 rounded-lg max-w-[90%] ${
-                  msg.sender === "user"
-                    ? "bg-[#E4F6FC] text-[#00B0EB] self-end"
-                    : "bg-gray-200 text-black self-start"
-                }`}
+                className={`max-w-[90%] ${
+                  msg.sender === "user" ? "self-end" : "self-start"
+                } flex flex-col gap-1`}
               >
-                {/* Gunakan ReactMarkdown agar AI Response bisa dirender dengan format Markdown */}
-                {msg.sender === "assistant" ? (
-                  <ReactMarkdown
-                    remarkPlugins={[remarkGfm]}
-                    rehypePlugins={[rehypeRaw]}
+                {/* Bubble Message */}
+                <div
+                  className={`p-3 rounded-lg ${
+                    msg.sender === "user"
+                      ? "bg-[#E4F6FC] text-[#00B0EB]"
+                      : "bg-gray-200 text-black"
+                  }`}
+                >
+                  {msg.sender === "assistant" ? (
+                    <ReactMarkdown
+                      remarkPlugins={[remarkGfm]}
+                      rehypePlugins={[rehypeRaw]}
+                    >
+                      {msg.content}
+                    </ReactMarkdown>
+                  ) : (
+                    <p className="whitespace-pre-wrap">{msg.content}</p>
+                  )}
+                </div>
+
+                {msg.sender === "assistant" && (
+                  <button
+                    onClick={() => {
+                      setIsExportModalVisible(true);
+                      setExportModalData({ id: msg.id, content: msg.content });
+                    }}
                   >
-                    {msg.content}
-                  </ReactMarkdown>
-                ) : (
-                  <p className="whitespace-pre-wrap">{msg.content}</p>
+                    <Image
+                      src="/icon-download.svg"
+                      width={20}
+                      height={20}
+                      alt="Download"
+                      className="cursor-pointer"
+                    />
+                  </button>
                 )}
               </div>
             ))}
+            {isExportModalVisible && exportModalData && (
+              <ExportModal
+                isVisible={!!exportModalData}
+                onClose={() => {
+                  setExportModalData(null);
+                  setIsExportModalVisible(false);
+                }}                
+                content={exportModalData.content}
+                title={`Laporan-${exportModalData.id}`}
+              />
+            )}
             {isLoading && (
               <div className="p-3 rounded-lg max-w-[90%] bg-gray-200 text-black self-start">
                 AI is typing...
@@ -198,8 +238,8 @@ export default function ChatBox() {
             </button>
           </div>
           <p className="text-xs text-gray-600 text-center">
-          This AI Report Generator can make mistakes. Check important info.
-        </p>
+            This AI Report Generator can make mistakes. Check important info.
+          </p>
         </div>
       </div>
     </div>

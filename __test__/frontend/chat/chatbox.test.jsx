@@ -145,4 +145,73 @@ describe("ChatBox API Integration", () => {
     const errorMessage = await screen.findByText(/Sorry, there was an error processing your request./i);
     expect(errorMessage).toBeInTheDocument();
   });
+
+  it("should open ExportModal when download icon is clicked", async () => {
+    global.fetch = jest.fn().mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        messageId: "1234",
+        userPrompt: "Export this please",
+        aiResponse: "Sure, here is your report",
+        createdAt: new Date().toISOString(),
+        metadata: {
+          finishReason: "stop",
+          usage: { promptTokens: 5, completionTokens: 10 },
+          modelUsed: "gemini",
+        },
+      }),
+    });
+  
+    renderWithServiceProvider(<ChatBox />);
+    const input = screen.getByPlaceholderText("Type a message...");
+    fireEvent.change(input, { target: { value: "Export this please" } });
+    fireEvent.keyDown(input, { key: "Enter", code: "Enter" });
+  
+    // Tunggu response bot muncul
+    const botMessage = await screen.findByText("Sure, here is your report");
+    expect(botMessage).toBeInTheDocument();
+  
+    // Klik ikon download
+    const downloadIcon = screen.getByAltText("Download");
+    fireEvent.click(downloadIcon);
+  
+    // Modal harus muncul
+    await waitFor(() => {
+      expect(screen.getByText("Ekspor Laporan")).toBeInTheDocument();
+    });
+  });
+  
+  it("should close ExportModal on cancel and reset modal data", async () => {
+    global.fetch = jest.fn().mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        messageId: "5678",
+        userPrompt: "Generate report",
+        aiResponse: "Here's your markdown report",
+        createdAt: new Date().toISOString(),
+        metadata: {
+          finishReason: "stop",
+          usage: { promptTokens: 5, completionTokens: 10 },
+          modelUsed: "gemini",
+        },
+      }),
+    });
+  
+    renderWithServiceProvider(<ChatBox />);
+    const input = screen.getByPlaceholderText("Type a message...");
+    fireEvent.change(input, { target: { value: "Generate report" } });
+    fireEvent.keyDown(input, { key: "Enter", code: "Enter" });
+  
+    const downloadIcon = await screen.findByAltText("Download");
+    fireEvent.click(downloadIcon);
+  
+    // Klik tombol Batal
+    const cancelButton = await screen.findByText("Batal");
+    fireEvent.click(cancelButton);
+  
+    // Modal harus tertutup
+    await waitFor(() => {
+      expect(screen.queryByText("Ekspor Laporan")).not.toBeInTheDocument();
+    });
+  });  
 });
