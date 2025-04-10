@@ -9,11 +9,13 @@ const config: Config = {
   coverageDirectory: "coverage",
   coverageReporters: ["json", "lcov", "text", "clover"],
   collectCoverageFrom: [
-    "**/*.{ts,tsx, js, jsx}",    
+    "**/*.{ts,tsx, js, jsx}",
     "!app/config.ts",
     "!app/utils/exceptions.ts",
   ],
   moduleNameMapper: {
+    '^@frontend/(.*)$': '<rootDir>/app/(frontend)/$1',
+    '^@backend/(.*)$': '<rootDir>/app/(backend)/$1',
     '^@/(.*)$': '<rootDir>/$1',
   },
   coverageThreshold: {

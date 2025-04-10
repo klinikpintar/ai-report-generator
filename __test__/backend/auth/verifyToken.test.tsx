@@ -2,8 +2,8 @@
 import jwt from "jsonwebtoken";
 import prisma from "@/lib/prisma";
 import { NextRequest } from "next/server";
-import { GET as verifyHandler } from "@/app/api/auth/token/verify/route";
-import config from "@/app/config";
+import { GET as verifyHandler } from "@backend/api/auth/token/verify/route";
+import config from "@backend/config";
 import { User } from "@prisma/client";
 
 // Mock Prisma

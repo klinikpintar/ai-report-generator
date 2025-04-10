@@ -5,12 +5,14 @@
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  extensions = [vector]
 }
 
 model User {
@@ -43,4 +45,34 @@ model Schema {
   description String
   schemaText  String
   createdAt   DateTime @default(now())
+  serviceId   String   @db.Uuid
+  service     Service  @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+}
+
+model Service {
+  id            String   @id @default(uuid()) @db.Uuid
+  name          String   @db.VarChar(255)
+  platformCode  String   @db.VarChar(255)
+  createdAt     DateTime @default(now())
+
+  schemas       Schema[]
+}
+
+model Resource {
+  id        Int      @id @default(autoincrement())
+  title     String
+  content   String   @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  embeddings Embedding[]
+}
+
+model Embedding {
+  id          Int      @id @default(autoincrement())
+  resourceId  Int
+  resource    Resource @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+  content     String   @db.Text
+  embedding   Unsupported("vector(768)")?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
