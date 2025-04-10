@@ -38,13 +38,12 @@ export default function ChatBox() {
   const [hasChatted, setHasChatted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const chatContainerRef = useRef<HTMLDivElement>(null);
-  const { selectedService } = useService(); // Ambil service dari context
+  const { selectedService, services, getServiceRepresentation } = useService(); // Ambil service dari context
 
   // Auto-scroll ke pesan terbaru setiap kali messages diperbarui
   useEffect(() => {
     if (chatContainerRef.current) {
-      chatContainerRef.current.scrollTop =
-        chatContainerRef.current.scrollHeight;
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
     }
   }, [messages]);
 
@@ -119,10 +118,7 @@ export default function ChatBox() {
 
       {/* Bagian Chat Scrollable */}
       {hasChatted && (
-        <div
-          ref={chatContainerRef}
-          className="flex-1 overflow-y-auto p-4 bg-white"
-        >
+        <div ref={chatContainerRef} className="flex-1 overflow-y-auto p-4 bg-white">
           <div className="ml-2 mt-4 flex flex-col mr-4 gap-y-6">
             {messages.map((msg) => (
               <div
@@ -135,10 +131,7 @@ export default function ChatBox() {
               >
                 {/* Gunakan ReactMarkdown agar AI Response bisa dirender dengan format Markdown */}
                 {msg.sender === "assistant" ? (
-                  <ReactMarkdown
-                    remarkPlugins={[remarkGfm]}
-                    rehypePlugins={[rehypeRaw]}
-                  >
+                  <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]}>
                     {msg.content}
                   </ReactMarkdown>
                 ) : (
@@ -160,7 +153,13 @@ export default function ChatBox() {
         <div className="w-full flex flex-col">
           {/* Teks di atas container input */}
           <div className="mb-1">
-            <p className="text-sm text-gray-600">Service: {selectedService}</p>
+            <p className="text-sm text-gray-600">
+              Service:{" "}
+              {getServiceRepresentation(
+                selectedService,
+                selectedService.length === services.length
+              )}
+            </p>
           </div>
 
           {/* Container untuk input dan button */}
@@ -189,17 +188,12 @@ export default function ChatBox() {
               onClick={sendMessage}
               disabled={isLoading || !input.trim()}
             >
-              <Image
-                src="/icon-send.svg"
-                width={45}
-                height={45}
-                alt="Send Icon"
-              />
+              <Image src="/icon-send.svg" width={45} height={45} alt="Send Icon" />
             </button>
           </div>
           <p className="text-xs text-gray-600 text-center">
-          This AI Report Generator can make mistakes. Check important info.
-        </p>
+            This AI Report Generator can make mistakes. Check important info.
+          </p>
         </div>
       </div>
     </div>
