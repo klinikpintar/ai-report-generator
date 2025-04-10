@@ -89,7 +89,13 @@ Use this information if relevant to answer the user's question.`;
       status: 200,
       headers: { 'Content-Type': 'application/json' },
     });
-  } catch (error) {
-    return errorHandler.handleError(error);
+  } catch {
+    return new Response(
+      JSON.stringify({ error: 'Failed to generate response' }), 
+      {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' },
+      }
+    );
   }
 }

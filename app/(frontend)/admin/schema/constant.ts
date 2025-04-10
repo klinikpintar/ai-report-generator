@@ -23,29 +23,21 @@ export const dummyPlatforms: Platform[] = [
 export const dummyServices: Service[] = [
   {
     id: 1,
-    createdAt: new Date(),
-    modifiedAt: new Date(),
     name: "Reservasi Pasien",
     platform: dummyPlatforms[0],
   },
   {
     id: 2,
-    createdAt: new Date(),
-    modifiedAt: new Date(),
     name: "Pemesanan Online",
     platform: dummyPlatforms[1],
   },
   {
     id: 3,
-    createdAt: new Date(),
-    modifiedAt: new Date(),
     name: "Laporan Keuangan",
     platform: dummyPlatforms[2],
   },
   {
     id: 4,
-    createdAt: new Date(),
-    modifiedAt: new Date(),
     name: "Manajemen Inventaris",
     platform: dummyPlatforms[1],
   },
@@ -55,8 +47,6 @@ export const dummyServices: Service[] = [
 export const dummySchemas: Schema[] = [
   {
     id: 1,
-    createdAt: new Date(),
-    modifiedAt: new Date(),
     name: "reservasi_pelanggan",
     service: dummyServices[0],
     description: "Schema untuk menyimpan data pelanggan yang melakukan reservasi",
@@ -74,8 +64,6 @@ export const dummySchemas: Schema[] = [
   },
   {
     id: 2,
-    createdAt: new Date(),
-    modifiedAt: new Date(),
     name: "rekam_medis",
     service: dummyServices[1],
     description: "Schema untuk menyimpan rekam medis pasien",
@@ -92,8 +80,6 @@ export const dummySchemas: Schema[] = [
   },
   {
     id: 3,
-    createdAt: new Date(),
-    modifiedAt: new Date(),
     name: "laporan_keuangan",
     service: dummyServices[2],
     description: "Schema untuk menyimpan data laporan keuangan",
@@ -107,8 +93,6 @@ export const dummySchemas: Schema[] = [
   },
   {
     id: 4,
-    createdAt: new Date(),
-    modifiedAt: new Date(),
     name: "manajemen_stok",
     service: dummyServices[3],
     description: "Schema untuk menyimpan data stok barang",

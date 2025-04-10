@@ -4,9 +4,9 @@ import authService from "@backend/services/authService";
 import { ErrorResponse } from "@backend/utils/exceptions";
 
 export async function GET(req: Request) {
-  const authorization = req.headers.get("Authorization") ?? "";
+  const cookie = req.headers.get("Cookie") ?? "";
   try {
-    const token = extractToken(authorization);
+    const token = extractToken(cookie, "access_token");
     const user = await authService.verify(token);
 
     return NextResponse.json(
