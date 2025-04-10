@@ -78,8 +78,8 @@ export default function ExportModal({
   return (
     <Modal
       isVisible={isVisible}
+      isForm={false}
       onClose={onClose}
-      onClearForm={() => {}}
       title="Ekspor Laporan"
       subtitle="Pilih format laporan yang ingin anda ekspor"
     >
