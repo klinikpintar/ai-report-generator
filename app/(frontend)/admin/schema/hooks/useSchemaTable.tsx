@@ -28,7 +28,7 @@ export const useSchemaTable = () => {
 
       const params = {
         serviceIds: state.filters.service.selected.map((service) => service.id),
-        platformCodes: state.filters.platform.selected.map((platform) => platform.id),
+        platformCodes: state.filters.platform.selected,
       };
 
       const data = await fetchSchemas(params);

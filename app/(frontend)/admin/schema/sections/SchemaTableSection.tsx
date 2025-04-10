@@ -8,7 +8,7 @@ import { ConfirmationDialog } from "../../../components/ConfirmationDialog";
 import EditSchemaModal from "../components/EditSchemaModal";
 import { useSchemaActions } from "../hooks";
 import { useState } from "react";
-import { Schema } from "../types";
+import { Schema } from "@frontend/common/types";
 
 export const SchemaTableSection = () => {
   const [schemaToEdit, setSchemaToEdit] = useState<Schema | null>(null);
@@ -60,6 +60,7 @@ export const SchemaTableSection = () => {
             description: schemaToEdit.description || "",
             schemaText: schemaToEdit.schemaText,
             fileName: schemaToEdit.name,
+            serviceId: schemaToEdit.serviceId,
           }}
         />
       )}
@@ -79,7 +80,7 @@ export const SchemaTableSection = () => {
           subtitle=""
           onClose={() => setSchemaToView(null)}
           isVisible={true}
-          onClearForm={() => {}}
+          isForm={false}
         >
           <div className="p-8">
             <code className="block h-[500px] overflow-y-scroll">{schemaToView.schemaText}</code>

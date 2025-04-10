@@ -3,7 +3,7 @@
 import { useCallback, useEffect } from "react";
 import { useSchemaContext } from "../context/SchemaContext";
 import { fetchPlatforms, fetchServices } from "@frontend/admin/schema/utils/api";
-import type { Platform, Service } from "../types";
+import type { Platform, Service } from "@frontend/common/types";
 import { toast } from "react-toastify";
 
 export const useSchemaFilters = () => {
