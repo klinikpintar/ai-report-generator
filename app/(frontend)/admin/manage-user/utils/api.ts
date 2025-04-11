@@ -21,6 +21,7 @@ export const fetchUsers = async ({ page, limit, role }: FetchUsersParams) => {
       headers: {
         "Content-Type": "application/json",
       },
+      credentials: "include",
     });
 
     if (!response.ok) {
