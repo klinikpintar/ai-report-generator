@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useCallback, useEffect } from "react";
 import { useUserTableContext } from "../context/UserTableContext";
 import { fetchUsers } from "../utils/api";
 
@@ -6,10 +6,10 @@ import { fetchUsers } from "../utils/api";
 export const useFetchUser = () => {
   const { dispatch, state } = useUserTableContext();
 
-  const getSelectedRole = () => {
+  const getSelectedRole = useCallback(() => {
     const selectedRoles = state.filters.role.selected;
     return selectedRoles.length === 1 ? selectedRoles[0] : undefined;
-  }
+  }, [state.filters.role.selected]);
 
   const handleFetchUsers = async () => {
     dispatch({ type: "FETCH_START" });

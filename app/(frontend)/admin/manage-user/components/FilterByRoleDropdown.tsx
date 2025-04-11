@@ -1,11 +1,28 @@
 "use client";
 import { FilterDropdown } from "@frontend/components/FilterDropdown";
-import React from "react";
+import React, { useEffect } from "react";
 import { UserRole } from "../types/user";
 import { useUserTableContext } from "../context/UserTableContext";
+import { useRouter } from "next/navigation";
 
 export const FilterByRoleDropdown = () => {
   const { dispatch, state } = useUserTableContext();
+  const router = useRouter();
+
+  const writeRoleToUrl = (role: UserRole) => {
+    const params = new URLSearchParams(window.location.search);
+    if (role) {
+      params.set("role", role);
+    } else {
+      params.delete("role");
+    }
+    router.push(`/admin/manage-user?${params.toString()}`);
+  };
+
+  const parseRoleFromUrl = () => {
+    const role = new URLSearchParams(window.location.search).get("role");
+    return role ? (role as UserRole) : null;
+  };
 
   const handleRoleChange = (selectedRoles: UserRole[]) => {
     dispatch({
@@ -17,7 +34,16 @@ export const FilterByRoleDropdown = () => {
         },
       },
     });
+
+    writeRoleToUrl(selectedRoles[0] || null); // Update the URL with the selected role
   };
+
+  useEffect(() => {
+    const role = parseRoleFromUrl();
+    if (role) {
+      handleRoleChange([role]);
+    }
+  }, []);
 
   const displayRole = (role: UserRole) => {
     switch (role) {
