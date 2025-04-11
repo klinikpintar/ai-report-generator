@@ -1,12 +1,14 @@
+"use client";
 import React from "react";
 import { UserManagementSection } from "@frontend/admin/manage-user/sections/userManagementSection";
 import { AddAccountButton } from "@frontend/admin/manage-user/components/addAccountButton";
 import { UserTable } from "./components/UserTable";
 import { FilterByRoleDropdown } from "./components/FilterByRoleDropdown";
+import { UserTableProvider } from "./context/UserTableContext";
 
 const ManageUserPage = () => {
   return (
-    <>
+    <UserTableProvider>
       <div className="px-8">
         <UserManagementSection />
         <section className="container max-w-screen-xl mx-auto mt-6 flex flex-col items-center justify-center space-y-10">
@@ -17,7 +19,7 @@ const ManageUserPage = () => {
           <AddAccountButton />
         </section>
       </div>
-    </>
+    </UserTableProvider>
   );
 };
 

@@ -5,13 +5,61 @@ import { User, UserRole } from "../types/user";
 import { Chip } from "@/components/ui/chip";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { mockUsers } from "../constants";
+import { useUserTableContext } from "../context/UserTableContext";
+import { fetchUsers } from "../utils/api";
+import { useRouter } from "next/navigation";
+import { toast } from "react-toastify";
 
-interface UserTableProps {
-  users?: User[];
-}
+export const UserTable = () => {
+  const { dispatch, state } = useUserTableContext();
+  const router = useRouter();
 
-export const UserTable = ({ users = mockUsers }: UserTableProps) => {
+  const handleFetchUsers = async (page: number = 1) => {
+    dispatch({ type: "FETCH_START" });
+    try {
+      const response = await fetchUsers({ limit: 5, page: page });
+      dispatch({
+        type: "FETCH_SUCCESS",
+        payload: { data: response.data, lastPage: response.pagination.total_pages },
+      });
+    } catch {
+      dispatch({ type: "FETCH_ERROR", payload: "Gagal memuat data pengguna" });
+    }
+  };
+
+  const handlePageChange = async (page: number) => {
+    // Update page in state (used for pagination component)
+    dispatch({ type: "SET_PAGE", payload: page });
+
+    // Update page in URL (used for browser navigation)
+    const params = new URLSearchParams();
+    params.append("page", page.toString());
+    router.push(`/admin/manage-user?${params.toString()}`);
+
+    // Refresh data
+    await handleFetchUsers(page);
+  };
+
+  const parsePageFromUrl = () => {
+    const page = new URLSearchParams(window.location.search).get("page");
+    return page ? parseInt(page) : 1;
+  }
+
+  React.useEffect(() => {
+    const page = parsePageFromUrl();
+    dispatch({ type: "SET_PAGE", payload: page });
+  }, []);
+
+  React.useEffect(() => {
+    handleFetchUsers(state.pagination.currentPage);
+  }, [state.pagination.currentPage]);
+
+  React.useEffect(() => {
+    if (state.error) {
+      toast.error(state.error);
+    }
+  }, [state.error]);
+
   const getRoleColor = (role: UserRole) => {
     switch (role) {
       case "BUSINESS_ANALYST":
@@ -94,17 +142,18 @@ export const UserTable = ({ users = mockUsers }: UserTableProps) => {
       ),
     },
   ];
+
   return (
     <div className="w-full flex flex-col gap-4" data-testid="schema-table">
       <GenericTable<User>
         columns={columns}
-        data={users}
-        isLoading={false}
+        data={state.data}
+        isLoading={state.isLoading}
         emptyMessage="Tidak ada user ditemukan"
         loadingMessage="Sedang memuat..."
         keyExtractor={(user) => user.id}
       />
-      <TablePagination currentPage={1} lastPage={1} onPageChange={() => {}} />
+      <TablePagination {...state.pagination} onPageChange={handlePageChange} />
     </div>
   );
 };
