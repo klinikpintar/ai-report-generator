@@ -6,53 +6,16 @@ import { Chip } from "@/components/ui/chip";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useUserTableContext } from "../context/UserTableContext";
-import { fetchUsers } from "../utils/api";
-import { useRouter } from "next/navigation";
+
 import { toast } from "react-toastify";
+import { useFetchUser } from "../hooks/useFetchUser";
+import { useUserTablePagination } from "../hooks/useUserTablePagination";
 
 export const UserTable = () => {
-  const { dispatch, state } = useUserTableContext();
-  const router = useRouter();
+  const { state } = useUserTableContext();
 
-  const handleFetchUsers = async (page: number = 1) => {
-    dispatch({ type: "FETCH_START" });
-    try {
-      const response = await fetchUsers({ limit: 5, page: page });
-      dispatch({
-        type: "FETCH_SUCCESS",
-        payload: { data: response.data, lastPage: response.pagination.total_pages },
-      });
-    } catch {
-      dispatch({ type: "FETCH_ERROR", payload: "Gagal memuat data pengguna" });
-    }
-  };
-
-  const handlePageChange = async (page: number) => {
-    // Update page in state (used for pagination component)
-    dispatch({ type: "SET_PAGE", payload: page });
-
-    // Update page in URL (used for browser navigation)
-    const params = new URLSearchParams();
-    params.append("page", page.toString());
-    router.push(`/admin/manage-user?${params.toString()}`);
-
-    // Refresh data
-    await handleFetchUsers(page);
-  };
-
-  const parsePageFromUrl = () => {
-    const page = new URLSearchParams(window.location.search).get("page");
-    return page ? parseInt(page) : 1;
-  }
-
-  React.useEffect(() => {
-    const page = parsePageFromUrl();
-    dispatch({ type: "SET_PAGE", payload: page });
-  }, []);
-
-  React.useEffect(() => {
-    handleFetchUsers(state.pagination.currentPage);
-  }, [state.pagination.currentPage]);
+  const { handleFetchUsers } = useFetchUser();
+  const { handlePageChange } = useUserTablePagination(handleFetchUsers);
 
   React.useEffect(() => {
     if (state.error) {
@@ -144,7 +107,10 @@ export const UserTable = () => {
   ];
 
   return (
-    <div className="w-full flex flex-col gap-4" data-testid="schema-table">
+    <div
+      className="min-w-5xl overflow-x-scroll w-full flex flex-col gap-4"
+      data-testid="schema-table"
+    >
       <GenericTable<User>
         columns={columns}
         data={state.data}
