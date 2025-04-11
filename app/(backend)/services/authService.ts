@@ -1,5 +1,10 @@
 import jwt from "jsonwebtoken";
-import { IAuthService, Payload } from "../interfaces/IAuthService";
+import {
+  IAuthService,
+  Payload,
+  IGenerateToken,
+  IVerifyToken,
+} from "../interfaces/IAuthService";
 import config from "../config";
 import prisma from "@/lib/prisma";
 import bcrypt from "bcryptjs";
@@ -11,7 +16,7 @@ import {
   UnauthorizedResponse,
 } from "../utils/exceptions";
 
-class AuthService implements IAuthService {
+class AuthService implements IAuthService, IGenerateToken, IVerifyToken {
   async login(
     email: string,
     password: string
@@ -137,12 +142,14 @@ class AuthService implements IAuthService {
     response.cookies.set("access_token", accessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
       path: "/",
       maxAge: accessToken ? config.JWT_ACCESS_EXPIRES : 0,
     });
     response.cookies.set("refresh_token", refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
       path: "/",
       maxAge: refreshToken ? config.JWT_REFRESH_EXPIRES : 0,
     });

@@ -3,10 +3,11 @@ import React from "react";
 interface FormInputProps {
   label: string;
   name: string;
-  type?: "text" | "password" | "textarea";
+  type?: "text" | "password" | "textarea" | "email";
   value: string;
   placeholder?: string;
   required?: boolean;
+  error?: string;
   onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
 }
 
@@ -17,6 +18,7 @@ const FormInput: React.FC<FormInputProps> = ({
   value,
   placeholder = "",
   required = false,
+  error,
   onChange,
 }) => {
   return (
@@ -34,6 +36,9 @@ const FormInput: React.FC<FormInputProps> = ({
         placeholder={placeholder}
         required={required}
       />
+      {error && (
+        <p className="mt-1 text-sm text-red-500" role="alert">{error}</p>
+      )}
     </div>
   );
 };

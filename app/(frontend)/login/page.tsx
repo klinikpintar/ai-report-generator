@@ -27,7 +27,6 @@ const LoginPage = () => {
 
     try {
       const { success } = await FeAuthService.login(email, password);
-      console.log(success)
 
       if (success) {
         setEmailContext(email);
@@ -40,6 +39,7 @@ const LoginPage = () => {
       setError("Something went wrong. Please try again.");
     } finally {
       setLoading(false);
+      isSubmitting.current = false;
     }
   };
 
@@ -56,7 +56,7 @@ const LoginPage = () => {
         <p className="text-center text-base mb-3 text-[18px]">Klinik Pintar</p>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} method="post" className="space-y-4">
           <FormInput
             label="Email"
             name="email"

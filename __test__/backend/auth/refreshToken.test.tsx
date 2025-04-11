@@ -118,7 +118,7 @@ describe("Auth API - Refresh Token", () => {
     const json = await response.json();
 
     expect(response.status).toBe(401);
-    expect(json).toHaveProperty("message", "No refresh token");
+    expect(json).toHaveProperty("message", "Unauthorized");
   });
 
   // ❌ Unhappy Path - Refresh Token Expired
