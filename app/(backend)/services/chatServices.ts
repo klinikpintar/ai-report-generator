@@ -200,11 +200,6 @@ export class ResponseFormatter {
       warnings.push('Requested schema(s) not found or had no content');
     }
     
-    // Add resource warning if needed
-    if (resourceIds && resourceIds.length > 0 && !relevantContentFound) {
-      warnings.push(`No relevant content found for resource IDs: ${resourceIds.join(', ')}`);
-    }
-    
     return {
       messageId: `msg-${Date.now()}`,
       userPrompt: messages[messages.length - 1].content,
@@ -220,8 +215,6 @@ export class ResponseFormatter {
         ...(schemaId !== undefined && { schemaId }),
         ...(schemaIncluded !== undefined && { schemaIncluded }),
         ...(schemaName && { schemaName }),
-        // Include resourceIds in response metadata
-        ...(resourceIds?.length && { resourceIds }),
         // Only include warnings if there are any
         ...(warnings.length > 0 && { warnings })
       },

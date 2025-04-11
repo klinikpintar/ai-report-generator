@@ -80,11 +80,19 @@ export default function ChatBox() {
 
     try {
       const schemaIds = await getRelatedSchemaIds(selectedService);
+      
+      const apiMessages = messages.map(msg => ({
+        role: msg.sender === "user" ? "user" : "assistant",
+        content: msg.content
+      }));
+      
+      apiMessages.push({ role: "user", content: input.trim() });
+      
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          messages: [{ role: "user", content: input.trim() }],
+          messages: apiMessages,
           schemaId: schemaIds,
         }),
       });
