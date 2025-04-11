@@ -31,8 +31,8 @@ jest.mock('@/lib/prisma', () => ({
 }));
 
 describe('Schema Embedding Utilities', () => {
-  // Add this at the top of the test suite to suppress all console.error
-  let originalConsoleError;
+  // Add proper type annotation to fix the TypeScript error
+  let originalConsoleError: typeof console.error;
   
   beforeAll(() => {
     // Store original implementation

@@ -189,8 +189,6 @@ export class ResponseFormatter {
     schemaId?: string | string[],
     schemaIncluded?: boolean,
     schemaName?: string | null,
-    resourceIds?: number[],
-    relevantContentFound?: boolean
   ): ApiResponse {
     // Create warnings array
     const warnings: string[] = [];
