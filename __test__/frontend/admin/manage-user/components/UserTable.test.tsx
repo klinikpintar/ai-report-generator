@@ -1,27 +1,34 @@
 import { UserTable } from "@frontend/admin/manage-user/components/UserTable";
 import { User } from "@frontend/admin/manage-user/types/user";
 import { render, screen } from "@testing-library/react";
+import { adminUser, businessAnalystUser } from "@/__mocks__/user-data";
+import { UserTableProvider } from "@frontend/admin/manage-user/context/UserTableContext";
+import { fetchUsers } from "@frontend/admin/manage-user/utils/api";
+import { ToastContainer } from "react-toastify";
 
-const adminUser: User = {
-  id: "1d305868-e285-44df-8fb4-9e24ad73f0a1",
-  email: "maya@gmail.com",
-  name: "Maya",
-  role: "ADMIN",
-  isActive: true,
-};
+const mockUsers: User[] = [adminUser, businessAnalystUser];
 
-const businessAnalystUser: User = {
-  id: "2d305868-e285-44df-8fb4-9e24ad73f0a2",
-  email: "rudi@gmail.com",
-  name: "Rudi",
-  role: "BUSINESS_ANALYST",
-  isActive: false,
-};
+jest.mock("@frontend/admin/manage-user/utils/api", () => ({
+  fetchUsers: jest.fn(() => Promise.resolve({ data: mockUsers, pagination: { total_pages: 1 } })),
+}));
+
+// mock the router
+jest.mock("next/navigation", () => ({
+  useRouter: jest.fn(() => ({
+    push: jest.fn(),
+  })),
+}));
 
 describe("UserTable", () => {
   const setup = () => {
-    const users: User[] = [adminUser, businessAnalystUser];
-    render(<UserTable users={users} />);
+    render(
+      <>
+        <ToastContainer />
+        <UserTableProvider>
+          <UserTable />
+        </UserTableProvider>
+      </>
+    );
   };
 
   beforeEach(() => {
@@ -51,7 +58,8 @@ describe("UserTable", () => {
     });
   });
 
-  describe("UserTable rows", () => {
+  describe("UserTable data", () => {
+    // Positive test cases
     it("should render the user full name", async () => {
       const nameCell = await screen.findByText(adminUser.name);
       expect(nameCell).toBeInTheDocument();
@@ -85,6 +93,30 @@ describe("UserTable", () => {
       const deleteButtons = await screen.findAllByRole("button", { name: /Hapus/i });
       expect(deleteButtons).toHaveLength(2);
       expect(deleteButtons[0]).toBeInTheDocument();
+    });
+
+    // Negative test cases
+    it("should display error message when fetching users fails", async () => {
+      (fetchUsers as jest.Mock).mockRejectedValueOnce(new Error("Failed to fetch users"));
+      setup();
+      const errorMessage = await screen.findByText("Gagal memuat data pengguna");
+      expect(errorMessage).toBeInTheDocument();
+    });
+  });
+
+  describe("UserTable pagination", () => {
+    it("should render pagination component", async () => {
+      const prevButton = await screen.findByRole("button", { name: /Sebelumnya/i });
+      const nextButton = await screen.findByRole("button", { name: /Selanjutnya/i });
+      expect(prevButton).toBeInTheDocument();
+      expect(nextButton).toBeInTheDocument();
+    });
+
+    describe("UserTable pagination with URL query", () => {
+      it("should activate page link 1 when query page is not set", async () => {
+        const firstPageLink = await screen.findByRole("link", { name: "1" });
+        expect(firstPageLink).toHaveAttribute("aria-current", "page");
+      });
     });
   });
 });
