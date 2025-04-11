@@ -3,14 +3,14 @@ import Navbar from "../../components/navbar";
 
 const Layout = ({ children }: { children: React.ReactNode }) => {
   return (
-    <main className="min-h-screen">
-      <div className="flex flex-col bg-white pt-14">
-        <Navbar />
+    <>
+      <Navbar />
+      <div className="w-screen flex flex-col bg-white pt-14">
         <div className="mt-5">
           <Suspense fallback={<div>Loading...</div>}>{children}</Suspense>
         </div>
       </div>
-    </main>
+    </>
   );
 };
 
