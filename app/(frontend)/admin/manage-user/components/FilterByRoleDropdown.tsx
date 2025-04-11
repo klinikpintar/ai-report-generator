@@ -21,7 +21,11 @@ export const FilterByRoleDropdown = () => {
 
   const parseRoleFromUrl = () => {
     const role = new URLSearchParams(window.location.search).get("role");
-    return role ? (role as UserRole) : null;
+    if (!role) return null;
+    
+    // Validate that the role is one of the valid UserRole values
+    const isValidRole = Object.values(UserRole).includes(role as UserRole);
+    return isValidRole ? (role as UserRole) : null;
   };
 
   const handleRoleChange = (selectedRoles: UserRole[]) => {
