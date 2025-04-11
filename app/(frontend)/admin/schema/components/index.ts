@@ -1,3 +1,2 @@
-export * from "./schema-table";
-export * from "./service-filter";
-export * from "./platform-filter";
+export * from "./SchemaTable";
+export * from "./SchemaFilters";
