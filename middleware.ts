@@ -4,7 +4,7 @@ import type { NextRequest } from "next/server";
 export async function verifyAccessToken(req: NextRequest, accessToken: string) {
   try {
     const apiResponse = await fetch(
-      `${req.nextUrl.origin}/api/auth/token/verify`,
+      `${process.env.NEXT_PUBLIC_BASE_URL}/api/auth/token/verify`,
       {
         method: "GET",
         headers: {
@@ -27,7 +27,7 @@ export async function verifyAccessToken(req: NextRequest, accessToken: string) {
 async function refreshAccessToken(req: NextRequest, refreshToken: string) {
   try {
     const apiResponse = await fetch(
-      `${req.nextUrl.origin}/api/auth/token/refresh`,
+      `${process.env.NEXT_PUBLIC_BASE_URL}/api/auth/token/refresh`,
       {
         method: "POST",
         headers: {
@@ -66,6 +66,7 @@ export async function middleware(req: NextRequest) {
   let decodedAccess = accessToken
     ? await verifyAccessToken(req, accessToken)
     : null;
+  console.log("Decoded Access Token:", decodedAccess);
 
   if (!decodedAccess && refreshToken) {
     accessToken = await refreshAccessToken(req, refreshToken);
