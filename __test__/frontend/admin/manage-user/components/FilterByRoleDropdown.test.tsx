@@ -1,10 +1,19 @@
 import { FilterByRoleDropdown } from "@frontend/admin/manage-user/components/FilterByRoleDropdown";
+import { UserTableProvider } from "@frontend/admin/manage-user/context/UserTableContext";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
+jest.mock("next/navigation", () => ({
+  useRouter: jest.fn(),
+}));
+
 describe("FilterByRoleDropdown", () => {
   const setup = () => {
-    render(<FilterByRoleDropdown />);
+    render(
+      <UserTableProvider>
+        <FilterByRoleDropdown />
+      </UserTableProvider>
+    );
   };
 
   const openDropdown = async () => {
