@@ -9,7 +9,7 @@ export const FilterByRoleDropdown = () => {
   const { dispatch, state } = useUserTableContext();
   const router = useRouter();
 
-  const writeRoleToUrl = (role: UserRole) => {
+  const writeRoleToUrl = (role: UserRole | null) => {
     const params = new URLSearchParams(window.location.search);
     if (role) {
       params.set("role", role);
@@ -35,7 +35,8 @@ export const FilterByRoleDropdown = () => {
       },
     });
 
-    writeRoleToUrl(selectedRoles[0] || null); // Update the URL with the selected role
+    const selectedRole = selectedRoles.length === 1 ? selectedRoles[0] : null;
+    writeRoleToUrl(selectedRole); // Update the URL with the selected role
   };
 
   useEffect(() => {
