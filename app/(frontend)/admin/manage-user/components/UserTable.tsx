@@ -114,7 +114,6 @@ export const UserTable = () => {
           data={state.data}
           isLoading={state.isLoading}
           emptyMessage="Tidak ada user ditemukan"
-          loadingMessage="Sedang memuat..."
           keyExtractor={(user) => user.id}
         />
       </div>

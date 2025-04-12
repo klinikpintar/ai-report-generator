@@ -109,7 +109,6 @@ export const SchemaTable: React.FC<SchemaTableProps> = ({
           data={schemas}
           isLoading={isLoading}
           emptyMessage="Tidak ada skema yang ditemukan"
-          loadingMessage="Loading..."
           keyExtractor={(schema) => schema.id}
         />
       </div>
