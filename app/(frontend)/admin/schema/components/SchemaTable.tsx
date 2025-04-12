@@ -37,7 +37,7 @@ export const SchemaTable: React.FC<SchemaTableProps> = ({
     {
       key: "name",
       header: "Nama Skema",
-      renderCell: (schema) => schema.name,
+      renderCell: (schema) => <span className="text-nowrap">{schema.name}</span>,
     },
     {
       key: "platform",
@@ -45,7 +45,7 @@ export const SchemaTable: React.FC<SchemaTableProps> = ({
       renderCell: (schema) => (
         <Chip
           variant="default"
-          className="w-full cursor-default text-white"
+          className="w-full cursor-default text-white text-nowrap"
           style={{ backgroundColor: getPlatformColor(schema.service.platformCode) }}
         >
           {schema.service.platformCode}
@@ -55,7 +55,7 @@ export const SchemaTable: React.FC<SchemaTableProps> = ({
     {
       key: "service",
       header: "Service",
-      renderCell: (schema) => schema.service?.name,
+      renderCell: (schema) => <span className="text-nowrap">{schema.service.name}</span> ,
     },
     {
       key: "file",
@@ -102,21 +102,22 @@ export const SchemaTable: React.FC<SchemaTableProps> = ({
   ];
 
   return (
-    <div className="flex flex-col gap-4" data-testid="schema-table">
-      <GenericTable<Schema>
-        columns={columns}
-        data={schemas}
-        isLoading={isLoading}
-        emptyMessage="Tidak ada skema yang ditemukan"
-        loadingMessage="Loading..."
-        keyExtractor={(schema) => schema.id}
-      />
-
+    <>
+      <div className="w-full overflow-x-auto" data-testid="schema-table">
+        <GenericTable<Schema>
+          columns={columns}
+          data={schemas}
+          isLoading={isLoading}
+          emptyMessage="Tidak ada skema yang ditemukan"
+          loadingMessage="Loading..."
+          keyExtractor={(schema) => schema.id}
+        />
+      </div>
       <TablePagination
         currentPage={currentPage}
         lastPage={lastPage}
         onPageChange={handlePageChange}
       />
-    </div>
+    </>
   );
 };

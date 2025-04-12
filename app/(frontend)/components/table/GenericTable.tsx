@@ -37,7 +37,7 @@ export function GenericTable<T>({
       <TableHeader>
         <TableRow>
           {columns.map((column) => (
-            <TableHead key={column.key} style={{ width: column.width }}>
+            <TableHead key={column.key} style={{ width: column.width }} className="text-nowrap">
               {column.header}
             </TableHead>
           ))}
