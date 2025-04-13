@@ -69,7 +69,7 @@ describe("GenericTable Component", () => {
     expect(editButtons).toHaveLength(3);
   });
 
-  it("should render loading message when isLoading is true", () => {
+  it("should render loading skeleton when isLoading is true", () => {
     render(
       <GenericTable
         {...createDefaultProps({
@@ -79,7 +79,8 @@ describe("GenericTable Component", () => {
       />
     );
 
-    expect(screen.getByText("Loading...")).toBeInTheDocument();
+    const skeletons = screen.getAllByTestId("skeleton");
+    expect(skeletons.length).toBeGreaterThan(0);
   });
 
   it("should render empty message when data is empty and not loading", () => {
@@ -95,19 +96,6 @@ describe("GenericTable Component", () => {
     expect(screen.getByText("No data found")).toBeInTheDocument();
   });
 
-  it("should render custom loading message when provided", () => {
-    render(
-      <GenericTable
-        {...createDefaultProps({
-          isLoading: true,
-          data: [],
-          loadingMessage: "Custom loading message",
-        })}
-      />
-    );
-
-    expect(screen.getByText("Custom loading message")).toBeInTheDocument();
-  });
 
   it("should render custom empty message when provided", () => {
     render(

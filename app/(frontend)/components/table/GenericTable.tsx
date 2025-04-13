@@ -7,6 +7,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export interface GenericTableColumn<T> {
   key: string;
@@ -20,7 +21,6 @@ export interface GenericTableProps<T> {
   data: T[];
   isLoading: boolean;
   emptyMessage?: string;
-  loadingMessage?: string;
   keyExtractor: (item: T) => string | number;
 }
 
@@ -29,7 +29,6 @@ export function GenericTable<T>({
   data,
   isLoading,
   emptyMessage = "No data found",
-  loadingMessage = "Loading...",
   keyExtractor,
 }: GenericTableProps<T>) {
   return (
@@ -37,20 +36,32 @@ export function GenericTable<T>({
       <TableHeader>
         <TableRow>
           {columns.map((column) => (
-            <TableHead key={column.key} style={{ width: column.width }}>
+            <TableHead key={column.key} style={{ width: column.width }} className="text-nowrap">
               {column.header}
             </TableHead>
           ))}
         </TableRow>
       </TableHeader>
       <TableBody>
-        {data.length === 0 ? (
+        {isLoading &&
+          [...Array(5)].map((_, i) => (
+            <TableRow key={`loader-${i}`}>
+              {columns.map((column) => (
+                <TableCell key={column.key} style={{ width: column.width }} className="h-12">
+                  <Skeleton className="h-4 w-4/5" />
+                </TableCell>
+              ))}
+            </TableRow>
+          ))}
+        {!isLoading && data.length === 0 && (
           <TableRow>
             <TableCell colSpan={columns.length} className="text-center">
-              {isLoading ? loadingMessage : emptyMessage}
+              {emptyMessage}
             </TableCell>
           </TableRow>
-        ) : (
+        )}
+        {!isLoading &&
+          data.length > 0 &&
           data.map((item) => (
             <TableRow key={keyExtractor(item)}>
               {columns.map((column) => (
@@ -62,8 +73,7 @@ export function GenericTable<T>({
                 </TableCell>
               ))}
             </TableRow>
-          ))
-        )}
+          ))}
       </TableBody>
     </Table>
   );
