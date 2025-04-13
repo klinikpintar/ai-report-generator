@@ -47,6 +47,17 @@ model Schema {
   createdAt   DateTime @default(now())
   serviceId   String   @db.Uuid
   service     Service  @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  embeddings  SchemaEmbedding[]
+}
+
+model SchemaEmbedding {
+  id        Int      @id @default(autoincrement())
+  schemaId  Int
+  schema    Schema   @relation(fields: [schemaId], references: [id], onDelete: Cascade)
+  content   String   @db.Text
+  embedding Unsupported("vector(768)")?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Service {
@@ -56,23 +67,4 @@ model Service {
   createdAt     DateTime @default(now())
 
   schemas       Schema[]
-}
-
-model Resource {
-  id        Int      @id @default(autoincrement())
-  title     String
-  content   String   @db.Text
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  embeddings Embedding[]
-}
-
-model Embedding {
-  id          Int      @id @default(autoincrement())
-  resourceId  Int
-  resource    Resource @relation(fields: [resourceId], references: [id], onDelete: Cascade)
-  content     String   @db.Text
-  embedding   Unsupported("vector(768)")?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
 }
