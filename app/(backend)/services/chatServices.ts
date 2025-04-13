@@ -2,6 +2,7 @@ import { deepseek } from '@ai-sdk/deepseek';
 import { google } from '@ai-sdk/google';
 import { generateText, CoreMessage } from 'ai';
 import prisma from '@/lib/prisma';
+import { AI_INSTRUCTION } from '@backend/constant/ai-instruction';
 
 // Types and interfaces
 export interface Message {
@@ -61,6 +62,7 @@ export class DeepseekProvider implements ModelProvider {
     return generateText({
       model: deepseek('deepseek-chat'),
       messages: sdkMessages,
+      system: AI_INSTRUCTION,
     });
   }
 
@@ -76,6 +78,7 @@ export class GeminiProvider implements ModelProvider {
     return generateText({
       model: google('gemini-2.0-flash'),
       messages: sdkMessages,
+      system: AI_INSTRUCTION,
     });
   }
 
