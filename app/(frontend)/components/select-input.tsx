@@ -13,8 +13,7 @@ const SelectInput: React.FC<SelectInputProps> = ({
   label,
   name,
   options,
-  value,
-  defaultValue = "",
+  value = "",
   onChange,
 }) => {
   return (
@@ -28,7 +27,6 @@ const SelectInput: React.FC<SelectInputProps> = ({
       <select
         id={name}
         name={name}
-        defaultValue={defaultValue} // Tidak dikontrol oleh formData
         value={value}
         onChange={onChange}
         className="bg-[#00B0EB] text-white text-[16.44px] font-semibold rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-3 cursor-pointer"
