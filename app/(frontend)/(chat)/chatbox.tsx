@@ -8,8 +8,9 @@ import rehypeRaw from "rehype-raw";
 import Dropdown from "./components/dropdown";
 import { useService } from "./context/serviceContext"; // Import context
 import Bantuan from "./components/bantuan";
-import { Service, Schema } from "@frontend/common/types";
+import type { Service, Schema } from "@frontend/common/types";
 import ExportModal from "@/app/(frontend)/(chat)/components/ekspor/modal";
+import { CodeBlock } from "./components/CodeBlock";
 
 // Definisikan tipe data pesan
 interface Message {
@@ -80,14 +81,14 @@ export default function ChatBox() {
 
     try {
       const schemaIds = await getRelatedSchemaIds(selectedService);
-      
-      const apiMessages = messages.map(msg => ({
+
+      const apiMessages = messages.map((msg) => ({
         role: msg.sender === "user" ? "user" : "assistant",
         content: msg.content
       }));
-      
+
       apiMessages.push({ role: "user", content: input.trim() });
-      
+
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -163,7 +164,41 @@ export default function ChatBox() {
                   }`}
                 >
                   {msg.sender === "assistant" ? (
-                    <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]}>
+                    <ReactMarkdown
+                      remarkPlugins={[remarkGfm]}
+                      rehypePlugins={[rehypeRaw]}
+                      components={{
+                        h1: (props) => <h1 className="text-2xl font-bold my-4" {...props} />,
+                        h2: (props) => <h2 className="text-xl font-bold my-3" {...props} />,
+                        h3: (props) => <h3 className="text-lg font-bold my-2" {...props} />,
+                        p: (props) => <p className="my-2" {...props} />,
+                        ul: (props) => <ul className="list-disc pl-5 my-2" {...props} />,
+                        ol: (props) => <ol className="list-decimal pl-5 my-2" {...props} />,
+                        li: (props) => <li className="my-1" {...props} />,
+                        code: ({
+                          inline,
+                          className,
+                          children,
+                          ...props
+                        }: {
+                          inline?: boolean;
+                          className?: string;
+                          children?: React.ReactNode;
+                        }) => {
+                          const match = /language-(\w+)/.exec(className || "");
+                          return !inline && match ? (
+                            <CodeBlock
+                              language={match[1]}
+                              value={String(children).replace(/\n$/, "")}
+                            />
+                          ) : (
+                            <code className="bg-gray-100 px-1 rounded text-sm" {...props}>
+                              {children}
+                            </code>
+                          );
+                        },
+                      }}
+                    >
                       {msg.content}
                     </ReactMarkdown>
                   ) : (
