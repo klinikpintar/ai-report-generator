@@ -1,6 +1,7 @@
 import schemaService from '@backend/services/schemaService';
 import prisma from '@/lib/prisma';
 import { Schema } from '@prisma/client';
+import { generateSchemaEmbeddings } from '@/lib/schema-embedding';
 
 jest.mock('@/lib/prisma', () => ({
   schema: {
@@ -9,6 +10,11 @@ jest.mock('@/lib/prisma', () => ({
     update: jest.fn(),
     delete: jest.fn(),
   },
+}));
+
+// Add mock for schema-embedding
+jest.mock('@/lib/schema-embedding', () => ({
+  generateSchemaEmbeddings: jest.fn(),
 }));
 
 describe('SchemaService Unit Tests', () => {
@@ -122,5 +128,85 @@ describe('SchemaService Unit Tests', () => {
   
     expect(result).toEqual(filteredSchemas);
   });
-  
+
+  it('should handle embedding generation error during schema creation', async () => {
+    const mockSchema = {
+      id: 3,
+      name: 'Error Test Schema',
+      description: 'Error Test Description',
+      schemaText: 'CREATE TABLE test_error (id INT);',
+      serviceId: 'f882f7f4-3a25-4fe5-88c9-113778eed603',
+      createdAt: new Date(),
+    };
+    
+    (prisma.schema.create as jest.Mock).mockResolvedValue(mockSchema);
+    (generateSchemaEmbeddings as jest.Mock).mockRejectedValue(
+      new Error('Embedding generation failed')
+    );
+    
+    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
+    
+    const result = await schemaService.createSchema({
+      name: 'Error Test Schema',
+      description: 'Error Test Description',
+      schemaText: 'CREATE TABLE test_error (id INT);',
+      serviceId: 'f882f7f4-3a25-4fe5-88c9-113778eed603',
+    });
+    
+    expect(generateSchemaEmbeddings).toHaveBeenCalledWith({
+      id: mockSchema.id,
+      name: mockSchema.name,
+      description: mockSchema.description,
+      schemaText: mockSchema.schemaText
+    });
+    
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      `Error generating embeddings for schema ${mockSchema.id}:`,
+      expect.any(Error)
+    );
+    
+    expect(result).toEqual(mockSchema);
+    
+    consoleErrorSpy.mockRestore();
+  });
+
+  it('should handle embedding generation error during schema update', async () => {
+    const mockUpdatedSchema = {
+      id: 4,
+      name: 'Update Schema',
+      description: 'Update Description',
+      schemaText: 'CREATE TABLE updated (id INT);',
+      serviceId: 'f882f7f4-3a25-4fe5-88c9-113778eed603',
+      createdAt: new Date(),
+    };
+    
+    (prisma.schema.update as jest.Mock).mockResolvedValue(mockUpdatedSchema);
+    (generateSchemaEmbeddings as jest.Mock).mockRejectedValue(
+      new Error('Embedding update failed')
+    );
+    
+    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
+    
+    const result = await schemaService.updateSchema({
+      id: 4,
+      schemaText: 'CREATE TABLE updated (id INT);',
+    });
+
+    expect(prisma.schema.update).toHaveBeenCalled();
+    expect(generateSchemaEmbeddings).toHaveBeenCalledWith({
+      id: mockUpdatedSchema.id,
+      name: mockUpdatedSchema.name,
+      description: mockUpdatedSchema.description,
+      schemaText: mockUpdatedSchema.schemaText
+    });
+    
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      `Error updating embeddings for schema ${mockUpdatedSchema.id}:`,
+      expect.any(Error)
+    );
+    
+    expect(result).toEqual(mockUpdatedSchema);
+    
+    consoleErrorSpy.mockRestore();
+  });
 });

@@ -1,9 +1,9 @@
-import { dummyPlatforms } from "../constant"
-import { Schema } from "../types"
+import { platforms } from "../constant"
+import { Platform, Schema, Service } from "@frontend/common/types"
 
 export interface FetchSchemasParams {
-  serviceIds?: number[]
-  platformIds?: number[]
+  serviceIds?: Service['id'][]
+  platformCodes?: Platform[]
   [key: string]: unknown
 }
 
@@ -17,26 +17,24 @@ export async function fetchSchemas(params: FetchSchemasParams = {}) {
     }
   });
 
-  const response = await fetch(`${window.location.origin}/api/schema?${queryParams.toString()}`);
+  const response = await fetch(`/api/schema?${queryParams.toString()}`);
   const data = await response.json() as Schema[];
 
-  const schemas = data.map((schema, index) => ({
+  const schemas = data.map((schema) => ({
     ...schema,
-    platform: dummyPlatforms[index % dummyPlatforms.length],
   })) as Schema[];
 
   return schemas;
 }
 
 export async function fetchServices() {
-  const response = await fetch(`${window.location.origin}/api/service`);
+  const response = await fetch(`/api/service`);
 
   const services = await response.json();
   return services;
 }
 
 export async function fetchPlatforms() {
-  const platforms = dummyPlatforms
   return Promise.resolve(platforms)
 }
 
