@@ -1,6 +1,7 @@
 import { render, screen, fireEvent, waitFor, act } from "@testing-library/react";
 import LoginPage from "@frontend/login/page";
 import FeAuthService from "@frontend/login/services/feAuthService";
+import { toast as mockedToast } from "react-toastify";
 
 // Mock useRouter
 const pushMock = jest.fn();
@@ -21,14 +22,41 @@ jest.mock("@frontend/login/context/userContext", () => ({
   }),
 }));
 
+jest.mock("react-toastify", () => ({
+  toast: {
+    error: jest.fn(),
+    success: jest.fn()
+  },
+  ToastContainer: jest.fn().mockImplementation(() => <div data-testid="toast-container" />),
+}));
+
+const originalLocalStorage = global.localStorage;
+
 const renderWithUserContext = () => {
   return render(<LoginPage />);
 };
 
 describe("LoginPage", () => {
   beforeEach(() => {
-    localStorage.clear();
+    Object.defineProperty(window, 'localStorage', {
+      value: {
+        getItem: jest.fn(),
+        setItem: jest.fn(),
+        clear: jest.fn(),
+        removeItem: jest.fn(),
+      },
+      writable: true
+    });
+
     jest.clearAllMocks();
+  });
+
+  afterAll(() => {
+    // Restore original localStorage setelah semua test
+    Object.defineProperty(window, 'localStorage', {
+      value: originalLocalStorage,
+      writable: true
+    });
   });
 
   it("renders title and subtitle", () => {
@@ -68,27 +96,36 @@ describe("LoginPage", () => {
   });
 
   it("calls FeAuthService.login and redirects on success", async () => {
-    (FeAuthService.login as jest.Mock).mockResolvedValue({ success: true });
-
-    const setItemMock = jest.spyOn(Storage.prototype, "setItem");
-
+    // Setup mocks
+    (FeAuthService.login as jest.Mock).mockResolvedValue({
+      success: true,
+      message: "Login successful"
+    });
+  
+    // Render component and fill form
     renderWithUserContext();
-
-    fireEvent.change(screen.getByPlaceholderText(/Masukkan email/i), {
-      target: { value: "user@example.com" },
-    });
-    fireEvent.change(screen.getByPlaceholderText(/Masukkan password/i), {
-      target: { value: "password123" },
-    });
-
+    const emailInput = screen.getByLabelText(/email/i);
+    const passwordInput = screen.getByLabelText(/password/i);
+    const button = screen.getByRole("button", { name: /login/i });
+  
+    fireEvent.change(emailInput, { target: { value: "test@example.com" } });
+    fireEvent.change(passwordInput, { target: { value: "password123" } });
+  
     await act(async () => {
-      fireEvent.click(screen.getByRole("button", { name: /login/i }));
+      fireEvent.click(button);
     });
-
+  
+    // Verify toast success was called
+    expect(mockedToast.success).toHaveBeenCalledWith(
+      "Login successful! Redirecting...",
+      expect.any(Object)
+    );
+  
+    expect(window.localStorage.setItem).toHaveBeenCalledWith("userEmail", "test@example.com");
+    expect(setEmailContextMock).toHaveBeenCalledWith("test@example.com");
+    
+    // Use waitFor because of the setTimeout in the component
     await waitFor(() => {
-      expect(FeAuthService.login).toHaveBeenCalledWith("user@example.com", "password123");
-      expect(setItemMock).toHaveBeenCalledWith("userEmail", "user@example.com");
-      expect(setEmailContextMock).toHaveBeenCalledWith("user@example.com");
       expect(pushMock).toHaveBeenCalledWith("/");
     });
   });
