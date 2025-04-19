@@ -1,8 +1,6 @@
 import { render, screen, fireEvent, waitFor, act } from "@testing-library/react";
 import LoginPage from "@frontend/login/page";
 import FeAuthService from "@frontend/login/services/feAuthService";
-import { useUser } from "@frontend/login/context/userContext";
-import { useRouter } from "next/navigation";
 
 // Mock useRouter
 const pushMock = jest.fn();
