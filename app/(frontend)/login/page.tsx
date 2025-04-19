@@ -47,7 +47,7 @@ const LoginPage = () => {
     <div className="flex items-center justify-center min-h-screen">
       <div className="max-w-2xl p-8">
         {/* Judul */}
-        <h2 className="font-bold text-center text-[#00B0EB] text-[32px]">
+        <h2 className="font-bold text-center text-blue-6 text-[32px]">
           Sign in to your account
         </h2>
         <p className="mt-2 text-center text-base text-[18px]">
@@ -85,7 +85,7 @@ const LoginPage = () => {
           <button
             type="submit"
             className={`w-full mt-4 font-semibold text-18 py-3 px-6 rounded-[50px] ${
-              loading ? "bg-[#00B0EB]/80 cursor-not-allowed" : "bg-[#00B0EB]"
+              loading ? "bg-blue-6/80 cursor-not-allowed" : "bg-blue-6"
             } text-white`}
             disabled={loading}
           >
