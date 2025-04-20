@@ -4,6 +4,15 @@ import { generateText } from 'ai';
 import prisma from '@/lib/prisma';
 import { ModelFactory, DeepseekProvider, GeminiProvider } from '@/app/(backend)/services/chatServices';
 
+// Add to the top of your route.test.ts file
+jest.mock('@/app/(backend)/utils/authUtils', () => ({
+  getUserFromRequest: jest.fn().mockResolvedValue({ 
+    id: 'test-user-id',
+    email: 'test@example.com',
+    role: 'USER'
+  })
+}));
+
 // Mock the ai module
 jest.mock('ai', () => ({
   generateText: jest.fn().mockResolvedValue({
@@ -33,6 +42,13 @@ jest.mock('@/lib/prisma', () => ({
     schema: {
       findUnique: jest.fn(),
     },
+    chatSession: {
+      findUnique: jest.fn(),
+      update: jest.fn(),
+    },
+    chatMessage: {
+      create: jest.fn(),
+    }
   },
 }));
 
@@ -685,6 +701,28 @@ describe('Chat API from user perspective', () => {
     // Restore original console.error
     consoleErrorSpy.mockRestore();
   });
+
+  it('handles unauthorized user correctly', async () => {
+    // In specific test
+    const { getUserFromRequest } = require('@/app/(backend)/utils/authUtils');
+
+    // Set up the mock for this test
+    (getUserFromRequest as jest.Mock).mockResolvedValueOnce(null);
+
+    const req = new NextRequest('http://localhost/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        messages: [{ role: 'user', content: 'Hello' }],
+      }),
+    });
+
+    const response = await POST(req);
+    expect(response.status).toBe(401);
+
+    const responseBody = await response.json();
+    expect(responseBody).toHaveProperty('error', 'Unauthorized');
+  });
 });
 
 
@@ -740,5 +778,223 @@ describe('Model Providers', () => {
         model: expect.anything(),
         messages: messages
       }));
+  });
+});
+
+describe('Chat Session Handling', () => {
+  beforeEach(() => {
+    // Reset all mocks for each test
+    jest.resetAllMocks();
+    
+    // Mock the AI response generator - this was missing
+    (generateText as jest.Mock).mockResolvedValue({
+      text: 'Mocked response',
+      finishReason: 'stop',
+      usage: {
+        promptTokens: 10,
+        completionTokens: 20,
+      },
+    });
+    
+    // Mock getUserFromRequest to return a valid user by default
+    const { getUserFromRequest } = require('@/app/(backend)/utils/authUtils');
+    (getUserFromRequest as jest.Mock).mockResolvedValue({ id: 'user123', email: 'test@example.com' });
+    
+    // Fix the chatSession mock structure to match what's used in route.ts
+    prisma.chatSession.findUnique = jest.fn()
+      .mockResolvedValue({
+        id: 'session-id-123',
+        userId: 'user123',
+        title: 'Test Session',
+        updatedAt: new Date(),
+        messages: []
+      });
+    
+    // Mock include parameter properly
+    prisma.chatSession.findUnique = jest.fn().mockImplementation(({ where, include }) => {
+      if (include?.messages) {
+        return Promise.resolve({
+          id: 'session-id-123',
+          userId: 'user123',
+          title: 'Test Session',
+          updatedAt: new Date(),
+          messages: [{ content: 'Hello', role: 'user' }]
+        });
+      }
+      
+      return Promise.resolve({
+        id: 'session-id-123',
+        userId: 'user123',
+        title: 'Test Session',
+        updatedAt: new Date()
+      });
+    });
+    
+    // Mock chat message creation
+    prisma.chatMessage.create = jest.fn().mockResolvedValue({});
+    
+    // Mock session update
+    prisma.chatSession.update = jest.fn().mockResolvedValue({});
+  });
+
+  it('verifies session belongs to user and proceeds if valid', async () => {
+    // Add this code to see what's failing
+    jest.spyOn(console, 'error').mockImplementation((msg, error) => {
+      console.log('Test error:', msg, error?.toString());
+    });
+
+    // Set up request with valid sessionId
+    const req = new NextRequest('http://localhost/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        messages: [{ role: 'user', content: 'Hello' }],
+        sessionId: 'session-id-123'
+      }),
+    });
+
+    const response = await POST(req);
+    expect(response.status).toBe(200);
+    
+    // Verify that prisma.chatSession.findUnique was called with correct params
+    expect(prisma.chatSession.findUnique).toHaveBeenCalledWith({
+      where: { id: 'session-id-123', userId: 'user123' }
+    });
+  });
+
+  it('returns 404 when session does not belong to user', async () => {
+    // Mock session not found
+    prisma.chatSession.findUnique = jest.fn().mockResolvedValue(null);
+    
+    const req = new NextRequest('http://localhost/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        messages: [{ role: 'user', content: 'Hello' }],
+        sessionId: 'invalid-session-id'
+      }),
+    });
+
+    const response = await POST(req);
+    expect(response.status).toBe(404);
+    
+    const responseBody = await response.json();
+    expect(responseBody).toHaveProperty('error', 'Session not found');
+  });
+
+  it('saves user and AI messages to history when sessionId is provided', async () => {
+    // Setup
+    const req = new NextRequest('http://localhost/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        messages: [{ role: 'user', content: 'Hello' }],
+        sessionId: 'session-id-123'
+      }),
+    });
+
+    // Act
+    await POST(req);
+
+    // Assert - verify both messages were saved
+    expect(prisma.chatMessage.create).toHaveBeenCalledTimes(2);
+    expect(prisma.chatMessage.create).toHaveBeenNthCalledWith(1, {
+      data: expect.objectContaining({
+        sessionId: 'session-id-123',
+        content: 'Hello',
+        role: 'user'
+      })
+    });
+    expect(prisma.chatMessage.create).toHaveBeenNthCalledWith(2, {
+      data: expect.objectContaining({
+        sessionId: 'session-id-123',
+        role: 'assistant'
+      })
+    });
+    
+    // Verify session timestamp was updated
+    expect(prisma.chatSession.update).toHaveBeenCalledWith({
+      where: { id: 'session-id-123' },
+      data: { updatedAt: expect.any(Date) }
+    });
+  });
+
+  it('updates session title if it is a new chat', async () => {
+    // Reset mockImplementation from previous tests
+    prisma.chatSession.findUnique = jest.fn();
+    
+    // First call for session verification
+    prisma.chatSession.findUnique.mockResolvedValueOnce({
+      id: 'session-id-123',
+      userId: 'user123',
+      title: 'New Chat',
+      updatedAt: new Date(),
+    });
+    
+    // Second call with include: { messages }
+    prisma.chatSession.findUnique.mockResolvedValueOnce({
+      id: 'session-id-123',
+      userId: 'user123',
+      title: 'New Chat',
+      messages: [
+        { content: 'This is a long first message that should be truncated for the title', role: 'user' }
+      ]
+    });
+    
+    const req = new NextRequest('http://localhost/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        messages: [{ role: 'user', content: 'Hello again' }],
+        sessionId: 'session-id-123'
+      }),
+    });
+
+    await POST(req);
+
+    // Verify title update was called with truncated message
+    expect(prisma.chatSession.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: 'session-id-123' },
+        data: expect.objectContaining({ 
+          title: expect.stringContaining('This is a long first message') 
+        })
+      })
+    );
+  });
+
+  it('does not update title for sessions with custom titles', async () => {
+    // Only mock the second findUnique call which checks the title
+    prisma.chatSession.findUnique
+      .mockResolvedValueOnce({ 
+        id: 'session-id-123', 
+        userId: 'user123',
+        title: 'Custom Title'
+      }) // First call for session validation
+      .mockResolvedValueOnce({ 
+        id: 'session-id-123',
+        title: 'Custom Title',
+        messages: [
+          { content: 'First message', role: 'user' }
+        ]
+      }); // Second call for title check
+
+    const req = new NextRequest('http://localhost/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        messages: [{ role: 'user', content: 'Hello again' }],
+        sessionId: 'session-id-123'
+      }),
+    });
+
+    await POST(req);
+
+    // Verify update was called but not with title changes
+    expect(prisma.chatSession.update).not.toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ title: expect.anything() })
+      })
+    );
   });
 });
