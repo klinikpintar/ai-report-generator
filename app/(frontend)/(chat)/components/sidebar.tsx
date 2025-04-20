@@ -1,13 +1,27 @@
 "use client";
 
 import Image from "next/image";
+import { useSession } from "../context/sessionContext";
 
 export default function Sidebar() {
+  const { createNewSession } = useSession();
+  
+  const handleNewChat = async () => {
+    try {
+      await createNewSession();
+    } catch (error) {
+      console.error("Failed to create new chat:", error);
+    }
+  };
+  
   return (
     <aside
       className="bg-white border-r-2 text-black h-screen fixed left-0 top-[72px] w-64 px-4 py-4 border-teal-7"
     >
-      <button className="flex items-center gap-3 p-2 hover:bg-gray-200 w-full text-left">
+      <button 
+        className="flex items-center gap-3 p-2 hover:bg-gray-200 w-full text-left"
+        onClick={handleNewChat}
+      >
         <Image
           src="/icon-plus.svg"
           width={20}
