@@ -1,4 +1,8 @@
 import { UnauthenticatedResponse } from "./exceptions";
+import { cookies } from 'next/headers';
+import { JwtPayload, verify } from 'jsonwebtoken';
+import prisma from '@/lib/prisma';
+import config from '@/app/(backend)/config';
 
 /**
  * Extract Refresh Token from Cookie
@@ -13,23 +17,31 @@ export const extractToken = (cookie: string, key: string) => {
   return refreshToken;
 };
 
-const units = {
-  s: 1000, // Detik ke milidetik
-  m: 60 * 1000, // Menit ke milidetik
-  h: 60 * 60 * 1000, // Jam ke milidetik
-  d: 24 * 60 * 60 * 1000, // Hari ke milidetik
-  w: 7 * 24 * 60 * 60 * 1000, // Minggu ke milidetik
-  mo: 30 * 24 * 60 * 60 * 1000, // Bulan ke milidetik
-  y: 365 * 24 * 60 * 60 * 1000, // Tahun ke milidetik
-};
-
-export const timeConvertMs = (time: string): number => {
-  const match = /^(\d+)([smhdwoy])$/.exec(time);
-  const [, value, unit] = match as unknown as [
-    string,
-    string,
-    keyof typeof units
-  ];
-
-  return parseInt(value) * units[unit];
-};
+export async function getUserFromRequest(req: Request) {
+  try {
+    const cookieStore = await cookies(); // Add await here
+    const accessToken = cookieStore.get('access_token')?.value;
+    
+    if (!accessToken) {
+      return null;
+    }
+    
+    // Use your existing config values
+    const decoded = verify(accessToken, config.JWT_ACCESS_SECRET) as JwtPayload;
+    
+    if (!decoded || !decoded.id) {
+      return null;
+    }
+    
+    // Get user from database
+    const user = await prisma.user.findUnique({
+      where: { id: decoded.id },
+      select: { id: true, email: true, role: true }
+    });
+    
+    return user;
+  } catch (error) {
+    console.error('Error getting user from request:', error);
+    return null;
+  }
+}
