@@ -1,7 +1,7 @@
 services:
   db_postgre:
     build:
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.local
     env_file:
       - .env
     environment:
