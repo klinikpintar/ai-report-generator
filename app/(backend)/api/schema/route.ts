@@ -4,17 +4,27 @@ import schemaService from '../../services/schemaService';
 import { validateSchemaInput } from '../../utils/schemaUtils';
 import { handleError } from '@backend/utils/errorUtils';
 import { GetSchemaDto } from '@backend/interfaces/ISchemaService';
+import { ErrorResponse } from '@backend/utils/exceptions';
 
 
 export async function GET(req: NextRequest) {
   try {
-    const url = new URL(req.url);
-    const serviceId = url.searchParams.getAll("serviceIds")
+    const { searchParams } = new URL(req.url);
 
-
-    const schemas = await schemaService.findAllSchemas(serviceId);
+    const params: GetSchemaDto = Object.fromEntries(searchParams.entries())
+    if (params.serviceIds) {
+      params.serviceIds = searchParams.getAll('serviceIds');
+    }
+    if (params.platformCodes) {
+      params.platformCodes = searchParams.getAll('platformCodes');
+    }
+    
+    const schemas = await schemaService.findAllSchemas(params);
     return NextResponse.json(schemas, { status: StatusCodes.OK });
   } catch (error) {
+    if (error instanceof ErrorResponse) {
+      return error.generate();
+    }
     return handleError(error, "GET Schemas");
   }
 }
