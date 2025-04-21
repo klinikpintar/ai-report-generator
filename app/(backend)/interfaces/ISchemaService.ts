@@ -1,5 +1,10 @@
 import { Schema } from '@prisma/client';
 
+export interface GetSchemaDto {
+  serviceIds?: string[];
+  platformCodes?: string[];
+}
+
 export interface CreateSchemaDto {
   name: string;
   description: string;
@@ -20,10 +25,10 @@ export interface ISchemaService extends IReadSchemaService, IWriteSchemaService,
 
 export interface IReadSchemaService {
   /**
-   * Find all schemas by service id
+   * Find all schemas filtered by service IDs or platform codes
    * @returns Promise<Schema[]> Array of schemas
    */
-  findAllSchemas(serviceIds?: string[]): Promise<Schema[]>;
+  findAllSchemas(data: GetSchemaDto): Promise<Schema[]>;
 }
 
 
