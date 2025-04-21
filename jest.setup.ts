@@ -2,6 +2,7 @@ import '@testing-library/jest-dom'
 import dotenv from 'dotenv'
 
 dotenv.config()
+jest.mock("jose");
 
 // jest.setup.js
 // Silence console logs during tests
