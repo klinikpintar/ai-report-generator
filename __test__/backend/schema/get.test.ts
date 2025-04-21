@@ -47,7 +47,7 @@ describe("Read Schema with Filtering", () => {
   // ✓ Positive case
   it("should return schemas filtered by serviceIds (UUIDs)", async () => {
     const [SERVICE_ID_1, SERVICE_ID_2] = services.map(service => service.id);
-  
+
     (prisma.schema.findMany as jest.Mock).mockImplementation(({ where }) => {
       return Promise.resolve(
         schemas.filter((schema) =>
@@ -67,6 +67,7 @@ describe("Read Schema with Filtering", () => {
 
     const response = await GET(request);
     const json = await response.json();
+    const {data} = json;
 
     expect(prisma.schema.findMany).toHaveBeenCalledWith({
       where: { AND: [{ serviceId: { in: [SERVICE_ID_1, SERVICE_ID_2] } }, expect.anything()] },
@@ -76,9 +77,9 @@ describe("Read Schema with Filtering", () => {
     });
 
     expect(response.status).toBe(StatusCodes.OK);
-    expect(json.length).toBe(2);
-    expect(json[0].serviceId).toBe(SERVICE_ID_1);
-    expect(json[1].serviceId).toBe(SERVICE_ID_2);
+    expect(data.length).toBe(2);
+    expect(data[0].serviceId).toBe(SERVICE_ID_1);
+    expect(data[1].serviceId).toBe(SERVICE_ID_2);
   });
 
   // ✓ Positive case
@@ -94,6 +95,7 @@ describe("Read Schema with Filtering", () => {
 
     const response = await GET(request);
     const json = await response.json();
+    const {data} = json;
 
     expect(prisma.schema.findMany).toHaveBeenCalledWith(expect.objectContaining({
       where: {
@@ -105,9 +107,9 @@ describe("Read Schema with Filtering", () => {
     }));
 
     expect(response.status).toBe(StatusCodes.OK);
-    expect(json.length).toBe(2);
-    expect(json[0].service.platformCode).toBe(platformCodes[0]);
-    expect(json[1].service.platformCode).toBe(platformCodes[0]);
+    expect(data.length).toBe(2);
+    expect(data[0].service.platformCode).toBe(platformCodes[0]);
+    expect(data[1].service.platformCode).toBe(platformCodes[0]);
   })
 
   // ❌ Negative case
@@ -144,3 +146,101 @@ describe("Read Schema with Filtering", () => {
 });
 
 
+describe("Pagination for Read Schema", () => {
+  it("should return paginated schemas if no query param provided", async () => {
+    (prisma.schema.findMany as jest.Mock).mockResolvedValue(schemas);
+
+    const request = new NextRequest(new URL("http://localhost/api/schema"), {
+      method: "GET",
+    });
+
+    const response = await GET(request);
+    const json = await response.json();
+
+    expect(response.status).toBe(StatusCodes.OK);
+    expect(json.data.length).toBe(2);
+    expect(json.pagination.current_page).toBe(1);
+    expect(json.pagination.total_pages).toBe(1);
+    expect(json.pagination.total_items).toBe(2);
+  })
+  it("should return paginated schemas with 'page' query param provided", async () => {
+    (prisma.schema.findMany as jest.Mock).mockResolvedValue(schemas);
+
+    const request = new NextRequest(new URL("http://localhost/api/schema?page=2"), {
+      method: "GET",
+    });
+
+    const response = await GET(request);
+    const json = await response.json();
+
+    expect(response.status).toBe(StatusCodes.OK);
+    expect(json.data.length).toBe(2);
+    expect(json.pagination.current_page).toBe(2);
+  })
+  it("should return paginated schemas with 'limit' query param provided", async () => {
+    (prisma.schema.findMany as jest.Mock).mockResolvedValue(schemas.slice(0, 1));
+
+    const request = new NextRequest(new URL("http://localhost/api/schema?limit=1"), {
+      method: "GET",
+    });
+
+    const response = await GET(request);
+    const json = await response.json();
+
+    expect(response.status).toBe(StatusCodes.OK);
+    expect(json.data.length).toBe(1);
+    expect(json.pagination.current_page).toBe(1);
+  })
+  it("should return paginated schemas with all query param provided", async () => {
+    (prisma.schema.findMany as jest.Mock).mockResolvedValue(schemas.slice(0, 1));
+
+    const request = new NextRequest(new URL("http://localhost/api/schema?page=2&limit=1"), {
+      method: "GET",
+    });
+
+    const response = await GET(request);
+    const json = await response.json();
+
+    expect(response.status).toBe(StatusCodes.OK);
+    expect(json.data.length).toBe(1);
+    expect(json.pagination.current_page).toBe(2);
+  })
+
+  it("should return 400 Bad Request if page or limit is not a number", async () => {
+    const request = new NextRequest(new URL("http://localhost/api/schema?page=abc&limit=xyz"), {
+      method: "GET",
+    });
+
+    const response = await GET(request);
+    const json = await response.json();
+
+    expect(response.status).toBe(StatusCodes.BAD_REQUEST);
+    expect(json).toHaveProperty("message");
+  })
+  it("should return 400 Bad Request if page or limit is less than 1", async () => {
+    const request = new NextRequest(new URL("http://localhost/api/schema?page=0&limit=-5"), {
+      method: "GET",
+    });
+
+    const response = await GET(request);
+    const json = await response.json();
+
+    expect(response.status).toBe(StatusCodes.BAD_REQUEST);
+    expect(json).toHaveProperty("message");
+  });
+
+  it("should return empty list if page exceeds total pages", async () => {
+    (prisma.schema.findMany as jest.Mock).mockResolvedValue([]);
+
+    const request = new NextRequest(new URL("http://localhost/api/schema?page=999&limit=2"), {
+      method: "GET",
+    });
+
+    const response = await GET(request);
+    const json = await response.json();
+
+    expect(response.status).toBe(StatusCodes.OK);
+    expect(json.data).toEqual([]);
+    expect(json.pagination.total_pages).toBe(0);
+  })
+})
