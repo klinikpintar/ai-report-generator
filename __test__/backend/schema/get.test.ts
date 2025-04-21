@@ -9,32 +9,47 @@ jest.mock("@/lib/prisma", () => ({
   },
 }));
 
+const platformCodes = ['POSTGRESQL'];
+
+const services = [
+  {
+    id: 'bd7a4c7a-1234-4c5e-b123-df12345abcd1',
+    name: 'User Service',
+    platformCode: platformCodes[0],
+  },
+  {
+    id: 'bd7a4c7a-1234-4c5e-b123-df12345abcd2',
+    name: 'Product Service',
+    platformCode: platformCodes[0],
+  },
+]
+
+const schemas = [
+  {
+    id: 1,
+    name: "products",
+    description: "Table for product info",
+    schemaText: "CREATE TABLE products (id SERIAL PRIMARY KEY);",
+    serviceId: 'bd7a4c7a-1234-4c5e-b123-df12345abcd1',
+    service: services[1],
+  },
+  {
+    id: 2,
+    name: "users",
+    description: "Table for user info",
+    schemaText: "CREATE TABLE users (id SERIAL PRIMARY KEY);",
+    serviceId: 'bd7a4c7a-1234-4c5e-b123-df12345abcd2',
+    service: services[0],
+  },
+];
+
 describe("Read Schema", () => {
-
   it("should return schemas filtered by serviceIds (UUIDs)", async () => {
-    const SERVICE_ID_1 = "bd7a4c7a-1234-4c5e-b123-df12345abcd1";
-    const SERVICE_ID_2 = "bd7a4c7a-1234-4c5e-b123-df12345abcd2";
-
-    const filteredSchemas = [
-      {
-        id: 1,
-        name: "products",
-        description: "Table for product info",
-        schemaText: "CREATE TABLE products (id SERIAL PRIMARY KEY);",
-        serviceId: SERVICE_ID_1,
-      },
-      {
-        id: 2,
-        name: "users",
-        description: "Table for user info",
-        schemaText: "CREATE TABLE users (id SERIAL PRIMARY KEY);",
-        serviceId: SERVICE_ID_2,
-      },
-    ];
-
+    const [SERVICE_ID_1, SERVICE_ID_2] = services.map(service => service.id);
+  
     (prisma.schema.findMany as jest.Mock).mockImplementation(({ where }) => {
       return Promise.resolve(
-        filteredSchemas.filter((schema) =>
+        schemas.filter((schema) =>
           where.AND[0].serviceId.in.includes(schema.serviceId)
         )
       );
@@ -66,38 +81,10 @@ describe("Read Schema", () => {
   });
 
   it('should return schemas filtered by platform codes', async () => {
-    const platformCodes = ['POSTGRESQL'];
-    const service = {
-      id: 'bd7a4c7a-1234-4c5e-b123-df12345abcd1',
-      name: 'User Service',
-      platformCode: platformCodes[0],
-    }
-
-    const filteredSchemas = [
-      {
-        id: 1,
-        name: "products",
-        description: "Table for product info",
-        schemaText: "CREATE TABLE products (id SERIAL PRIMARY KEY);",
-        serviceId: 'bd7a4c7a-1234-4c5e-b123-df12345abcd1',
-        service: service,
-      },
-      {
-        id: 2,
-        name: "users",
-        description: "Table for user info",
-        schemaText: "CREATE TABLE users (id SERIAL PRIMARY KEY);",
-        serviceId: 'bd7a4c7a-1234-4c5e-b123-df12345abcd2',
-        service: service,
-      },
-    ];
-
-    (prisma.schema.findMany as jest.Mock).mockResolvedValue(filteredSchemas);
+    (prisma.schema.findMany as jest.Mock).mockResolvedValue(schemas);
 
     const request = new NextRequest(
-      new URL(
-        `http://localhost/api/schema?platformCodes=${platformCodes[0]}`
-      ),
+      new URL(`http://localhost/api/schema?platformCodes=${platformCodes[0]}`),
       {
         method: "GET",
       }
