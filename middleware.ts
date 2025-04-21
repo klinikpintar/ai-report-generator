@@ -138,14 +138,13 @@ export async function middleware(req: NextRequest, event: NextFetchEvent) {
     event.waitUntil(
       (async () => {
         if (refreshToken) {
-          const newAccessToken = await refreshAccessToken(refreshToken);
-          console.log("Token refreshed in background:", !!newAccessToken);
-          // Optionally: save to cookie if Next.js supports modifying response here
+          await refreshAccessToken(refreshToken);
         }
       })()
     );
   }
 
+  // check user role for api routes
   if (isApiRoute(pathname)) {
     event.waitUntil(logAccess(user.id, pathname, user.role));
     return NextResponse.next();
