@@ -10,6 +10,18 @@ export const CreateSchemaDto = z.object({
 const PLATFORM_CODES = ['POSTGRESQL', 'MYSQL', 'MONGODB'];
 
 export const GetSchemaDto = z.object({
+  page: z
+    .string()
+    .optional()
+    .transform((val) => parseInt(val ?? "1"))
+    .refine((val) => val > 0, { message: "Page must be greater than 0" }),
+
+  limit: z
+    .string()
+    .optional()
+    .transform((val) => parseInt(val ?? "10"))
+    .refine((val) => val > 0, { message: "Limit must be greater than 0" }),
+
   serviceIds: z
     .array(z.string().uuid({ message: 'Service ID must be a valid UUID' }))
     .optional(),

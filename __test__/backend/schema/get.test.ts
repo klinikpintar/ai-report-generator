@@ -6,6 +6,7 @@ import prisma from "@/lib/prisma";
 jest.mock("@/lib/prisma", () => ({
   schema: {
     findMany: jest.fn(),
+    count: jest.fn(),
   },
 }));
 
@@ -48,6 +49,7 @@ describe("Read Schema with Filtering", () => {
   it("should return schemas filtered by serviceIds (UUIDs)", async () => {
     const [SERVICE_ID_1, SERVICE_ID_2] = services.map(service => service.id);
 
+    (prisma.schema.count as jest.Mock).mockResolvedValue(schemas.length);
     (prisma.schema.findMany as jest.Mock).mockImplementation(({ where }) => {
       return Promise.resolve(
         schemas.filter((schema) =>
@@ -67,14 +69,16 @@ describe("Read Schema with Filtering", () => {
 
     const response = await GET(request);
     const json = await response.json();
-    const {data} = json;
+    const { data } = json;
 
-    expect(prisma.schema.findMany).toHaveBeenCalledWith({
-      where: { AND: [{ serviceId: { in: [SERVICE_ID_1, SERVICE_ID_2] } }, expect.anything()] },
-      include: {
-        service: true,
-      },
-    });
+    expect(prisma.schema.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { AND: [{ serviceId: { in: [SERVICE_ID_1, SERVICE_ID_2] } }, expect.anything()] },
+        include: {
+          service: true,
+        },
+      })
+    );
 
     expect(response.status).toBe(StatusCodes.OK);
     expect(data.length).toBe(2);
@@ -84,6 +88,7 @@ describe("Read Schema with Filtering", () => {
 
   // ✓ Positive case
   it('should return schemas filtered by platform codes', async () => {
+    (prisma.schema.count as jest.Mock).mockResolvedValue(schemas.length);
     (prisma.schema.findMany as jest.Mock).mockResolvedValue(schemas);
 
     const request = new NextRequest(
@@ -95,16 +100,19 @@ describe("Read Schema with Filtering", () => {
 
     const response = await GET(request);
     const json = await response.json();
-    const {data} = json;
+    const { data } = json;
 
-    expect(prisma.schema.findMany).toHaveBeenCalledWith(expect.objectContaining({
-      where: {
-        AND:
-          expect.arrayContaining([
-            { service: { platformCode: expect.objectContaining({ in: platformCodes }) } }
-          ]),
-      }
-    }));
+
+    expect(prisma.schema.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: {
+          AND:
+            expect.arrayContaining([
+              { service: { platformCode: expect.objectContaining({ in: platformCodes }) } }
+            ]),
+        }
+      })
+    );
 
     expect(response.status).toBe(StatusCodes.OK);
     expect(data.length).toBe(2);
@@ -230,6 +238,7 @@ describe("Pagination for Read Schema", () => {
   });
 
   it("should return empty list if page exceeds total pages", async () => {
+    (prisma.schema.count as jest.Mock).mockResolvedValue(5);
     (prisma.schema.findMany as jest.Mock).mockResolvedValue([]);
 
     const request = new NextRequest(new URL("http://localhost/api/schema?page=999&limit=2"), {
@@ -241,6 +250,6 @@ describe("Pagination for Read Schema", () => {
 
     expect(response.status).toBe(StatusCodes.OK);
     expect(json.data).toEqual([]);
-    expect(json.pagination.total_pages).toBe(0);
+    expect(json.pagination.total_pages).toBe(Math.ceil(5 / 2));
   })
 })

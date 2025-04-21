@@ -1,6 +1,6 @@
-import { GetSchemaDto, ISchemaService, UpdateSchemaDto } from '../interfaces/ISchemaService';
+import { GetSchemaDto, GetSchemaResponse, ISchemaService, UpdateSchemaDto } from '../interfaces/ISchemaService';
 import prisma from '@/lib/prisma';
-import { Schema } from '@prisma/client';
+import { Prisma, Schema } from '@prisma/client';
 import { CreateSchemaDto as CreateSchemaValidator, GetSchemaDto as GetSchemaValidator } from '../dtos/schema.dtos';
 import { BadRequestResponse } from '@backend/utils/exceptions';
 
@@ -17,25 +17,40 @@ class SchemaService implements ISchemaService {
     });
   }
 
-  async findAllSchemas(data: GetSchemaDto): Promise<Schema[]> {
+  async findAllSchemas(data: GetSchemaDto): Promise<GetSchemaResponse> {
     const parsedData = GetSchemaValidator.safeParse(data);
     if (!parsedData.success) {
       throw new BadRequestResponse(parsedData.error.errors[0].message);
     }
 
-    const { serviceIds, platformCodes } = parsedData.data;
+    const { serviceIds, platformCodes, limit, page } = parsedData.data;
+    const where: Prisma.SchemaWhereInput = {
+      AND: [
+        serviceIds && serviceIds.length > 0 ? { serviceId: { in: serviceIds } } : {},
+        platformCodes && platformCodes.length > 0 ? { service: { platformCode: { in: platformCodes, mode: 'insensitive' } } } : {},
+      ]
+    };
+    const [totalItems, items] = await Promise.all([
+      prisma.schema.count({where}),
+      prisma.schema.findMany({
+        where,
+        skip: (page - 1) * limit,
+        take: limit,
+        include: {
+          service: true,
+        },
+      })
+    ]);
 
-    return prisma.schema.findMany({
-      where: {
-        AND: [
-          serviceIds && serviceIds.length > 0 ? { serviceId: { in: serviceIds } } : {},
-          platformCodes && platformCodes.length > 0 ? { service: { platformCode: { in: platformCodes, mode: 'insensitive' } } } : {},
-        ]
+    const totalPages = Math.ceil(totalItems / limit);
+    return {
+      data: items,
+      pagination: {
+        currentPage: page,
+        totalPages,
+        totalItems,
       },
-      include: {
-        service: true,
-      },
-    });
+    };
   }
 
   async updateSchema(data: UpdateSchemaDto): Promise<Schema> {

@@ -4,7 +4,6 @@ import schemaService from '../../services/schemaService';
 import { validateSchemaInput } from '../../utils/schemaUtils';
 import { handleError } from '@backend/utils/errorUtils';
 import { GetSchemaDto } from '@backend/interfaces/ISchemaService';
-import { ErrorResponse } from '@backend/utils/exceptions';
 
 
 export async function GET(req: NextRequest) {
@@ -19,12 +18,17 @@ export async function GET(req: NextRequest) {
       params.platformCodes = searchParams.getAll('platformCodes');
     }
     
-    const schemas = await schemaService.findAllSchemas(params);
-    return NextResponse.json(schemas, { status: StatusCodes.OK });
+    const {data, pagination} = await schemaService.findAllSchemas(params);
+    const response = {
+      data,
+      pagination: {
+        current_page: pagination.currentPage,
+        total_pages: pagination.totalPages,
+        total_items: pagination.totalItems,
+      },
+    };
+    return NextResponse.json(response, { status: StatusCodes.OK });
   } catch (error) {
-    if (error instanceof ErrorResponse) {
-      return error.generate();
-    }
     return handleError(error, "GET Schemas");
   }
 }
