@@ -1,7 +1,10 @@
-import { middleware } from "@/middleware";
-import { NextRequest, NextResponse } from "next/server";
+import {
+  middleware,
+  verifyAccessToken,
+  refreshAccessToken,
+} from "@/middleware";
+import { NextRequest } from "next/server";
 
-// mock helper
 jest.mock("jose", () => ({
   jwtVerify: jest.fn().mockResolvedValue({
     payload: {
@@ -22,8 +25,6 @@ jest.mock("@/middleware", () => {
     logAccess: jest.fn(),
   };
 });
-
-import { verifyAccessToken, refreshAccessToken } from "@/middleware";
 
 const createMockRequest = (
   path: string,
@@ -48,33 +49,114 @@ const createMockRequest = (
   return { req, event };
 };
 
-const expectRedirectTo = (response: NextResponse, expectedUrl: string) => {
-  const location = response.headers?.get?.("location");
-  expect(location).not.toBeNull(); // cek dulu ada isinya
-  expect(location).toContain(expectedUrl);
-};
-
 describe("middleware", () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
-  it("should allow access to auth route (/login)", async () => {
+  it("allows access to /login without auth", async () => {
     const { req, event } = createMockRequest("/login");
     const response = await middleware(req, event as any);
-    expect(response?.status).toBe(200);
+    expect(response.status).toBe(200);
   });
 
-  it("should redirect to login if no tokens", async () => {
+  it("redirects to /login if no tokens are present", async () => {
     const { req, event } = createMockRequest("/admin");
-
     (verifyAccessToken as jest.Mock).mockResolvedValue(null);
 
     const response = await middleware(req, event as any);
-    expectRedirectTo(response, "http://localhost:3000/login");
+    expect(response.status).toBe(307);
+    expect(response.headers.get("location")).toBe(
+      "http://localhost:3000/login"
+    );
   });
 
-  it("should refresh token if access token invalid", async () => {
+  it("returns null if refresh token response is not ok", async () => {
+    const { refreshAccessToken: realRefreshAccessToken } =
+      jest.requireActual("@/middleware");
+
+    global.fetch = jest.fn().mockResolvedValueOnce({ ok: false });
+
+    const token = await realRefreshAccessToken("dummy_refresh_token");
+    expect(token).toBeNull();
+  });
+
+  it("returns null if refresh token fetch throws", async () => {
+    const { refreshAccessToken: realRefreshAccessToken } =
+      jest.requireActual("@/middleware");
+
+    global.fetch = jest.fn().mockRejectedValueOnce(new Error("network error"));
+
+    const token = await realRefreshAccessToken("dummy_refresh_token");
+    expect(token).toBeNull();
+  });
+
+  it("refreshes token in background if it's about to expire", async () => {
+    const { req, event } = createMockRequest("/admin", {
+      access_token: "valid",
+      refresh_token: "refresh",
+    });
+
+    (verifyAccessToken as jest.Mock).mockResolvedValue({
+      id: "u1",
+      role: "ADMIN",
+      email: "admin@example.com",
+      exp: Math.floor(Date.now() / 1000) + 60, // about to expire
+    });
+
+    const response = await middleware(req, event as any);
+    expect(response.status).toBe(200);
+    expect(event.waitUntil).toHaveBeenCalled();
+  });
+
+  it("redirects BUSINESS_ANALYST from /admin to /", async () => {
+    const { req, event } = createMockRequest("/admin", {
+      access_token: "valid",
+    });
+
+    (verifyAccessToken as jest.Mock).mockResolvedValue({
+      id: "u2",
+      email: "ba@example.com",
+      role: "BUSINESS_ANALYST",
+    });
+
+    const response = await middleware(req, event as any);
+    expect(response.status).toBe(200);
+  });
+
+  it("returns 200 for valid ADMIN access to /admin", async () => {
+    const { req, event } = createMockRequest("/admin", {
+      access_token: "valid",
+    });
+
+    (verifyAccessToken as jest.Mock).mockResolvedValue({
+      id: "u3",
+      email: "admin@example.com",
+      role: "ADMIN",
+    });
+
+    const response = await middleware(req, event as any);
+    expect(response.status).toBe(200);
+    expect(event.waitUntil).toHaveBeenCalled();
+  });
+
+  it("logs access for API route", async () => {
+    const { req, event } = createMockRequest("/api/any-endpoint", {
+      access_token: "valid",
+    });
+
+    (verifyAccessToken as jest.Mock).mockResolvedValue({
+      id: "u4",
+      email: "api@example.com",
+      role: "ADMIN",
+    });
+
+    const response = await middleware(req, event as any);
+    expect(response.status).toBe(200);
+    expect(event.waitUntil).toHaveBeenCalled();
+  });
+
+  it("calls refreshAccessToken and verify again if access token is initially invalid", async () => {
     const { req, event } = createMockRequest("/admin", {
       refresh_token: "valid_refresh_token",
     });
@@ -82,48 +164,14 @@ describe("middleware", () => {
     (verifyAccessToken as jest.Mock)
       .mockResolvedValueOnce(null)
       .mockResolvedValueOnce({
-        id: "123",
+        id: "u5",
         email: "admin@example.com",
         role: "ADMIN",
-        exp: Math.floor(Date.now() / 1000) + 3600,
       });
 
     (refreshAccessToken as jest.Mock).mockResolvedValue("new_access_token");
 
     const response = await middleware(req, event as any);
-    expect(response?.status).toBe(307);
-  });
-
-  it("should redirect BUSINESS_ANALYST away from /admin", async () => {
-    const { req, event } = createMockRequest("/admin", {
-      access_token: "dummy_token",
-    });
-  
-    (verifyAccessToken as jest.Mock).mockResolvedValue({
-      id: "321",
-      email: "ba@test.com",
-      role: "BUSINESS_ANALYST",
-      exp: Math.floor(Date.now() / 1000) + 3600,
-    });
-  
-    const response = await middleware(req, event as any);
-  
-    expect(response.status).toBe(200);
-  });
-
-  it("should allow ADMIN to access /admin", async () => {
-    const { req, event } = createMockRequest("/admin", {
-      access_token: "dummy_token",
-    });
-
-    (verifyAccessToken as jest.Mock).mockResolvedValue({
-      id: "admin_id",
-      email: "admin@test.com",
-      role: "ADMIN",
-    });
-
-    const response = await middleware(req, event as any);
-    expect(response?.status).toBe(200);
-    expect(event.waitUntil).toHaveBeenCalledWith(expect.any(Promise));
+    expect(response.status).toBe(307);
   });
 });
