@@ -3,6 +3,8 @@ import { StatusCodes } from 'http-status-codes';
 import schemaService from '../../services/schemaService';
 import { validateSchemaInput } from '../../utils/schemaUtils';
 import { handleError } from '@backend/utils/errorUtils';
+import { GetSchemaDto } from '@backend/interfaces/ISchemaService';
+
 
 export async function GET(req: NextRequest) {
   try {

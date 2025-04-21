@@ -1,7 +1,8 @@
-import { ISchemaService, UpdateSchemaDto } from '../interfaces/ISchemaService';
+import { GetSchemaDto, ISchemaService, UpdateSchemaDto } from '../interfaces/ISchemaService';
 import prisma from '@/lib/prisma';
 import { Schema } from '@prisma/client';
-import { CreateSchemaDto as CreateSchemaValidator } from '../dtos/schema.dtos';
+import { CreateSchemaDto as CreateSchemaValidator, GetSchemaDto as GetSchemaValidator } from '../dtos/schema.dtos';
+import { BadRequestResponse } from '@backend/utils/exceptions';
 
 class SchemaService implements ISchemaService {
   async createSchema(data: unknown): Promise<Schema> {
@@ -16,16 +17,26 @@ class SchemaService implements ISchemaService {
     });
   }
 
-async findAllSchemas(serviceIds?: string[]): Promise<Schema[]> {
-  return prisma.schema.findMany({
-    where: serviceIds?.length
-      ? { serviceId: { in: serviceIds } }
-      : undefined,
-    include: {
-      service: true,
-    },
-  });
-}
+  async findAllSchemas(data: GetSchemaDto): Promise<Schema[]> {
+    const parsedData = GetSchemaValidator.safeParse(data);
+    if (!parsedData.success) {
+      throw new BadRequestResponse(parsedData.error.errors[0].message);
+    }
+
+    const { serviceIds, platformCodes } = parsedData.data;
+
+    return prisma.schema.findMany({
+      where: {
+        AND: [
+          serviceIds && serviceIds.length > 0 ? { serviceId: { in: serviceIds } } : {},
+          platformCodes && platformCodes.length > 0 ? { service: { platformCode: { in: platformCodes, mode: 'insensitive' } } } : {},
+        ]
+      },
+      include: {
+        service: true,
+      },
+    });
+  }
 
   async updateSchema(data: UpdateSchemaDto): Promise<Schema> {
     const { id, ...updateFields } = data;
