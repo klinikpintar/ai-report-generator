@@ -2,19 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { MarkdownExporter } from "@/app/(backend)/services/markdownExporter";
 import { ReportSchema } from "@/app/(backend)/dtos/report.dto";
 import { ZodError } from "zod";
-import { verifyAccessToken } from "@/middleware"; // sesuaikan path
 
 export async function POST(req: NextRequest) {
   const authHeader = req.headers.get("Authorization");
   const token = authHeader?.replace("Bearer ", "");
   if (!token) {
     return NextResponse.json({ message: "Missing token" }, { status: 401 });
-  }
-
-  // OWASP A2 – Broken Authentication: Verifikasi token akses pengguna
-  const user = await verifyAccessToken(req, token || "");
-  if (!user) {
-    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
 
   try {
