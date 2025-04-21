@@ -43,7 +43,8 @@ const schemas = [
   },
 ];
 
-describe("Read Schema", () => {
+describe("Read Schema with Filtering", () => {
+  // ✓ Positive case
   it("should return schemas filtered by serviceIds (UUIDs)", async () => {
     const [SERVICE_ID_1, SERVICE_ID_2] = services.map(service => service.id);
   
@@ -80,6 +81,7 @@ describe("Read Schema", () => {
     expect(json[1].serviceId).toBe(SERVICE_ID_2);
   });
 
+  // ✓ Positive case
   it('should return schemas filtered by platform codes', async () => {
     (prisma.schema.findMany as jest.Mock).mockResolvedValue(schemas);
 
@@ -108,6 +110,7 @@ describe("Read Schema", () => {
     expect(json[1].service.platformCode).toBe(platformCodes[0]);
   })
 
+  // ❌ Negative case
   it("should return 400 Bad Request if invalid service ID", async () => {
     const req = new NextRequest(
       new URL("http://localhost/api/schema?serviceIds=not-a-uuid"),
@@ -117,6 +120,7 @@ describe("Read Schema", () => {
     expect(res.status).toBe(StatusCodes.BAD_REQUEST);
   });
 
+  // ❌ Negative case
   it("should return 400 Bad Request if invalid platform code", async () => {
     const req = new NextRequest(
       new URL("http://localhost/api/schema?platformCodes=INVALID"),
@@ -126,6 +130,8 @@ describe("Read Schema", () => {
     expect(res.status).toBe(StatusCodes.BAD_REQUEST);
   });
 
+
+  // Edge case
   it("should return INTERNAL_SERVER_ERROR when DB fails", async () => {
     (prisma.schema.findMany as jest.Mock).mockRejectedValue(new Error("Database error"));
 
@@ -136,3 +142,5 @@ describe("Read Schema", () => {
     expect(json.error).toBe("GET Schemas: Internal Server Error");
   });
 });
+
+
