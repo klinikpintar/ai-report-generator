@@ -22,6 +22,9 @@ export async function POST(req: Request) {
     });
     return authService.putTokenInCookie(response, accessToken, refreshToken);
   } catch (error) {
-    return (error as ErrorResponse).generate();
+    if (error instanceof ErrorResponse) {
+      return error.generate();
+    }
+    return new ErrorResponse("Internal server error", 500).generate();
   }
 }

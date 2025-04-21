@@ -17,7 +17,6 @@ export async function POST(req: Request) {
     if (error instanceof ErrorResponse) {
       return error.generate();
     }
-    console.error("Unexpected error during user creation:", error);
     return new ErrorResponse("Internal server error", 500).generate();
   }
 }
@@ -50,6 +49,9 @@ export async function GET(req: Request) {
       },
     });
   } catch (error) {
-    return (error as ErrorResponse).generate();
+    if (error instanceof ErrorResponse) {
+      return error.generate();
+    }
+    return new ErrorResponse("Internal server error", 500).generate();
   }
 }
