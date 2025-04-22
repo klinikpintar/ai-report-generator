@@ -57,6 +57,6 @@ export class PdfExporter implements IExporter {
   }
 
   getFileName(createdAt: string): string {
-    return `report-${Date.now()}.pdf`;
+    return `report-${createdAt}.pdf`;
   }
 }

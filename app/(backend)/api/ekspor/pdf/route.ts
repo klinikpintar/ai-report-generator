@@ -17,6 +17,8 @@ export async function POST(req: NextRequest) {
     const isPreview = searchParams.get("preview") === "true";
 
     const body = await req.json();
+
+    // ✅ OWASP A1 – Input Validation
     const parsed = ReportSchema.parse(body.reportData);
 
     const exporter = new PdfExporter();
@@ -28,18 +30,26 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ message: "Gagal generate PDF" }, { status: 500 });
     }
 
+    const filename = exporter.getFileName(parsed.createdAt); // ⬅️ Pakai createdAt untuk nama file
+
     return new NextResponse(fileBuffer, {
       status: 200,
       headers: {
         "Content-Type": exporter.getMimeType(),
-        "Content-Disposition": `${isPreview ? "inline" : "attachment"}; filename="${exporter.getFileName(parsed.createdAt)}"`,
+        "Content-Disposition": `${isPreview ? "inline" : "attachment"}; filename="${filename}"`,
       },
     });
   } catch (err) {
     if (err instanceof ZodError) {
-      return NextResponse.json({ message: "Input tidak valid", errors: err.errors }, { status: 400 });
+      return NextResponse.json(
+        { message: "Input tidak valid", errors: err.errors },
+        { status: 400 }
+      );
     }
 
-    return NextResponse.json({ message: "Gagal mengekspor laporan" }, { status: 500 });
+    return NextResponse.json(
+      { message: "Gagal mengekspor laporan" },
+      { status: 500 }
+    );
   }
 }
