@@ -12,13 +12,27 @@ interface UserJwtPayload {
   iat?: number;
 }
 
+interface RoleConfig {
+  defaultPath: string;
+  restrictedPaths: string[];
+}
+
+interface ApiRule {
+  paths: string[];
+  allowedRoles: ROLE[];
+  methods: string[];
+}
+
+// Constants
+const FIVE_MINUTES_IN_SECONDS = 300;
+
 const AUTH_ROUTES = {
   LOGIN: "/login",
   API_LOGIN: "/api/auth/login",
   API_REFRESH: "/api/auth/token/refresh",
 };
 
-const ROLE_REDIRECTS = {
+const ROLE_REDIRECTS: Record<ROLE, RoleConfig> = {
   ADMIN: {
     defaultPath: "/admin",
     restrictedPaths: ["/"],
@@ -29,8 +43,30 @@ const ROLE_REDIRECTS = {
   },
 };
 
-const FIVE_MINUTES_IN_SECONDS = 300;
+const API_ACCESS_RULES: ApiRule[] = [
+  {
+    paths: ["/chat", "/ekspor"],
+    allowedRoles: ["BUSINESS_ANALYST"],
+    methods: ["GET", "POST", "PUT", "DELETE"],
+  },
+  {
+    paths: ["/users"],
+    allowedRoles: ["ADMIN"],
+    methods: ["GET", "POST", "PUT", "DELETE"],
+  },
+  {
+    paths: ["/service", "/schema"],
+    allowedRoles: ["ADMIN", "BUSINESS_ANALYST"],
+    methods: ["GET"],
+  },
+  {
+    paths: ["/service", "/schema"],
+    allowedRoles: ["ADMIN"],
+    methods: ["POST", "PUT", "DELETE"],
+  },
+];
 
+// Token management functions
 export async function verifyAccessToken(
   token: string
 ): Promise<UserJwtPayload | null> {
@@ -50,23 +86,25 @@ export async function verifyAccessToken(
   }
 }
 
-export async function refreshAccessToken(refreshToken: string) {
+export async function refreshAccessToken(
+  refreshToken: string
+): Promise<string | null> {
   try {
-    const apiResponse = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}${AUTH_ROUTES.API_REFRESH}`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Cookie: `refresh_token=${refreshToken}`,
-        },
-      }
-    );
+    const apiUrl = `${process.env.NEXT_PUBLIC_API_URL}${AUTH_ROUTES.API_REFRESH}`;
+    const apiResponse = await fetch(apiUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Cookie: `refresh_token=${refreshToken}`,
+      },
+    });
+
     if (!apiResponse.ok) return null;
 
     const data = await apiResponse.json();
     return data.data.access_token;
-  } catch {
+  } catch (error) {
+    console.error("Failed to refresh token:", error);
     return null;
   }
 }
@@ -98,43 +136,24 @@ async function logAccess(
   }
 }
 
-function handleApiRoutes(pathname: string, role: ROLE, method: string) {
-  // Define permission rules
-  const rules = [
-    {
-      paths: ["/chat", "/ekspor"],
-      allowedRoles: ["BUSINESS_ANALYST"],
-      methods: ["GET", "POST", "PUT", "DELETE"]
-    },
-    {
-      paths: ["/users"],
-      allowedRoles: ["ADMIN"],
-      methods: ["GET", "POST", "PUT", "DELETE"]
-    },
-    {
-      paths: ["/service", "/schema"],
-      allowedRoles: ["ADMIN", "BUSINESS_ANALYST"],
-      methods: ["GET"]
-    },
-    {
-      paths: ["/service", "/schema"],
-      allowedRoles: ["ADMIN"],
-      methods: ["POST", "PUT", "DELETE"]
-    }
-  ];
-
-  // Find matching rule
-  for (const rule of rules) {
-    const pathMatches = rule.paths.some(path => pathname.includes(path));
+function checkApiAccess(
+  pathname: string,
+  role: ROLE,
+  method: string
+): NextResponse | null {
+  for (const rule of API_ACCESS_RULES) {
+    const pathMatches = rule.paths.some((path) => pathname.includes(path));
     if (pathMatches) {
       const isAllowedRole = rule.allowedRoles.includes(role);
       const isAllowedMethod = rule.methods.includes(method);
-      
+
       if (!isAllowedRole || !isAllowedMethod) {
         return NextResponse.json({ message: "Unauthorized" }, { status: 403 });
       }
     }
   }
+
+  return null; // Access granted
 }
 
 function getRedirectURL(role: ROLE, pathname: string): string | null {
@@ -145,12 +164,19 @@ function getRedirectURL(role: ROLE, pathname: string): string | null {
   );
 
   if (isRestrictedPath) return roleConfig.defaultPath;
-
   if (role === "ADMIN" && !pathname.startsWith("/admin")) {
     return roleConfig.defaultPath;
   }
 
   return null;
+}
+
+async function handleBackgroundTokenRefresh(
+  refreshToken: string
+): Promise<void> {
+  if (refreshToken) {
+    await refreshAccessToken(refreshToken);
+  }
 }
 
 export async function middleware(req: NextRequest, event: NextFetchEvent) {
@@ -176,21 +202,18 @@ export async function middleware(req: NextRequest, event: NextFetchEvent) {
     );
   }
 
-  // Background token refresh if needed
   if (user.exp && isTokenAboutToExpire(user.exp)) {
-    event.waitUntil(
-      (async () => {
-        if (refreshToken) {
-          await refreshAccessToken(refreshToken);
-        }
-      })()
-    );
+    event.waitUntil(handleBackgroundTokenRefresh(refreshToken || ""));
   }
 
-  // check user role for api routes
   if (isApiRoute(pathname)) {
     event.waitUntil(logAccess(user.id, pathname, user.role));
-    handleApiRoutes(pathname, user.role, req.method);
+
+    const accessResult = checkApiAccess(pathname, user.role, req.method);
+    if (accessResult) {
+      return accessResult;
+    }
+
     return NextResponse.next();
   }
 
@@ -200,7 +223,6 @@ export async function middleware(req: NextRequest, event: NextFetchEvent) {
   }
 
   event.waitUntil(logAccess(user.id, pathname, user.role));
-
   return NextResponse.next();
 }
 
