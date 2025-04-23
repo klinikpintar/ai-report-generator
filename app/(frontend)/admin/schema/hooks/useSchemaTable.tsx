@@ -20,16 +20,44 @@ export const useSchemaTable = () => {
     [router, dispatch]
   );
 
+  // Helper function for getting selected filters. Omitting all options when user selects all option. Select All == Select Nothing.
+  const getSelectedFilters = () => {
+    const between = (x: number, min: number, max: number) => {
+      return x > min && x < max;
+    };
+
+    const doesFilterByService = between(
+      state.filters.service.selected.length,
+      0,
+      state.filters.service.all.length
+    );
+
+    const doesFilterByPlatform = between(
+      state.filters.platform.selected.length,
+      0,
+      state.filters.platform.all.length
+    );
+
+    const selectedServiceIds = doesFilterByService
+      ? state.filters.service.selected.map((service) => service.id)
+      : [];
+    const selectedPlatformCodes = doesFilterByPlatform ? state.filters.platform.selected : [];
+
+    return [selectedServiceIds, selectedPlatformCodes];
+  };
+
   // Fetch schemas based on current filters
   const fetchFilteredSchemas = useCallback(
     async ({ page }: { page?: number } = {}) => {
       try {
         dispatch({ type: "FETCH_START" });
 
+        const [selectedServiceIds, selectedPlatformCodes] = getSelectedFilters();
+
         const params: FetchSchemasParams = {
-          serviceIds: state.filters.service.selected.map((service) => service.id),
-          platformCodes: state.filters.platform.selected,
-          page: page || state.pagination.currentPage
+          serviceIds: selectedServiceIds,
+          platformCodes: selectedPlatformCodes,
+          page: page || state.pagination.currentPage,
         };
 
         const { data, pagination } = await fetchSchemas(params);
