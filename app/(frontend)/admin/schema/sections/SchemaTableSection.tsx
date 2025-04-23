@@ -32,6 +32,11 @@ export const SchemaTableSection = () => {
     await refreshSchemas();
   };
 
+  const onEditModalClose = async () => {
+    setSchemaToEdit(null)
+    await refreshSchemas();
+  }
+
   return (
     <>
       <SchemaFilters />
@@ -58,7 +63,7 @@ export const SchemaTableSection = () => {
       {schemaToEdit && (
         <EditSchemaModal
           isVisible={true}
-          onClose={() => setSchemaToEdit(null)}
+          onClose={onEditModalClose}
           schema={{
             id: schemaToEdit.id,
             name: schemaToEdit.name,
