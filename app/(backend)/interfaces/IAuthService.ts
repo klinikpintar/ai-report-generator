@@ -1,4 +1,3 @@
-import { NextResponse } from "next/server";
 export interface Payload {
   id: string;
   role?: string;
@@ -17,7 +16,9 @@ export interface IAuthService {
   refreshToken(
     token: string
   ): Promise<{ newAccessToken: string; newRefreshToken: string }>;
+}
 
+export interface IGenerateToken {
   /**
    * Generate Access Token
    * @param payload - Data payload (id, role)
@@ -31,7 +32,9 @@ export interface IAuthService {
    * @returns {Promise<string>} Refresh Token
    */
   generateRefreshToken(payload: Payload): Promise<string>;
+}
 
+export interface IVerifyToken {
   /**
    * Verify and Decode JWT Token
    * @param token - JWT token to verify
@@ -39,17 +42,4 @@ export interface IAuthService {
    * @returns Decoded payload or null if invalid
    */
   verifyToken(token: string, secret: string): Payload | null;
-
-  /**
-   * Put Refresh Token in Cookie
-   * @param response - NextResponse object
-   * @param accessToken - Access token
-   * @param refreshToken - Refresh token
-   * @returns NextResponse object with cookie
-   */
-  putTokenInCookie(
-    response: NextResponse,
-    accessToken: string,
-    refreshToken: string
-  ): NextResponse;
 }

@@ -1,6 +1,7 @@
 services:
   db_postgre:
-    image: postgres:latest
+    build:
+      dockerfile: Dockerfile.local
     env_file:
       - .env
     environment:

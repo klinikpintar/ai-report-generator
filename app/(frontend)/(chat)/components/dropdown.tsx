@@ -3,52 +3,56 @@
 import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import { useService } from "../context/serviceContext"; // Import context
+import { Service } from "@frontend/common/types/service";
+import { toast } from "react-toastify";
 
 export default function Dropdown() {
   const [isOpen, setIsOpen] = useState(false);
-  const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
-  const { selectedService, setSelectedService } = useService(); // Gunakan context
+  const { selectedService, setSelectedService, services, setServices, getServiceRepresentation } = useService(); // Gunakan context
   const dropdownRef = useRef<HTMLDivElement>(null); // Ref untuk mendeteksi klik di luar
 
+  const selectAllService: Service = {
+    id: "0",
+    name: "Select All",
+    platformCode: "",
+    createdAt: "",
+  };
+
+  useEffect(() => {
+    const fetchServices = async () => {
+      try {
+        const response = await fetch("/api/service");
+        const data = (await response.json()) as Service[];
+        setServices(data);
+      } catch {
+        toast.error("Failed to fetch list of services");
+      }
+    };
+    fetchServices();
+  }, []);
+
   // Daftar layanan dengan platformnya
-  const options = [
-    { service: "Select All", platform: "" },
-    { service: "Reservasi", platform: "PostgreSQL" },
-    { service: "Keuangan", platform: "MySQL" },
-    { service: "Kesehatan", platform: "MongoDB" },
-    { service: "Inventaris", platform: "MySQL" },
-  ];
+  const options = [selectAllService, ...services];
 
   // Cek apakah semua layanan sudah dipilih
-  const allSelected = selectedOptions.length === options.length - 1;
+  const allSelected = selectedService.length === options.length - 1 && options.length > 1;
 
-  const toggleOption = (service: string) => {
-    if (service === "Select All") {
+  const toggleOption = (service: Service) => {
+    if (service === selectAllService) {
       if (allSelected) {
-        setSelectedOptions([]);
-        setSelectedService("Pilih Service");
+        setSelectedService([]);
       } else {
-        setSelectedOptions(options.slice(1).map((opt) => opt.service));
-        setSelectedService("Select All");
+        setSelectedService(services);
       }
       return;
     }
 
-    const newSelection = selectedOptions.includes(service)
-      ? selectedOptions.filter((item) => item !== service)
-      : [...selectedOptions, service];
+    const isSelected = selectedService.some((item) => item.id === service.id);
+    const newSelectedService = isSelected
+      ? selectedService.filter((item) => item.id !== service.id)
+      : [...selectedService, service];
 
-    setSelectedOptions(newSelection);
-
-    if (newSelection.length === 0) {
-      setSelectedService("Pilih Service");
-    } else if (newSelection.length === 1) {
-      setSelectedService(newSelection[0]);
-    } else if (newSelection.length === options.length - 1) {
-      setSelectedService("Select All");
-    } else {
-      setSelectedService(`${newSelection[0]} and ${newSelection.length - 1} more`);
-    }
+    setSelectedService(newSelectedService);
   };
 
   // ✅ **Tutup dropdown jika klik di luar**
@@ -66,7 +70,7 @@ export default function Dropdown() {
   }, []);
 
   return (
-    <div className="relative w-full" ref={dropdownRef}>
+    <div className="relative w-full z-10" ref={dropdownRef}>
       <button
         className="w-full text-left flex items-center gap-5 font-bold text-lg text-blue-6"
         onClick={() => setIsOpen(!isOpen)}
@@ -81,7 +85,7 @@ export default function Dropdown() {
         />
       </button>
 
-      <p className="text-gray-700 text-base">{selectedService}</p>
+      <p className="text-gray-700 text-base">{getServiceRepresentation(selectedService, allSelected)}</p>
 
       {/* Dropdown Menu */}
       {isOpen && (
@@ -91,16 +95,16 @@ export default function Dropdown() {
               <div className="flex items-center space-x-3">
                 <input
                   type="checkbox"
-                  checked={
-                    option.service === "Select All" ? allSelected : selectedOptions.includes(option.service)
-                  }
-                  onChange={() => toggleOption(option.service)}
+                  checked={allSelected || selectedService.some((item) => item.id === option.id)}
+                  onChange={() => toggleOption(option)}
                   className="form-checkbox h-5 w-5 text-red-500 border-gray-300 rounded focus:ring-red-500"
-                  aria-label={option.service}
+                  aria-label={option.name}
                 />
-                <span className="text-gray-700">{option.service}</span>
+                <span className="text-gray-700">{option.name}</span>
               </div>
-              {option.platform && <span className="text-gray-500 text-sm">{option.platform}</span>}
+              {option.platformCode && (
+                <span className="text-gray-500 text-sm">{option.platformCode}</span>
+              )}
             </label>
           ))}
         </div>

@@ -1,66 +1,45 @@
-import { Platform, Schema, Service } from "./types"
+import { Platform, Schema, Service } from "@frontend/common/types";
 
 
-export const dummyPlatforms: Platform[] = [
-  {
-    id: 1,
-    name: "PostgreSQL",
-    color: "#013F59",
-  },
-  {
-    id: 2,
-    name: "MySQL",
-    color: "#FF9500",
-  },
-  {
-    id: 3,
-    name: "MongoDB",
-    color: "#009951",
-  }
-];
+export const platforms: Platform[] = [
+  "PostgreSQL",
+  "MySQL",
+  "MongoDB",
+]
 
 
 export const dummyServices: Service[] = [
   {
-    id: 1,
-    createdAt: new Date(),
-    modifiedAt: new Date(),
+    id: "1",
     name: "Reservasi Pasien",
-    platform: dummyPlatforms[0],
     platformCode: "PostgreSQL",
+    createdAt: "2023-01-01T00:00:00Z",
   },
   {
-    id: 2,
-    createdAt: new Date(),
-    modifiedAt: new Date(),
-    name: "Pemesanan Online",
-    platform: dummyPlatforms[1],
+    id: "2",
+    name: "Rekam Medis",
     platformCode: "MySQL",
+    createdAt: "2023-01-02T00:00:00Z",
   },
   {
-    id: 3,
-    createdAt: new Date(),
-    modifiedAt: new Date(),
+    id: "3",
     name: "Laporan Keuangan",
-    platform: dummyPlatforms[2],
     platformCode: "MongoDB",
+    createdAt: "2023-01-03T00:00:00Z",
   },
   {
-    id: 4,
-    createdAt: new Date(),
-    modifiedAt: new Date(),
+    id: "4",
     name: "Manajemen Inventaris",
-    platform: dummyPlatforms[1],
-    platformCode: "MySQL",
+    platformCode: "PostgreSQL",
+    createdAt: "2023-01-04T00:00:00Z",
   },
 ]
+
 
 
 export const dummySchemas: Schema[] = [
   {
     id: 1,
-    createdAt: new Date(),
-    modifiedAt: new Date(),
     name: "reservasi_pelanggan",
     service: dummyServices[0],
     description: "Schema untuk menyimpan data pelanggan yang melakukan reservasi",
@@ -74,12 +53,11 @@ export const dummySchemas: Schema[] = [
       tgl_checkin DATE,
       tgl_checkout DATE
     )`,
-    platform: dummyPlatforms[0],
+    serviceId: dummyServices[0].id,
+    createdAt: "2023-01-01T00:00:00Z",
   },
   {
     id: 2,
-    createdAt: new Date(),
-    modifiedAt: new Date(),
     name: "rekam_medis",
     service: dummyServices[1],
     description: "Schema untuk menyimpan rekam medis pasien",
@@ -92,12 +70,11 @@ export const dummySchemas: Schema[] = [
       diagnosa TEXT,
       resep_obat TEXT
     )`,
-    platform: dummyPlatforms[1],
+    serviceId: dummyServices[1].id,
+    createdAt: "2023-01-02T00:00:00Z",
   },
   {
     id: 3,
-    createdAt: new Date(),
-    modifiedAt: new Date(),
     name: "laporan_keuangan",
     service: dummyServices[2],
     description: "Schema untuk menyimpan data laporan keuangan",
@@ -107,12 +84,11 @@ export const dummySchemas: Schema[] = [
       jenis_transaksi VARCHAR(50),
       total DECIMAL(10, 2)
     )`,
-    platform: dummyPlatforms[0],
+    serviceId: dummyServices[2].id,
+    createdAt: "2023-01-03T00:00:00Z",
   },
   {
     id: 4,
-    createdAt: new Date(),
-    modifiedAt: new Date(),
     name: "manajemen_stok",
     service: dummyServices[3],
     description: "Schema untuk menyimpan data stok barang",
@@ -122,6 +98,7 @@ export const dummySchemas: Schema[] = [
       harga DECIMAL(10, 2),
       stok INT
     )`,
-    platform: dummyPlatforms[1],
+    serviceId: dummyServices[3].id,
+    createdAt: "2023-01-04T00:00:00Z",
   },
 ]
