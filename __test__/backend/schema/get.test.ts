@@ -156,6 +156,7 @@ describe("Read Schema with Filtering", () => {
 
 describe("Pagination for Read Schema", () => {
   it("should return paginated schemas if no query param provided", async () => {
+    (prisma.schema.count as jest.Mock).mockResolvedValue(schemas.length);
     (prisma.schema.findMany as jest.Mock).mockResolvedValue(schemas);
 
     const request = new NextRequest(new URL("http://localhost/api/schema"), {

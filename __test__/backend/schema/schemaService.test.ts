@@ -9,6 +9,7 @@ jest.mock('@/lib/prisma', () => ({
     findMany: jest.fn(),
     update: jest.fn(),
     delete: jest.fn(),
+    count: jest.fn(),
   },
 }));
 
@@ -48,7 +49,7 @@ describe('SchemaService Unit Tests', () => {
     const result = await schemaService.findAllSchemas({});
 
     expect(prisma.schema.findMany).toHaveBeenCalledTimes(1);
-    expect(result).toEqual([mockSchema]);
+    expect(result.data).toEqual([mockSchema]);
   });
 
   it('should update a schema', async () => {
@@ -116,16 +117,18 @@ describe('SchemaService Unit Tests', () => {
     }
     const result = await schemaService.findAllSchemas(param);
 
-    expect(prisma.schema.findMany).toHaveBeenCalledWith({
-      where: {
-        AND: [{ serviceId: { in: [SERVICE_ID_1, SERVICE_ID_2] } }, expect.anything()],
-      },
-      include: {
-        service: true,
-      },
-    });
+    expect(prisma.schema.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: {
+          AND: [{ serviceId: { in: [SERVICE_ID_1, SERVICE_ID_2] } }, expect.anything()],
+        },
+        include: {
+          service: true,
+        },
+      })
+    );
 
-    expect(result).toEqual(filteredSchemas);
+    expect(result.data).toEqual(filteredSchemas);
   });
 
 });

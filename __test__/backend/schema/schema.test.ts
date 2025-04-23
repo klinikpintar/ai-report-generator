@@ -13,6 +13,7 @@ jest.mock("@/lib/prisma", () => ({
     findUnique: jest.fn().mockResolvedValue(null),
     update: jest.fn().mockResolvedValue({ id: 1, description: "Updated table description" }),
     delete: jest.fn().mockResolvedValue({ id: 1 }),
+    count: jest.fn().mockResolvedValue(1),
   },
 }));
 
@@ -186,13 +187,14 @@ describe("CUD of Schema API (Using NextRequest)", () => {
 
   it("should remove schema from list after deletion", async () => {
     await DELETE(sendRequest("DELETE", { id: 1 }));
+    (prisma.schema.count as jest.Mock).mockResolvedValue(0);
     (prisma.schema.findMany as jest.Mock).mockResolvedValue([]);
 
     const request = sendRequest("GET");
     const response = await GET(request);
     const json = await response.json();
 
-    expect(json.some((schema: Schema) => schema.name === validSchemaData.name)).toBe(false);
+    expect(json.data.some((schema: Schema) => schema.name === validSchemaData.name)).toBe(false);
   });
 
 });
