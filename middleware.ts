@@ -98,6 +98,45 @@ async function logAccess(
   }
 }
 
+function handleApiRoutes(pathname: string, role: ROLE, method: string) {
+  // Define permission rules
+  const rules = [
+    {
+      paths: ["/chat", "/ekspor"],
+      allowedRoles: ["BUSINESS_ANALYST"],
+      methods: ["GET", "POST", "PUT", "DELETE"]
+    },
+    {
+      paths: ["/users"],
+      allowedRoles: ["ADMIN"],
+      methods: ["GET", "POST", "PUT", "DELETE"]
+    },
+    {
+      paths: ["/service", "/schema"],
+      allowedRoles: ["ADMIN", "BUSINESS_ANALYST"],
+      methods: ["GET"]
+    },
+    {
+      paths: ["/service", "/schema"],
+      allowedRoles: ["ADMIN"],
+      methods: ["POST", "PUT", "DELETE"]
+    }
+  ];
+
+  // Find matching rule
+  for (const rule of rules) {
+    const pathMatches = rule.paths.some(path => pathname.includes(path));
+    if (pathMatches) {
+      const isAllowedRole = rule.allowedRoles.includes(role);
+      const isAllowedMethod = rule.methods.includes(method);
+      
+      if (!isAllowedRole || !isAllowedMethod) {
+        return NextResponse.json({ message: "Unauthorized" }, { status: 403 });
+      }
+    }
+  }
+}
+
 function getRedirectURL(role: ROLE, pathname: string): string | null {
   const roleConfig = ROLE_REDIRECTS[role] || ROLE_REDIRECTS.BUSINESS_ANALYST;
 
@@ -151,6 +190,7 @@ export async function middleware(req: NextRequest, event: NextFetchEvent) {
   // check user role for api routes
   if (isApiRoute(pathname)) {
     event.waitUntil(logAccess(user.id, pathname, user.role));
+    handleApiRoutes(pathname, user.role, req.method);
     return NextResponse.next();
   }
 

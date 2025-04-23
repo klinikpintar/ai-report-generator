@@ -12,6 +12,9 @@ const config: Config = {
     "**/*.{ts,tsx, js, jsx}",
     "!app/config.ts",
     "!app/utils/exceptions.ts",
+    "!**/*.d.ts",
+    "!**/node_modules/**",
+    "!**/.next/**"
   ],
   moduleNameMapper: {
     '^@frontend/(.*)$': '<rootDir>/app/(frontend)/$1',
