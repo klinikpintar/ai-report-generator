@@ -35,9 +35,14 @@ export async function verifyAccessToken(
   token: string
 ): Promise<UserJwtPayload | null> {
   try {
-    const secretEnv = process.env.JWT_ACCESS_SECRET ?? "access_secret";
+    const secretEnv = process.env.JWT_ACCESS_SECRET;
+    if (!secretEnv) {
+      throw new Error("JWT secret is not defined in environment variables.");
+    }
     const secret = new TextEncoder().encode(secretEnv);
-    const { payload } = await jose.jwtVerify(token, secret);
+    const { payload } = await jose.jwtVerify(token, secret, {
+      algorithms: ["HS256"],
+    });
     return payload as unknown as UserJwtPayload;
   } catch (error) {
     console.error("Token verification failed:", error);
