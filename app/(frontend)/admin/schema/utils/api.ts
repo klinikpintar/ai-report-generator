@@ -7,7 +7,6 @@ export interface FetchSchemasParams {
   [key: string]: unknown
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function fetchSchemas(params: FetchSchemasParams = {}) {
   const queryParams = new URLSearchParams();
 

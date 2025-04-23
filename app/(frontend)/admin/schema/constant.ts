@@ -27,6 +27,7 @@ export const dummyServices: Service[] = [
     modifiedAt: new Date(),
     name: "Reservasi Pasien",
     platform: dummyPlatforms[0],
+    platformCode: "PostgreSQL",
   },
   {
     id: 2,
@@ -34,6 +35,7 @@ export const dummyServices: Service[] = [
     modifiedAt: new Date(),
     name: "Pemesanan Online",
     platform: dummyPlatforms[1],
+    platformCode: "MySQL",
   },
   {
     id: 3,
@@ -41,6 +43,7 @@ export const dummyServices: Service[] = [
     modifiedAt: new Date(),
     name: "Laporan Keuangan",
     platform: dummyPlatforms[2],
+    platformCode: "MongoDB",
   },
   {
     id: 4,
@@ -48,6 +51,7 @@ export const dummyServices: Service[] = [
     modifiedAt: new Date(),
     name: "Manajemen Inventaris",
     platform: dummyPlatforms[1],
+    platformCode: "MySQL",
   },
 ]
 

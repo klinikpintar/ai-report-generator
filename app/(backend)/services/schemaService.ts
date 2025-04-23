@@ -16,11 +16,20 @@ class SchemaService implements ISchemaService {
     });
   }
 
-async findAllSchemas(serviceIds?: string[]): Promise<Schema[]> {
+async findAllSchemas(serviceIds?: string[], platformCodes?: string[]): Promise<Schema[]> {
   return prisma.schema.findMany({
-    where: serviceIds?.length
-      ? { serviceId: { in: serviceIds } }
-      : undefined,
+    where: {
+      ...(serviceIds?.length ? { serviceId: { in: serviceIds } } : {}),
+      ...(platformCodes?.length
+        ? {
+            service: {
+              platformCode: {
+                in: platformCodes,
+              },
+            },
+          }
+        : {}),
+    },
     include: {
       service: true,
     },

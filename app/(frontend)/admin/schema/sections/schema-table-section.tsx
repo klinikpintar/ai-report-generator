@@ -57,7 +57,7 @@ export const SchemaTableSection = () => {
       setLoading(true);
       const params = {
         serviceIds: selectedServices.map((service) => service.id),
-        platformCodes: selectedPlatforms.map((platform) => platform.id),
+        platformCodes: selectedPlatforms.map((platform) => platform.name),
       };
       const filteredSchemas = await fetchSchemas(params);
       setSchemas(filteredSchemas);

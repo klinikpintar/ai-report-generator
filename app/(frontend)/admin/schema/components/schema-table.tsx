@@ -91,6 +91,17 @@ export const SchemaTable: React.FC<SchemaTableProps> = ({
     setSchemaToRead(null);
   };
 
+  const getPlatformColor = (platform: string) => {
+    switch (platform) {
+      case "PostgreSQL":
+        return "bg-[#013F59]";
+      case "MySQL":
+        return "bg-[#FF9500]";
+      case "MongoDB":
+        return "bg-[#009951]";
+    }
+  };
+
   return (
     <div className="flex flex-col gap-4" data-testid="schema-table">
       <Table>
@@ -112,17 +123,18 @@ export const SchemaTable: React.FC<SchemaTableProps> = ({
             </TableRow>
           )}
           {schemas.map((schema) => {
-            const platform = schema.platform!;
+            const platform = schema.service?.platformCode ?? "Unknown";
             return (
               <TableRow key={schema.id}>
                 <TableCell>{schema.name}</TableCell>
                 <TableCell className="px-2">
                   <Chip
                     variant="default"
-                    className="w-full cursor-default text-white"
-                    style={{ backgroundColor: platform.color }}
+                    className={`w-full cursor-default text-white ${getPlatformColor(
+                      platform
+                    )} hover:${getPlatformColor(platform)}`}
                   >
-                    {platform.name}
+                    {platform}
                   </Chip>
                 </TableCell>
                 <TableCell className="px-2">{schema.service!.name}</TableCell>
