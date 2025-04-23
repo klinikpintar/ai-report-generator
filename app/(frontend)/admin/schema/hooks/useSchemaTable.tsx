@@ -31,13 +31,13 @@ export const useSchemaTable = () => {
         platformCodes: state.filters.platform.selected,
       };
 
-      const data = await fetchSchemas(params);
+      const {data, pagination} = await fetchSchemas(params);
 
       dispatch({
         type: "FETCH_SUCCESS",
         payload: {
           data,
-          lastPage: Math.ceil(data.length / 10),
+          lastPage: pagination.total_pages,
         },
       });
     } catch {

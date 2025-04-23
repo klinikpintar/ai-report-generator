@@ -1,3 +1,4 @@
+import { PaginationResponse } from "@frontend/common/types";
 import { Platform, Service, Schema } from "@frontend/common/types";
 export const mockPlatforms: Platform[] = [
   "PostgreSQL",
@@ -32,3 +33,13 @@ export const mockSchemas: Schema[] = [
     createdAt: "2023-01-01T00:00:00Z",
   },
 ];
+
+export const mockPaginatedSchemas: PaginationResponse<Schema> = {
+  data: mockSchemas,
+  message: "",
+  pagination: {
+    current_page: 1,
+    total_pages: 1,
+    total_items: mockSchemas.length
+  }
+}
