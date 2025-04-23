@@ -23,6 +23,7 @@ const mockSchemas: Schema[] = [
       name: "Service A",
       createdAt: new Date(),
       modifiedAt: new Date(),
+      platformCode: "Platform A",
       platform: {
         id: 1,
         name: "Platform A",
@@ -52,6 +53,7 @@ const mockSchemas: Schema[] = [
       name: "Service B",
       createdAt: new Date(),
       modifiedAt: new Date(),
+      platformCode: "Platform B",
       platform: {
         id: 2,
         name: "Platform B",

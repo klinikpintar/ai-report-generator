@@ -1,8 +1,16 @@
 import "@testing-library/jest-dom";
 import { render, screen, waitFor, within } from "@testing-library/react";
 import { SchemaTableSection } from "@frontend/admin/schema/sections";
-import { fetchPlatforms, fetchServices, fetchSchemas } from "@frontend/admin/schema/utils/api";
-import { dummyPlatforms, dummySchemas, dummyServices } from "@frontend/admin/schema/constant";
+import {
+  fetchPlatforms,
+  fetchServices,
+  fetchSchemas,
+} from "@frontend/admin/schema/utils/api";
+import {
+  dummyPlatforms,
+  dummySchemas,
+  dummyServices,
+} from "@frontend/admin/schema/constant";
 import userEvent from "@testing-library/user-event";
 import { ToastContainer } from "react-toastify";
 
@@ -50,7 +58,9 @@ describe("Schema Table Section", () => {
   });
 
   it("should render error message when one fetch fails", async () => {
-    (fetchSchemas as jest.Mock).mockRejectedValue(new Error("Failed to fetch schemas"));
+    (fetchSchemas as jest.Mock).mockRejectedValue(
+      new Error("Failed to fetch schemas")
+    );
     (fetchServices as jest.Mock).mockResolvedValue([]);
     (fetchPlatforms as jest.Mock).mockResolvedValue([]);
 
@@ -62,7 +72,9 @@ describe("Schema Table Section", () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText(/failed to load initial data/i)).toBeInTheDocument();
+      expect(
+        screen.getByText(/failed to load initial data/i)
+      ).toBeInTheDocument();
     });
   });
 
@@ -102,12 +114,16 @@ describe("Schema Table Section", () => {
 
     // User select the first platform
     const dropdownMenu = screen.getByTestId("platform-filter-dropdown");
-    const platformOption = within(dropdownMenu).getByText(dummyPlatforms[0].name);
+    const platformOption = within(dropdownMenu).getByText(
+      dummyServices[0].platformCode
+    );
     (fetchSchemas as jest.Mock).mockResolvedValue([dummySchemas[0]]);
     await userEvent.click(platformOption);
 
     expect(fetchSchemas).toHaveBeenCalledWith(
-      expect.objectContaining({ platformCodes: [dummyPlatforms[0].id] })
+      expect.objectContaining({
+        platformCodes: [dummyServices[0].platformCode],
+      })
     );
   });
 
@@ -130,11 +146,15 @@ describe("Schema Table Section", () => {
     const dropdownMenu = screen.getByTestId("service-filter-dropdown");
 
     const serviceOption = within(dropdownMenu).getByText(dummyServices[0].name);
-    (fetchSchemas as jest.Mock).mockRejectedValue(new Error("Failed to fetch filtered schemas"));
+    (fetchSchemas as jest.Mock).mockRejectedValue(
+      new Error("Failed to fetch filtered schemas")
+    );
     await userEvent.click(serviceOption);
 
     await waitFor(() => {
-      expect(screen.getByText(/failed to fetch filtered schemas/i)).toBeInTheDocument();
+      expect(
+        screen.getByText(/failed to fetch filtered schemas/i)
+      ).toBeInTheDocument();
     });
   });
 
