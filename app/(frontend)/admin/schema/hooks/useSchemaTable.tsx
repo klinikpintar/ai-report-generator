@@ -2,49 +2,52 @@
 "use client";
 
 import { useCallback, useEffect } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useSchemaContext } from "../context/SchemaContext";
-import { fetchSchemas } from "../utils/api";
+import { fetchSchemas, FetchSchemasParams } from "../utils/api";
 import { toast } from "react-toastify";
 
 export const useSchemaTable = () => {
   const { state, dispatch } = useSchemaContext();
   const router = useRouter();
-  const searchParams = useSearchParams();
 
   // Handle page change
   const handlePageChange = useCallback(
     (page: number) => {
-      router.push(`?page=${page}`);
       dispatch({ type: "SET_PAGE", payload: page });
+      fetchFilteredSchemas({ page });
     },
     [router, dispatch]
   );
 
   // Fetch schemas based on current filters
-  const fetchFilteredSchemas = useCallback(async () => {
-    try {
-      dispatch({ type: "FETCH_START" });
+  const fetchFilteredSchemas = useCallback(
+    async ({ page }: { page?: number } = {}) => {
+      try {
+        dispatch({ type: "FETCH_START" });
 
-      const params = {
-        serviceIds: state.filters.service.selected.map((service) => service.id),
-        platformCodes: state.filters.platform.selected,
-      };
+        const params: FetchSchemasParams = {
+          serviceIds: state.filters.service.selected.map((service) => service.id),
+          platformCodes: state.filters.platform.selected,
+          page: page || state.pagination.currentPage
+        };
 
-      const {data, pagination} = await fetchSchemas(params);
+        const { data, pagination } = await fetchSchemas(params);
 
-      dispatch({
-        type: "FETCH_SUCCESS",
-        payload: {
-          data,
-          lastPage: pagination.total_pages,
-        },
-      });
-    } catch {
-      dispatch({ type: "FETCH_ERROR", payload: "Failed to fetch schemas" });
-      toast.error("Failed to fetch schemas");
-    }
-  }, [dispatch, state.filters.service.selected, state.filters.platform.selected]);
+        dispatch({
+          type: "FETCH_SUCCESS",
+          payload: {
+            data,
+            lastPage: pagination.total_pages,
+          },
+        });
+      } catch {
+        dispatch({ type: "FETCH_ERROR", payload: "Failed to fetch schemas" });
+        toast.error("Failed to fetch schemas");
+      }
+    },
+    [dispatch, state.filters.service.selected, state.filters.platform.selected]
+  );
 
   // First load the schemas
   useEffect(() => {
@@ -58,12 +61,6 @@ export const useSchemaTable = () => {
     }
     fetchFilteredSchemas();
   }, [state.filters.platform.selected, state.filters.service.selected, fetchFilteredSchemas]);
-
-  // Set page from URL on mount
-  useEffect(() => {
-    const page = Number.parseInt(searchParams.get("page") || "1", 10);
-    dispatch({ type: "SET_PAGE", payload: page });
-  }, []);
 
   return {
     schemas: state.data,
