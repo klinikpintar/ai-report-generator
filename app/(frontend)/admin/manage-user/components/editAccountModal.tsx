@@ -1,22 +1,71 @@
+// components/EditAccountModal.tsx
 import React from "react";
-
-interface User {
-  id: string;
-  fullName: string;
-  email: string;
-  status: string;
-  role: string;
-}
+import Modal from "./plainModal";
+import UserForm from "./userFormEdit";
+import { useEditAccount } from "@frontend/admin/manage-user/hooks/useEditAccount";
 
 interface EditAccountModalProps {
   isVisible: boolean;
   onClose: () => void;
-  user: User;
+  user: {
+    id: string;
+    fullName: string;
+    email: string;
+    status: string;
+    role: string;
+  };
 }
 
 const EditAccountModal: React.FC<EditAccountModalProps> = ({ isVisible, onClose, user }) => {
+  const {
+    formData,
+    errors,
+    handleChange,
+    handleSubmit,
+    setErrors,
+  } = useEditAccount(user, onClose);
+
+  const handleCancel = () => {
+    setErrors({});
+    onClose();
+  };
+
+  if (!isVisible) return (
+    <Modal
+      isVisible={isVisible}
+      title="Edit Akun Pengguna"
+      subtitle="Perbarui informasi akun pengguna sesuai kebutuhan"
+      isForm={true}
+      onClose={handleCancel}
+    >
+      <div aria-hidden={!isVisible ? "true" : "false"}>
+        <UserForm
+          formData={formData}
+          errors={errors}
+          handleChange={handleChange}
+          handleSubmit={handleSubmit}
+          handleCancel={handleCancel}
+        />
+      </div>
+    </Modal>
+  );
+
   return (
-    <>Empty</>
+    <Modal
+      isVisible={isVisible}
+      title="Edit Akun Pengguna"
+      subtitle="Perbarui informasi akun pengguna sesuai kebutuhan"
+      isForm={true}
+      onClose={handleCancel}
+    >
+      <UserForm
+        formData={formData}
+        errors={errors}
+        handleChange={handleChange}
+        handleSubmit={handleSubmit}
+        handleCancel={handleCancel}
+      />
+    </Modal>
   );
 };
 
