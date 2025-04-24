@@ -1,9 +1,7 @@
-import { User } from "../types/user";
-
 export const useUserActions = () => {
-  const handleDeleteUser = (user: User) => {
+  const handleDeleteUser = (userId: string) => {
     // WIP
-    console.log(user.name)
+    console.log(userId)
     return true
   }
   return {
