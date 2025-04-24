@@ -59,7 +59,7 @@ export const UserTableSection = () => {
             id: userToEdit.id,
             fullName: userToEdit.name,
             email: userToEdit.email,
-            status: userToEdit.isActive ? "Active" : "Inactive",
+            status: userToEdit.isActive ? "Aktif" : "Nonaktif",
             role: userToEdit.role
           }}
         />
