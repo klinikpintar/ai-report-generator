@@ -5,19 +5,14 @@ import { AddAccountButton } from "@frontend/admin/manage-user/components/addAcco
 import { UserTable } from "./components/UserTable";
 import { FilterByRoleDropdown } from "./components/FilterByRoleDropdown";
 import { UserTableProvider } from "./context/UserTableContext";
+import { UserTableSection } from "./sections/userTableSection";
 
 const ManageUserPage = () => {
   return (
     <UserTableProvider>
       <div className="px-8">
         <UserManagementSection />
-        <section className="container max-w-screen-xl mx-auto mt-6 flex flex-col items-center justify-center space-y-10">
-          <div className="flex justify-end w-full">
-            <FilterByRoleDropdown />
-          </div>
-          <UserTable />
-          <AddAccountButton />
-        </section>
+        <UserTableSection />
       </div>
     </UserTableProvider>
   );

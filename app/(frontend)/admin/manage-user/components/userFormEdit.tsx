@@ -21,74 +21,104 @@ const UserFormEdit: React.FC<UserFormProps> = ({
   handleCancel,
 }) => {
   return (
-    <form onSubmit={handleSubmit}>
-      <label>
-        Nama Lengkap
+    <form onSubmit={handleSubmit} className="space-y-6 px-6 py-4 rounded-2xl">
+      <div>
+        <label className="block font-semibold mb-2" htmlFor="fullName">Nama Lengkap</label>
         <input
+          id="fullName"
           name="fullName"
           value={formData.fullName}
           onChange={handleChange}
+          className="w-full border rounded-md px-4 py-2 text-base"
         />
-      </label>
-      {errors.fullName && <p>{errors.fullName}</p>}
+        {errors.fullName && <p className="text-red-500 text-sm">{errors.fullName}</p>}
+      </div>
 
-      <label>
-        Email
+      <div>
+        <label className="block font-semibold mb-2" htmlFor="email">Email</label>
         <input
+          id="email"
           name="email"
           value={formData.email}
           onChange={handleChange}
+          className="w-full border rounded-md px-4 py-2 text-base"
         />
-      </label>
-      {errors.email && <p>{errors.email}</p>}
+        {errors.email && <p className="text-red-500 text-sm">{errors.email}</p>}
+      </div>
 
-      <label>
-        <input
-          type="radio"
-          name="status"
-          value="Aktif"
-          checked={formData.status === "Aktif"}
-          onChange={handleChange}
-        />
-        Aktif
-      </label>
-      <label>
-        <input
-          type="radio"
-          name="status"
-          value="Nonaktif"
-          checked={formData.status === "Nonaktif"}
-          onChange={handleChange}
-        />
-        Nonaktif
-      </label>
-      {errors.status && <p>{errors.status}</p>}
+      <div className="flex flex-col md:flex-row md:justify-between md:space-x-6">
+      <div className="w-full md:w-1/2 mb-4 md:mb-0">
+        <p className="font-semibold mb-2">Status Akun</p>
+        <div className="flex flex-col space-y-2">
+          <label className="flex items-center space-x-2">
+            <input
+              type="radio"
+              name="status"
+              value="Aktif"
+              checked={formData.status === "Aktif"}
+              onChange={handleChange}
+            />
+            <span>Aktif</span>
+          </label>
+          <label className="flex items-center space-x-2">
+            <input
+              type="radio"
+              name="status"
+              value="Nonaktif"
+              checked={formData.status === "Nonaktif"}
+              onChange={handleChange}
+            />
+            <span>Nonaktif</span>
+          </label>
+        </div>
+        {errors.status && <p className="text-red-500 text-sm">{errors.status}</p>}
+      </div>
 
-      <label>
-        <input
-          type="radio"
-          name="role"
-          value="ADMIN"
-          checked={formData.role === "ADMIN"}
-          onChange={handleChange}
-        />
-        Admin
-      </label>
-      <label>
-        <input
-          type="radio"
-          name="role"
-          value="BUSINESS_ANALYST"
-          checked={formData.role === "BUSINESS_ANALYST"}
-          onChange={handleChange}
-        />
-        Business Analyst
-      </label>
-      {errors.role && <p>{errors.role}</p>}
+      <div className="w-full md:w-1/2">
+        <p className="font-semibold mb-2">Role</p>
+        <div className="flex flex-col space-y-2">
+          <label className="flex items-center space-x-2">
+            <input
+              type="radio"
+              name="role"
+              value="ADMIN"
+              checked={formData.role === "ADMIN"}
+              onChange={handleChange}
+            />
+            Admin
+          </label>
+          <label className="flex items-center space-x-2">
+            <input
+              type="radio"
+              name="role"
+              value="BUSINESS_ANALYST"
+              checked={formData.role === "BUSINESS_ANALYST"}
+              onChange={handleChange}
+            />
+            Business Analyst
+          </label>
+        </div>
+        {errors.role && <p className="text-red-500 text-sm">{errors.role}</p>}
+      </div>
+    </div>
 
-      <button type="submit">Simpan</button>
-      <button type="button" onClick={handleCancel}>Batal</button>
+      <div className="flex justify-center space-x-4 pt-4">
+        <button
+          type="button"
+          onClick={handleCancel}
+          className="border-2 border-blue-400 text-blue-500 rounded-full px-6 py-2 font-semibold"
+        >
+          Batal
+        </button>
+        <button
+          type="submit"
+          className="bg-blue-400 text-white rounded-full px-6 py-2 font-semibold"
+        >
+          Simpan
+        </button>
+      </div>
     </form>
+
   );
 };
 
