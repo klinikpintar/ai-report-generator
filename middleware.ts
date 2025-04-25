@@ -1,44 +1,68 @@
 import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
+import type { NextRequest, NextFetchEvent } from "next/server";
+import * as jose from "jose";
 
-export async function verifyAccessToken(req: NextRequest, accessToken: string) {
+type ROLE = "ADMIN" | "BUSINESS_ANALYST";
+
+interface UserJwtPayload {
+  id: string;
+  email: string;
+  role: ROLE;
+  exp?: number;
+  iat?: number;
+}
+
+const AUTH_ROUTES = {
+  LOGIN: "/login",
+  API_LOGIN: "/api/auth/login",
+  API_REFRESH: "/api/auth/token/refresh",
+};
+
+const ROLE_REDIRECTS = {
+  ADMIN: {
+    defaultPath: "/admin",
+    restrictedPaths: ["/"],
+  },
+  BUSINESS_ANALYST: {
+    defaultPath: "/",
+    restrictedPaths: ["/admin"],
+  },
+};
+
+const FIVE_MINUTES_IN_SECONDS = 300;
+
+export async function verifyAccessToken(
+  token: string
+): Promise<UserJwtPayload | null> {
   try {
-    const apiResponse = await fetch(
-      `${process.env.NEXT_PUBLIC_BASE_URL}/api/auth/token/verify`,
-      {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Cookie: `access_token=${accessToken}`,
-        },
-        credentials: "include",
-      }
-    );
-
-    if (!apiResponse.ok) throw new Error("Token verification failed");
-
-    const data = await apiResponse.json();
-    return data.data.user;
-  } catch {
+    const secretEnv = process.env.JWT_ACCESS_SECRET;
+    if (!secretEnv) {
+      throw new Error("JWT secret is not defined in environment variables.");
+    }
+    const secret = new TextEncoder().encode(secretEnv);
+    const { payload } = await jose.jwtVerify(token, secret, {
+      algorithms: ["HS256"],
+    });
+    return payload as unknown as UserJwtPayload;
+  } catch (error) {
+    console.error("Token verification failed:", error);
     return null;
   }
 }
 
-async function refreshAccessToken(req: NextRequest, refreshToken: string) {
+export async function refreshAccessToken(refreshToken: string) {
   try {
     const apiResponse = await fetch(
-      `${process.env.NEXT_PUBLIC_BASE_URL}/api/auth/token/refresh`,
+      `${process.env.NEXT_PUBLIC_API_URL}${AUTH_ROUTES.API_REFRESH}`,
       {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Cookie: `refresh_token=${refreshToken}`,
         },
-        credentials: "include",
       }
     );
-
-    if (!apiResponse.ok) throw new Error("Failed to refresh token");
+    if (!apiResponse.ok) return null;
 
     const data = await apiResponse.json();
     return data.data.access_token;
@@ -47,47 +71,99 @@ async function refreshAccessToken(req: NextRequest, refreshToken: string) {
   }
 }
 
-function getRedirectURL(role: string, pathname: string) {
-  if (role === "ADMIN" && !pathname.startsWith("/admin")) return "/admin";
-  if (role !== "ADMIN" && pathname.startsWith("/admin")) return "/";
+function isAuthRoute(pathname: string): boolean {
+  return Object.values(AUTH_ROUTES).some((route) => pathname.includes(route));
+}
+
+function isApiRoute(pathname: string): boolean {
+  return pathname.includes("/api/");
+}
+
+function isTokenAboutToExpire(expTimestamp: number): boolean {
+  const currentTime = Math.floor(Date.now() / 1000);
+  return expTimestamp - currentTime < FIVE_MINUTES_IN_SECONDS;
+}
+
+async function logAccess(
+  userId: string,
+  path: string,
+  role: ROLE
+): Promise<void> {
+  try {
+    console.log(
+      `User ${userId} (${role}) accessed ${path} at ${new Date().toISOString()}`
+    );
+  } catch (error) {
+    console.error("Failed to log access:", error);
+  }
+}
+
+function getRedirectURL(role: ROLE, pathname: string): string | null {
+  const roleConfig = ROLE_REDIRECTS[role] || ROLE_REDIRECTS.BUSINESS_ANALYST;
+
+  const isRestrictedPath = roleConfig.restrictedPaths.some(
+    (path) => pathname === path || pathname.startsWith(`${path}/`)
+  );
+
+  if (isRestrictedPath) return roleConfig.defaultPath;
+
+  if (role === "ADMIN" && !pathname.startsWith("/admin")) {
+    return roleConfig.defaultPath;
+  }
+
   return null;
 }
 
-export async function middleware(req: NextRequest) {
-  if (
-    req.url.includes("api/auth/login") ||
-    req.url.includes("api/auth/token/verify") ||
-    req.url.includes("api/auth/token/refresh")
-  )
+export async function middleware(req: NextRequest, event: NextFetchEvent) {
+  const { pathname } = req.nextUrl;
+
+  if (isAuthRoute(pathname)) {
     return NextResponse.next();
+  }
 
   let accessToken = req.cookies.get("access_token")?.value ?? null;
   const refreshToken = req.cookies.get("refresh_token")?.value ?? null;
-  let decodedAccess = accessToken
-    ? await verifyAccessToken(req, accessToken)
-    : null;
-  console.log("Decoded Access Token:", decodedAccess);
 
-  if (!decodedAccess && refreshToken) {
-    accessToken = await refreshAccessToken(req, refreshToken);
-    decodedAccess = accessToken
-      ? await verifyAccessToken(req, accessToken)
-      : null;
+  let user = accessToken ? await verifyAccessToken(accessToken) : null;
+
+  if (!user && refreshToken) {
+    accessToken = await refreshAccessToken(refreshToken);
+    user = accessToken ? await verifyAccessToken(accessToken) : null;
   }
 
-  if (!decodedAccess)
-    return NextResponse.redirect(new URL("/login", req.nextUrl.origin));
+  if (!user) {
+    return NextResponse.redirect(
+      new URL(AUTH_ROUTES.LOGIN, req.nextUrl.origin)
+    );
+  }
 
-  if (req.url.includes("/api/")) return NextResponse.next();
+  // Background token refresh if needed
+  if (user.exp && isTokenAboutToExpire(user.exp)) {
+    event.waitUntil(
+      (async () => {
+        if (refreshToken) {
+          await refreshAccessToken(refreshToken);
+        }
+      })()
+    );
+  }
 
-  const redirectURL = getRedirectURL(decodedAccess.role, req.nextUrl.pathname);
-  if (redirectURL)
+  // check user role for api routes
+  if (isApiRoute(pathname)) {
+    event.waitUntil(logAccess(user.id, pathname, user.role));
+    return NextResponse.next();
+  }
+
+  const redirectURL = getRedirectURL(user.role, pathname);
+  if (redirectURL && redirectURL !== pathname) {
     return NextResponse.redirect(new URL(redirectURL, req.nextUrl.origin));
+  }
+
+  event.waitUntil(logAccess(user.id, pathname, user.role));
 
   return NextResponse.next();
 }
 
-// ditambahkan url path yang lainnya
 export const config = {
   matcher: ["/", "/admin/:path*", "/api/:path*"],
 };

@@ -26,6 +26,8 @@ export default function ExportModal({
 
     try {
       const token = localStorage.getItem("access_token");
+      const createdAt = new Date().toISOString().split("T")[0];
+      const fileName = `report-${createdAt}`;
 
       const endpoint =
         selectedFormat === "markdown"
@@ -42,7 +44,7 @@ export default function ExportModal({
           reportData: {
             title,
             content,
-            createdAt: new Date().toISOString().split("T")[0],
+            createdAt,
           },
         }),
       });
@@ -59,7 +61,7 @@ export default function ExportModal({
       if (selectedFormat === "markdown") {
         const a = document.createElement("a");
         a.href = url;
-        a.download = `${title}.md`;
+        a.download = `${fileName}.md`;
         a.click();
         URL.revokeObjectURL(url);
       } else {

@@ -290,4 +290,75 @@ describe('AddAccountModal', () => {
       );
     });
   })
+
+  it('should toggle password visibility when the show password button is clicked', async () => {
+    render(<AddAccountModal isVisible={true} onClose={mockOnClose} />);
+  
+    // Find password fields and toggle buttons
+    const passwordInput = screen.getByLabelText('Password');
+    const confirmPasswordInput = screen.getByLabelText('Confirm Password');
+    
+    const showPasswordButton = screen.getByLabelText('Show password');
+    
+    // Verify initially passwords are hidden (type is password)
+    expect(passwordInput).toHaveAttribute('type', 'password');
+    expect(confirmPasswordInput).toHaveAttribute('type', 'password');
+    
+    await userEvent.click(showPasswordButton);
+    
+    // Verify password is now visible (type is text)
+    expect(passwordInput).toHaveAttribute('type', 'text');
+    expect(confirmPasswordInput).toHaveAttribute('type', 'password'); // Confirm password field should still be hidden
+    
+    // Toggle password back to hidden
+    await userEvent.click(showPasswordButton);
+    
+    // Verify password and confirm password fields are hidden again
+    expect(passwordInput).toHaveAttribute('type', 'password');
+    expect(confirmPasswordInput).toHaveAttribute('type', 'password');
+  });
+
+  it('should toggle confirm password visibility when the show confirm password button is clicked', async () => {
+    render(<AddAccountModal isVisible={true} onClose={mockOnClose} />);
+  
+    // Find password fields and toggle buttons
+    const passwordInput = screen.getByLabelText('Password');
+    const confirmPasswordInput = screen.getByLabelText('Confirm Password');
+    
+    const showConfirmPasswordButton = screen.getByLabelText('Show confirm password');
+    
+    // Verify initially passwords are hidden (type is password)
+    expect(passwordInput).toHaveAttribute('type', 'password');
+    expect(confirmPasswordInput).toHaveAttribute('type', 'password');
+    
+    await userEvent.click(showConfirmPasswordButton);
+    
+    // Verify confirm password is now visible
+    expect(passwordInput).toHaveAttribute('type', 'password'); // Password field should still be hidden
+    expect(confirmPasswordInput).toHaveAttribute('type', 'text');
+    
+    // Toggle confirm password back to hidden
+    await userEvent.click(showConfirmPasswordButton);
+    
+     // Verify password and confirm password fields are hidden again
+     expect(passwordInput).toHaveAttribute('type', 'password');
+     expect(confirmPasswordInput).toHaveAttribute('type', 'password');
+  });
+
+  it('should update aria-label when toggling password visibility', async () => {
+    render(<AddAccountModal isVisible={true} onClose={mockOnClose} />);
+    
+    const showPasswordButton = screen.getByLabelText('Show password');
+    
+    // Initially the aria-label should be "Show password"
+    expect(showPasswordButton).toHaveAttribute('aria-label', 'Show password');
+    
+    // After clicking, the aria-label should change
+    await userEvent.click(showPasswordButton);
+    expect(showPasswordButton).toHaveAttribute('aria-label', 'Hide password');
+    
+    // After clicking again, the aria-label should revert
+    await userEvent.click(showPasswordButton);
+    expect(showPasswordButton).toHaveAttribute('aria-label', 'Show password');
+  });
 });

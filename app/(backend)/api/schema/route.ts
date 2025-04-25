@@ -8,9 +8,10 @@ export async function GET(req: NextRequest) {
   try {
     const url = new URL(req.url);
     const serviceId = url.searchParams.getAll("serviceIds")
+    const platformCode = url.searchParams.getAll("platformCodes")
 
 
-    const schemas = await schemaService.findAllSchemas(serviceId);
+    const schemas = await schemaService.findAllSchemas(serviceId, platformCode);
     return NextResponse.json(schemas, { status: StatusCodes.OK });
   } catch (error) {
     return handleError(error, "GET Schemas");

@@ -5,6 +5,7 @@ import { useRouter, usePathname } from "next/navigation";
 import Image from "next/image";
 import FeAuthService from "@frontend/login/services/feAuthService";
 import { useUser } from "@frontend/login/context/userContext";
+import { toast } from "react-toastify";
 
 export default function Navbar() {
   const router = useRouter();
@@ -21,11 +22,17 @@ export default function Navbar() {
     if (logoutResponse.success) {
       router.push("/login");
     } else {
-      alert("Logout failed. Please try again."); // 🔹 Pastikan alert dipanggil di sini
+      toast.error("Logout failed. Please try again.", {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
     }
   }
   
-
   return (
     <nav
       className={`flex items-center h-[72px] justify-between px-8 py-2 bg-white fixed top-0 w-screen pl-20
