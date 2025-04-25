@@ -17,7 +17,7 @@ export const extractToken = (cookie: string, key: string) => {
   return refreshToken;
 };
 
-export async function getUserFromRequest(_req: Request) {
+export async function getUserFromRequest() {
   try {
     const cookieStore = await cookies(); // Add await here
     const accessToken = cookieStore.get('access_token')?.value;
