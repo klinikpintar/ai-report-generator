@@ -28,7 +28,7 @@ export const useFetchUser = () => {
 
   useEffect(() => {
     handleFetchUsers();
-  }, [state.pagination.currentPage, state.filters.role.selected]);
+  }, [handleFetchUsers, state.pagination.currentPage, state.filters.role.selected]);
 
   return { handleFetchUsers };
 };

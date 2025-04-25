@@ -43,7 +43,7 @@ export default function Dropdown() {
     };
 
     fetchServices();
-  }, []);
+  }, [setServices]);
 
   // ✅ Safe fallback for services
   const options = [

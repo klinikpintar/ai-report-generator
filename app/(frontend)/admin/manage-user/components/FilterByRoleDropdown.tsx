@@ -48,7 +48,7 @@ export const FilterByRoleDropdown = () => {
     if (role) {
       handleRoleChange([role]);
     }
-  }, []);
+  }, [handleRoleChange]);
 
   const displayRole = (role: UserRole) => {
     switch (role) {

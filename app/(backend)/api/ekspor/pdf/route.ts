@@ -26,7 +26,7 @@ export async function POST(req: NextRequest) {
     let fileBuffer: Buffer;
     try {
       fileBuffer = await exporter.export(parsed);
-    } catch (pdfError) {
+    } catch (_) {
       return NextResponse.json({ message: "Gagal generate PDF" }, { status: 500 });
     }
 
