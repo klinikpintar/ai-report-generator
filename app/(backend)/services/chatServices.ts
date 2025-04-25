@@ -76,7 +76,7 @@ export class GeminiProvider implements ModelProvider {
     const sdkMessages = messages as CoreMessage[];
     
     return generateText({
-      model: google('gemini-2.5-pro-exp-03-25'),
+      model: google('gemini-2.0-flash'),
       messages: sdkMessages,
       system: AI_INSTRUCTION,
     });
