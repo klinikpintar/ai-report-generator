@@ -39,7 +39,10 @@ describe("useSchemaTable", () => {
 
   describe("basic functionality", () => {
     it("should provide schema data and loading state", async () => {
-      (fetchSchemas as jest.Mock).mockResolvedValue(mockPaginatedSchemas);
+      // ... other mock setups for pagination tests
+-     (fetchSchemas as jest.Mock).mockResolvedValue(mockSchemas);
++     (fetchSchemas as jest.Mock).mockResolvedValue(mockPaginatedSchemas);
+      // ... rest of the test assertions
 
       const { result } = renderHook(() => useSchemaTable(), {
         wrapper: TestWrapper,
