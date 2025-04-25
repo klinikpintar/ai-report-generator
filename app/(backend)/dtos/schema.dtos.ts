@@ -7,9 +7,7 @@ export const CreateSchemaDto = z.object({
   serviceId: z.string().uuid('Service ID is required'),
 });
 
--import const PLATFORM_CODES = ['POSTGRESQL', 'MYSQL', 'MONGODB'];
-+import { PLATFORM_CODES as PlatformCodes } from '@backend/dtos/platform.dto';
-+const PLATFORM_CODES = PlatformCodes.map(code => code.toUpperCase());
+const PLATFORM_CODES = ['POSTGRESQL', 'MYSQL', 'MONGODB'];
 
 export const GetSchemaDto = z.object({
   page: z
