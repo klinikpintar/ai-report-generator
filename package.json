@@ -17,6 +17,7 @@
     "@ai-sdk/deepseek": "^0.1.12",
     "@ai-sdk/google": "^1.1.19",
     "@ai-sdk/react": "^1.1.20",
+    "@heroicons/react": "^2.2.0",
     "@prisma/client": "6.4.1",
     "@radix-ui/react-alert-dialog": "^1.1.6",
     "@radix-ui/react-dialog": "^1.1.6",
