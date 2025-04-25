@@ -1,10 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse, NextRequest } from 'next/server';
 import prisma from '@/lib/prisma';
 import { getUserFromRequest } from '@/app/(backend)/utils/authUtils';
 
 export async function GET(
   _request: NextRequest,
-  context: { params: { id: string } }
+  { params }: { params: { id: string } }
 ) {
   try {
     const user = await getUserFromRequest();
@@ -12,7 +12,7 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { id } = context.params; // Access id from context.params
+    const { id } = params;
     
     // Verify user owns this session
     const session = await prisma.chatSession.findUnique({
@@ -36,8 +36,8 @@ export async function GET(
 }
 
 export async function POST(
-  req: NextRequest,
-  context: { params: { id: string } }
+  request: Request,
+  { params }: { params: { id: string } }
 ) {
   try {
     const user = await getUserFromRequest();
@@ -45,8 +45,8 @@ export async function POST(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { id } = context.params; // Access id from context.params
-    const { content, role, modelUsed } = await req.json();
+    const { id } = params;
+    const { content, role, modelUsed } = await request.json();
     
     // Verify user owns this session
     const session = await prisma.chatSession.findUnique({
