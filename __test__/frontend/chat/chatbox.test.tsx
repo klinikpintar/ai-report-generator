@@ -10,9 +10,29 @@ jest.mock("react-markdown", () => (props: React.PropsWithChildren) => <div>{prop
 jest.mock("remark-gfm", () => jest.fn());
 jest.mock("rehype-raw", () => jest.fn());
 
-// Helper function untuk render dengan ServiceProvider
+// Mock SessionContext
+jest.mock("@frontend/(chat)/context/sessionContext", () => ({
+  useSession: () => ({
+    activeSessionId: null,
+    setActiveSessionId: jest.fn(),
+    createNewSession: jest.fn().mockResolvedValue("mock-session-id"),
+    sessions: [],
+    isLoading: false,
+    error: null,
+    refreshSessions: jest.fn()
+  }),
+  SessionProvider: ({ children }) => <>{children}</>
+}));
+
+// Helper function for rendering with both providers
 const renderWithServiceProvider = (children: ReactNode) => {
-  return render(<ServiceProvider>{children}</ServiceProvider>);
+  const SessionProvider = require("@frontend/(chat)/context/sessionContext").SessionProvider;
+  
+  return render(
+    <SessionProvider>
+      <ServiceProvider>{children}</ServiceProvider>
+    </SessionProvider>
+  );
 };
 
 describe("ChatBox Component", () => {
@@ -63,6 +83,40 @@ describe("ChatBox Component", () => {
 describe("ChatBox API Integration", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    
+    // Mock for session message loading
+    global.fetch = jest.fn().mockImplementation((url) => {
+      // Handle session-related API calls
+      if (url.includes('/api/chat-sessions/')) {
+        if (url.endsWith('/messages')) {
+          // Handle messages endpoint
+          return Promise.resolve({
+            ok: true,
+            json: async () => ({
+              messages: []
+            })
+          });
+        } else {
+          // Handle session details endpoint
+          return Promise.resolve({
+            ok: true,
+            json: async () => ({
+              session: {
+                id: "mock-session-id",
+                title: "Test Session",
+                messages: []
+              }
+            })
+          });
+        }
+      }
+      
+      // Let other fetch calls be handled by specific test implementations
+      return Promise.resolve({
+        ok: true,
+        json: async () => ([])
+      });
+    });
   });
 
   const mockServices: Service[] = [
@@ -103,6 +157,8 @@ describe("ChatBox API Integration", () => {
           finishReason: "stop",
           usage: { promptTokens: 5, completionTokens: 10 },
           modelUsed: "gemini",
+          // Include these fields for session support
+          sessionId: "mock-session-id"
         },
       }),
     });
@@ -241,3 +297,19 @@ describe("ChatBox API Integration", () => {
     expect(errorMessage).toBeInTheDocument();
   });
 });
+
+// Mock Next.js navigation hooks
+jest.mock("next/navigation", () => ({
+  useRouter: jest.fn(() => ({
+    push: jest.fn(),
+    replace: jest.fn(),
+    prefetch: jest.fn()
+  })),
+  useSearchParams: jest.fn(() => ({
+    get: jest.fn((param) => {
+      if (param === "id") return null; // For sessionId
+      return null;
+    })
+  })),
+  usePathname: jest.fn(() => "/chat")
+}));

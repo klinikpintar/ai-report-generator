@@ -29,7 +29,7 @@ export default function Dropdown() {
       }
     };
     fetchServices();
-  }, []);
+  }, [setServices]);
 
   // Daftar layanan dengan platformnya
   const options = [selectAllService, ...services];
