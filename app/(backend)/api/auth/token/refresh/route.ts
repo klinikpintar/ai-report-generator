@@ -24,7 +24,7 @@ export async function POST(req: Request) {
     if (error instanceof ErrorResponse) {
       return error.generate();
     }
-    console.error("Unexpected error during user creation:", error);
+    console.error(error);
     return new ErrorResponse("Internal server error", 500).generate();
   }
 }
