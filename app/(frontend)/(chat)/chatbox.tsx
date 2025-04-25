@@ -65,7 +65,7 @@ export default function ChatBox() {
     } else {
       setIsInitializing(false); // No session to load
     }
-  }, [searchParams]);
+  }, [searchParams, setActiveSessionId]);
 
   // Load messages from a session
   const loadSessionMessages = async (sessionId: string) => {
@@ -75,8 +75,15 @@ export default function ChatBox() {
 
       const data = await response.json();
 
+      interface SessionMessage {
+        id: string;
+        content: string;
+        role: string;
+        modelUsed?: string;
+      }
+
       // Convert session messages to your format
-      const formattedMessages = data.session.messages.map((msg: any) => ({
+      const formattedMessages = data.session.messages.map((msg: SessionMessage) => ({
         id: msg.id,
         sender: msg.role === "user" ? "user" : "assistant",
         content: msg.content,
