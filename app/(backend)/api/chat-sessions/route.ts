@@ -3,7 +3,7 @@ import prisma from '@/lib/prisma';
 import { getUserFromRequest } from '@/app/(backend)/utils/authUtils';
 
 // Get all user's chat sessions
-export async function GET(req: Request) {
+export async function GET() {
   try {
     const user = await getUserFromRequest();
     if (!user) {
