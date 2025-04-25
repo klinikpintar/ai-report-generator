@@ -3,8 +3,8 @@ import prisma from '@/lib/prisma';
 import { getUserFromRequest } from '@/app/(backend)/utils/authUtils';
 
 export async function GET(
-  _request: NextRequest,
-  { params }: { params: { id: string } }
+  request: NextRequest,
+  context: { params: { id: string } }
 ) {
   try {
     const user = await getUserFromRequest();
@@ -12,7 +12,7 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { id } = params;
+    const { id } = context.params;
     
     // Verify user owns this session
     const session = await prisma.chatSession.findUnique({
@@ -31,7 +31,7 @@ export async function GET(
     return NextResponse.json({ messages });
   } catch (error) {
     console.error('Error fetching chat messages:', error);
-    return NextResponse.json({ error: 'Failed to fetch chat messages' }, { status: 500 });
+    return NextResponse.json({ error: 'Server error' }, { status: 500 });
   }
 }
 
