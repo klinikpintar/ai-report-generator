@@ -1,3 +1,4 @@
+// This section is used in admin/manage-user page
 "use client";
 
 import { useState } from "react";
@@ -7,8 +8,8 @@ import { FilterByRoleDropdown } from "../components/FilterByRoleDropdown";
 import { UserTable } from "../components/UserTable";
 import AddAccountModal from "../components/addAccountModal";
 import EditAccountModal from "../components/editAccountModal";
-import { ConfirmationDialog } from "../../../components/ConfirmationDialog";
-import { useUserActions } from "../hooks/useUserAction";
+import { ConfirmationDialog } from "@frontend/components/ConfirmationDialog";
+import { useUserActions } from "@frontend/admin/manage-user/hooks/useUserAction";
 
 export const UserTableSection = () => {
   const [userToEdit, setUserToEdit] = useState<User | null>(null);

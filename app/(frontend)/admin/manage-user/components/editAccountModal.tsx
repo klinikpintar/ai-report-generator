@@ -38,7 +38,7 @@ const EditAccountModal: React.FC<EditAccountModalProps> = ({ isVisible, onClose,
       isForm={true}
       onClose={handleCancel}
     >
-      <div aria-hidden={!isVisible ? "true" : "false"}>
+      <div aria-hidden="true">
         <UserForm
           formData={formData}
           errors={errors}

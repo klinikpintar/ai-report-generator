@@ -1,6 +1,6 @@
 import { useState, FormEvent } from "react";
 import { toast } from "react-toastify";
-import { AxiosError } from "axios";
+import axios, { AxiosError } from "axios";
 
 interface FormData {
   fullName: string;
@@ -73,7 +73,7 @@ export const useEditAccount = (user: User, onClose: () => void) => {
 
       // TODO: implement PUT /api/users/{id}
       console.log(user.id, updatedData)
-      // await axios.put(`/api/users/${user.id}`, updatedData);
+      await axios.put(`/api/users/${user.id}`, updatedData);
 
       toast.success("User successfully updated", {
         position: "top-right",
