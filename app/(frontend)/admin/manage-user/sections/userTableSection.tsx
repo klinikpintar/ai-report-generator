@@ -7,14 +7,12 @@ import { FilterByRoleDropdown } from "../components/FilterByRoleDropdown";
 import { UserTable } from "../components/UserTable";
 import AddAccountModal from "../components/addAccountModal";
 import EditAccountModal from "../components/editAccountModal";
-import Modal from "@frontend/components/Modal";
 import { ConfirmationDialog } from "../../../components/ConfirmationDialog";
 import { useUserActions } from "../hooks/useUserAction";
 
 export const UserTableSection = () => {
   const [userToEdit, setUserToEdit] = useState<User | null>(null);
   const [userToDelete, setUserToDelete] = useState<User | null>(null);
-  const [userToView, setUserToView] = useState<User | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
 
   const { handleDeleteUser } = useUserActions();
@@ -72,23 +70,6 @@ export const UserTableSection = () => {
           onConfirm={handleConfirmDelete}
           description="Apakah Anda yakin ingin menghapus pengguna ini?"
         />
-      )}
-
-      {userToView && (
-        <Modal
-          title={`Detail Pengguna - ${userToView.name}`}
-          subtitle=""
-          onClose={() => setUserToView(null)}
-          isVisible={true}
-          isForm={false}
-        >
-          <div className="p-8 space-y-4">
-            <p><strong>Nama:</strong> {userToView.name}</p>
-            <p><strong>Email:</strong> {userToView.email}</p>
-            <p><strong>Status:</strong> {userToView.isActive}</p>
-            <p><strong>Role:</strong> {userToView.role}</p>
-          </div>
-        </Modal>
       )}
     </section>
   );

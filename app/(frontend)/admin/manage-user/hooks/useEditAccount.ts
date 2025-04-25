@@ -1,6 +1,6 @@
 import { useState, FormEvent } from "react";
 import { toast } from "react-toastify";
-import axios, { AxiosError } from "axios";
+import { AxiosError } from "axios";
 
 interface FormData {
   fullName: string;
@@ -49,13 +49,11 @@ export const useEditAccount = (user: User, onClose: () => void) => {
   const handleChange = (e: InputChangeEvent) => {
     const { name, value } = e.target;
 
-    // Validasi agar hanya input valid yang diterima
     if (name === "role" && !["ADMIN", "BUSINESS_ANALYST"].includes(value)) return;
     if (name === "status" && !["Aktif", "Nonaktif"].includes(value)) return;
 
     setFormData(prev => ({ ...prev, [name]: value }));
 
-    // Hapus error saat user memperbaiki input
     if (errors[name as keyof FormErrors]) {
       setErrors(prev => ({ ...prev, [name]: undefined }));
     }
@@ -73,7 +71,9 @@ export const useEditAccount = (user: User, onClose: () => void) => {
         status: formData.status,
       };
 
-      await axios.put(`/api/users/${user.id}`, updatedData);
+      // TODO: implement PUT /api/users/{id}
+      console.log(user.id, updatedData)
+      // await axios.put(`/api/users/${user.id}`, updatedData);
 
       toast.success("User successfully updated", {
         position: "top-right",

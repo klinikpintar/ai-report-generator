@@ -85,7 +85,7 @@ const UserFormEdit: React.FC<UserFormProps> = ({
               checked={formData.role === "ADMIN"}
               onChange={handleChange}
             />
-            Admin
+            <span>Admin</span>
           </label>
           <label className="flex items-center space-x-2">
             <input
@@ -95,7 +95,7 @@ const UserFormEdit: React.FC<UserFormProps> = ({
               checked={formData.role === "BUSINESS_ANALYST"}
               onChange={handleChange}
             />
-            Business Analyst
+            <span>Business Analyst</span>
           </label>
         </div>
         {errors.role && <p className="text-red-500 text-sm">{errors.role}</p>}
