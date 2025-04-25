@@ -70,7 +70,7 @@ export default function Dropdown() {
   }, []);
 
   return (
-    <div className="relative w-full" ref={dropdownRef}>
+    <div className="relative w-full z-10" ref={dropdownRef}>
       <button
         className="w-full text-left flex items-center gap-5 font-bold text-lg text-blue-6"
         onClick={() => setIsOpen(!isOpen)}
