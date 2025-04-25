@@ -1,10 +1,9 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { getUserFromRequest } from '@/app/(backend)/utils/authUtils';
 
-// Fix the GET handler
 export async function GET(
-  request: Request,
+  _request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
@@ -36,9 +35,8 @@ export async function GET(
   }
 }
 
-// Fix the POST handler
 export async function POST(
-  req: Request,
+  req: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
