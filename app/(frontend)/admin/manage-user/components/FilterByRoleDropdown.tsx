@@ -1,6 +1,6 @@
 "use client";
 import { FilterDropdown } from "@frontend/components/FilterDropdown";
-import React, { useEffect } from "react";
+import React, { useEffect, useCallback } from "react"; // Add useCallback
 import { UserRole } from "../types/user";
 import { useUserTableContext } from "../context/UserTableContext";
 import { useRouter } from "next/navigation";
@@ -9,7 +9,7 @@ export const FilterByRoleDropdown = () => {
   const { dispatch, state } = useUserTableContext();
   const router = useRouter();
 
-  const writeRoleToUrl = (role: UserRole | null) => {
+  const writeRoleToUrl = useCallback((role: UserRole | null) => {
     const params = new URLSearchParams(window.location.search);
     if (role) {
       params.set("role", role);
@@ -17,18 +17,19 @@ export const FilterByRoleDropdown = () => {
       params.delete("role");
     }
     router.push(`/admin/manage-user?${params.toString()}`);
-  };
+  }, [router]);
 
-  const parseRoleFromUrl = () => {
+  const parseRoleFromUrl = useCallback(() => {
     const role = new URLSearchParams(window.location.search).get("role");
     if (!role) return null;
     
     // Validate that the role is one of the valid UserRole values
     const isValidRole = Object.values(UserRole).includes(role as UserRole);
     return isValidRole ? (role as UserRole) : null;
-  };
+  }, []);
 
-  const handleRoleChange = (selectedRoles: UserRole[]) => {
+  // Wrap in useCallback to stabilize reference
+  const handleRoleChange = useCallback((selectedRoles: UserRole[]) => {
     dispatch({
       type: "SET_FILTERS",
       payload: {
@@ -40,15 +41,15 @@ export const FilterByRoleDropdown = () => {
     });
 
     const selectedRole = selectedRoles.length === 1 ? selectedRoles[0] : null;
-    writeRoleToUrl(selectedRole); // Update the URL with the selected role
-  };
+    writeRoleToUrl(selectedRole);
+  }, [dispatch, state.filters.role, writeRoleToUrl]);
 
   useEffect(() => {
     const role = parseRoleFromUrl();
     if (role) {
       handleRoleChange([role]);
     }
-  }, [handleRoleChange]);
+  }, [handleRoleChange, parseRoleFromUrl]); // Include all dependencies
 
   const displayRole = (role: UserRole) => {
     switch (role) {

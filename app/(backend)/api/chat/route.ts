@@ -28,7 +28,7 @@ export async function POST(req: Request) {
   const contextEnhancer = new SchemaContextEnhancer(schemaRepository);
 
   try {
-    const user = await getUserFromRequest(req);
+    const user = await getUserFromRequest();
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }

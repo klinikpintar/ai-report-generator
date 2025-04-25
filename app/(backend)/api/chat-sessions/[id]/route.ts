@@ -8,7 +8,7 @@ export async function GET(
   context: { params: { id: string } }
 ) {
   try {
-    const user = await getUserFromRequest(req);
+    const user = await getUserFromRequest();
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -44,7 +44,7 @@ export async function DELETE(
   context: { params: { id: string } }  // Change parameter format
 ) {
   try {
-    const user = await getUserFromRequest(req);
+    const user = await getUserFromRequest();
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -78,7 +78,7 @@ export async function PATCH(
   context: { params: { id: string } }  // Change parameter format
 ) {
   try {
-    const user = await getUserFromRequest(req);
+    const user = await getUserFromRequest();
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }

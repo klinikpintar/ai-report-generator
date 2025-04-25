@@ -2,15 +2,18 @@ import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { getUserFromRequest } from '@/app/(backend)/utils/authUtils';
 
-// Get messages for a specific chat session
-export async function GET(req: Request, { params }: { params: { id: string } }) {
+// Fix the parameter typing
+export async function GET(
+  req: Request, 
+  context: { params: { id: string } } // Change to this format
+) {
   try {
-    const user = await getUserFromRequest(req);
+    const user = await getUserFromRequest();
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { id } = params;
+    const { id } = context.params; // Access id from context.params
     
     // Verify user owns this session
     const session = await prisma.chatSession.findUnique({
@@ -33,15 +36,18 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
   }
 }
 
-// Add a message to a chat session
-export async function POST(req: Request, { params }: { params: { id: string } }) {
+// Fix POST handler the same way
+export async function POST(
+  req: Request, 
+  context: { params: { id: string } } // Change to this format
+) {
   try {
-    const user = await getUserFromRequest(req);
+    const user = await getUserFromRequest();
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { id } = params;
+    const { id } = context.params; // Access id from context.params
     const { content, role, modelUsed } = await req.json();
     
     // Verify user owns this session
