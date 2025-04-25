@@ -17,6 +17,10 @@ export async function GET(req: Request) {
       { status: 200 }
     );
   } catch (error) {
-    return (error as ErrorResponse).generate();
+    if (error instanceof ErrorResponse) {
+      return error.generate();
+    }
+    console.error(error);
+    return new ErrorResponse("Internal server error", 500).generate();
   }
 }
