@@ -35,7 +35,7 @@ export const useUserTablePagination = (handleFetchUsers: () => Promise<void>) =>
   useEffect(() => {
     const page = parsePageFromUrl();
     dispatch({ type: "SET_PAGE", payload: page });
-  }, []);
+  }, [dispatch]);
 
   return { handlePageChange };
 }

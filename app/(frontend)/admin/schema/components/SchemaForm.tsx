@@ -83,26 +83,18 @@ const SchemaForm: React.FC<SchemaFormProps> = ({
           required
           onChange={handleChange}
         />
-        {/* Dropdown Pilih Platform */}
-        <SelectInput
-          label="Platform"
-          name="platform"
-          options={[
-            { value: "PostgreSQL", label: "PostgreSQL" },
-            { value: "MySQL", label: "MySQL" },
-            { value: "MongoDB", label: "MongoDB" },
-          ]}
-        />
-        <SelectInput
-          label="Service Skema"
-          name="serviceId"
-          value={formData.serviceId}
-          onChange={handleChange}
-          options={services.map((item) => ({
-            value: item.id,
-            label: item.name,
-          }))}
-        />
+        <div className="col-span-2">
+          <SelectInput
+            label="Service Skema"
+            name="serviceId"
+            value={formData.serviceId}
+            onChange={handleChange}
+            options={services.map((item) => ({
+              value: item.id,
+              label: item.name,
+            }))}
+          />
+        </div>
         {showFileInput && (
           <div className="col-span-2">
             <label

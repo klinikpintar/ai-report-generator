@@ -18,8 +18,8 @@ export const useSchemaFilters = () => {
         dispatch({
           type: "SET_FILTERS",
           payload: {
-            platform: { all: allPlatforms, selected: [] },
-            service: { all: allServices, selected: [] },
+            platform: { all: allPlatforms, selected: allPlatforms },
+            service: { all: allServices, selected: allServices },
           },
         });
       } catch {

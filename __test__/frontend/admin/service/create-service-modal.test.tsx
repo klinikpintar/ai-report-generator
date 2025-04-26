@@ -1,5 +1,13 @@
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import CreateServiceModal from "@frontend/admin/service/components/create-service-modal";
+import { toast } from "react-toastify";
+
+jest.mock("react-toastify", () => ({
+  toast: {
+    error: jest.fn(),
+    success: jest.fn(),
+  },
+}));
 
 const mockServices = [
   { id: "1", name: "Reservasi", db: "PostgreSQL" },
@@ -123,5 +131,66 @@ describe("Create Service Modal Test", () => {
     await waitFor(() => {
       expect(screen.queryByText("Reservasi")).not.toBeInTheDocument();
     });
+  });
+
+  it("Should show an error toast if delete fails", async () => {
+    (fetch as jest.Mock).mockResolvedValueOnce({
+      ok: true,
+      json: async () => mockServices,
+    });
+
+    render(<CreateServiceModal isVisible={true} onClose={() => {}} />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Reservasi")).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getAllByTestId("delete-service-button")[0]);
+
+    (global.fetch as jest.Mock).mockImplementationOnce(() => {
+      throw new TypeError("Failed to fetch");
+    });
+    fireEvent.click(screen.getByText("Konfirmasi"));
+
+    expect(toast.error).toHaveBeenCalledWith(
+      expect.stringContaining(
+        "Error deleting service: TypeError: Failed to fetch"
+      )
+    );
+
+    expect(screen.getByText("Reservasi")).toBeInTheDocument();
+  });
+
+  it("Should show toast error when submitting service fails", async () => {
+    (fetch as jest.Mock).mockResolvedValueOnce({
+      ok: true,
+      json: async () => mockServices,
+    });
+
+    render(<CreateServiceModal isVisible={true} onClose={() => {}} />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Reservasi")).toBeInTheDocument();
+    });
+
+    fireEvent.change(screen.getByPlaceholderText("Masukkan nama service"), {
+      target: { value: "Kesehatan" },
+    });
+    fireEvent.change(screen.getByText("Pilih Platform Service"), {
+      target: { value: "MongoDB" },
+    });
+
+    (global.fetch as jest.Mock).mockImplementationOnce(() => {
+      throw new TypeError("Failed to fetch");
+    });
+    fireEvent.click(screen.getByText("Tambah"));
+
+    await waitFor(() => {
+      expect(toast.error).toHaveBeenCalledWith(
+        "Error submitting service: TypeError: Failed to fetch"
+      );
+    });
+
+    expect(screen.queryByText("Kesehatan")).not.toBeInTheDocument();
   });
 });

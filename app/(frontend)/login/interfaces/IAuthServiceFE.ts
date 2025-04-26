@@ -44,23 +44,3 @@ export type LogoutResponse = {
    */
   message: string;
 };
-
-export interface ICheckAuthService {
-  /**
-   * Check if the user is authenticated
-   * @returns {Promise<CheckAuthResponse>} Response object containing authentication status and message
-   */
-  checkAuth(): Promise<CheckAuthResponse>;
-}
-
-export type CheckAuthResponse = {
-  /**
-   * Indicates whether the user is authenticated
-   */
-  isAuthenticated: boolean;
-
-  /**
-   * Message describing the authentication status (e.g., error message)
-   */
-  message: string;
-};

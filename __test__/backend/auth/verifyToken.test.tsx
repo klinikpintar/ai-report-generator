@@ -40,16 +40,20 @@ describe("Auth API - Verify Token", () => {
   beforeEach(() => {
     jest.clearAllMocks();
 
-    (prisma.user.findUnique as jest.Mock).mockImplementation(async ({ where }) => {
-      if (where.id === testUser.id) return testUser;
-      return null;
-    });
+    (prisma.user.findUnique as jest.Mock).mockImplementation(
+      async ({ where }) => {
+        if (where.id === testUser.id) return testUser;
+        return null;
+      }
+    );
 
-    jwtVerifySpy = jest.spyOn(jwt, "verify").mockImplementation((token, secret) => {
-      if (token.includes("invalid")) throw new Error("Invalid token");
-      if (token.includes("expired")) throw new Error("Token expired");
-      return { id: testUser.id };
-    });
+    jwtVerifySpy = jest
+      .spyOn(jwt, "verify")
+      .mockImplementation((token, secret) => {
+        if (token.includes("invalid")) throw new Error("Invalid token");
+        if (token.includes("expired")) throw new Error("Token expired");
+        return { id: testUser.id };
+      });
   });
 
   test("✅ Should return user data if token is valid and user is found", async () => {
@@ -58,6 +62,8 @@ describe("Auth API - Verify Token", () => {
       id: testUser.id,
       email: testUser.email,
       role: testUser.role,
+      name: testUser.name,
+      isActive: true,
     });
 
     const request = new NextRequest(new URL(BASE_API_URL_VERIFY_TOKEN), {
@@ -77,12 +83,23 @@ describe("Auth API - Verify Token", () => {
       id: testUser.id,
       email: testUser.email,
       role: testUser.role,
+      name: testUser.name,
+      isActive: true,
     });
     expect(json).toHaveProperty("message", "Token verified");
-    expect(jwt.verify).toHaveBeenCalledWith("validToken", config.JWT_ACCESS_SECRET);
+    expect(jwt.verify).toHaveBeenCalledWith(
+      "validToken",
+      config.JWT_ACCESS_SECRET
+    );
     expect(prisma.user.findUnique).toHaveBeenCalledWith({
       where: { id: testUser.id },
-      select: { id: true, email: true, role: true },
+      select: {
+        id: true,
+        email: true,
+        role: true,
+        name: true,
+        isActive: true,
+      },
     });
   });
 
