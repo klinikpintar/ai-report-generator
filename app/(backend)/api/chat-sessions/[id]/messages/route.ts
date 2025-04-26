@@ -1,10 +1,10 @@
-import { NextResponse } from 'next/server';
+import { NextResponse, NextRequest } from 'next/server';
 import prisma from '@/lib/prisma';
 import { getUserFromRequest } from '@/app/(backend)/utils/authUtils';
 
 export async function GET(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> | { id: string } }
+  request: NextRequest,
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     const user = await getUserFromRequest();
@@ -12,10 +12,7 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Fix the way id is accessed
-    const id = params instanceof Promise 
-      ? (await params).id 
-      : params.id;
+    const { id } = await context.params;
     
     // Verify user owns this session
     const session = await prisma.chatSession.findUnique({
@@ -39,8 +36,8 @@ export async function GET(
 }
 
 export async function POST(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> | { id: string } }
+  request: NextRequest,
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     const user = await getUserFromRequest();
@@ -48,14 +45,9 @@ export async function POST(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Fix the way id is accessed
-    const id = params instanceof Promise 
-      ? (await params).id 
-      : params.id;
-    
+    const { id } = await context.params;
     const { content, role, modelUsed } = await request.json();
     
-    // Rest of your function remains the same
     // Verify user owns this session
     const session = await prisma.chatSession.findUnique({
       where: { id, userId: user.id },
