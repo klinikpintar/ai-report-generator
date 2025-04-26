@@ -8,7 +8,7 @@ import rehypeRaw from "rehype-raw";
 import Dropdown from "./components/dropdown";
 import { useService } from "./context/serviceContext"; // Import context
 import Bantuan from "./components/bantuan";
-import type { Service, Schema } from "@frontend/common/types";
+import type { Service } from "@frontend/common/types";
 import ExportModal from "@/app/(frontend)/(chat)/components/ekspor/modal";
 import { CodeBlock } from "./components/CodeBlock";
 import { useSession } from "./context/sessionContext";
