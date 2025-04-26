@@ -3,7 +3,7 @@ import { SchemaProvider } from "@frontend/admin/schema/context/SchemaContext";
 import { useSchemaTable } from "@frontend/admin/schema/hooks";
 import { fetchSchemas } from "@frontend/admin/schema/utils/api";
 import type { ReactNode } from "react";
-import { mockSchemas } from "@/__mocks__/schema-data";
+import { mockPaginatedSchemas, mockSchemas } from "@/__mocks__/schema-data";
 
 jest.mock("next/navigation", () => ({
   useRouter: jest.fn(() => ({
@@ -39,7 +39,10 @@ describe("useSchemaTable", () => {
 
   describe("basic functionality", () => {
     it("should provide schema data and loading state", async () => {
-      (fetchSchemas as jest.Mock).mockResolvedValue(mockSchemas);
+      // ... other mock setups for pagination tests
+-     (fetchSchemas as jest.Mock).mockResolvedValue(mockSchemas);
++     (fetchSchemas as jest.Mock).mockResolvedValue(mockPaginatedSchemas);
+      // ... rest of the test assertions
 
       const { result } = renderHook(() => useSchemaTable(), {
         wrapper: TestWrapper,

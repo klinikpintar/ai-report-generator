@@ -5,6 +5,7 @@ import { useRouter, usePathname } from "next/navigation";
 import Image from "next/image";
 import FeAuthService from "@frontend/login/services/feAuthService";
 import { useUser } from "@frontend/login/context/userContext";
+import { toast } from "react-toastify";
 import { useUIState } from "@frontend/(chat)/layout"; // Import the context
 
 export default function Navbar() {
@@ -29,7 +30,14 @@ export default function Navbar() {
     if (logoutResponse.success) {
       router.push("/login");
     } else {
-      alert("Logout failed. Please try again.");
+      toast.error("Logout failed. Please try again.", {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
     }
   }
 
