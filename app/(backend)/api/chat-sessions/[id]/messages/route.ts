@@ -4,7 +4,7 @@ import { getUserFromRequest } from '@/app/(backend)/utils/authUtils';
 
 export async function GET(
   request: NextRequest,
-  context: { params: { id: string } }
+  { params }: { params: { id: string } }  // Changed from context: { params: { id: string } }
 ) {
   try {
     const user = await getUserFromRequest();
@@ -12,7 +12,7 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { id } = context.params;
+    const { id } = params;  // Changed from context.params
     
     // Verify user owns this session
     const session = await prisma.chatSession.findUnique({
