@@ -8,6 +8,7 @@ export async function GET(req: Request) {
   try {
     const token = extractToken(cookie, "access_token");
     const user = await authService.verify(token);
+    console.log("token", cookie);
 
     return NextResponse.json(
       {
