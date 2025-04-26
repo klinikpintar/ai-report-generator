@@ -1,11 +1,11 @@
-import { NextResponse } from 'next/server';
+import { NextResponse, NextRequest } from 'next/server';
 import prisma from '@/lib/prisma';
 import { getUserFromRequest } from '@/app/(backend)/utils/authUtils';
 
 // Get a specific chat session with its messages
 export async function GET(
-  req: Request,
-  context: { params: { id: string } }
+  req: NextRequest,
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     const user = await getUserFromRequest();
@@ -13,9 +13,7 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Change this line to use await with params
-    const params = await Promise.resolve(context.params);
-    const id = params.id;
+    const { id } = await context.params;
     
     // Verify the session exists and belongs to the user
     const session = await prisma.chatSession.findUnique({
@@ -40,8 +38,8 @@ export async function GET(
 
 // Delete a chat session
 export async function DELETE(
-  req: Request,
-  context: { params: { id: string } }  // Change parameter format
+  req: NextRequest,
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     const user = await getUserFromRequest();
@@ -49,7 +47,7 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const id = context.params.id;  // Direct access instead of destructuring
+    const { id } = await context.params;
     
     // Verify the session exists and belongs to the user
     const existingSession = await prisma.chatSession.findUnique({
@@ -74,8 +72,8 @@ export async function DELETE(
 
 // Update session title
 export async function PATCH(
-  req: Request,
-  context: { params: { id: string } }  // Change parameter format
+  req: NextRequest,
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     const user = await getUserFromRequest();
@@ -83,7 +81,7 @@ export async function PATCH(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const id = context.params.id;  // Direct access instead of destructuring
+    const { id } = await context.params;
     const { title } = await req.json();
     
     // First find by ID only
