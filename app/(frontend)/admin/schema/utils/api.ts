@@ -1,29 +1,30 @@
 import { platforms } from "../constant"
-import { Platform, Schema, Service } from "@frontend/common/types"
+import { PaginationResponse, Platform, Schema, Service } from "@frontend/common/types"
 
 export interface FetchSchemasParams {
   serviceIds?: Service['id'][]
   platformCodes?: Platform[]
-  [key: string]: unknown
+  page?: number;
+  limit?: number;
+
 }
 
-export async function fetchSchemas(params: FetchSchemasParams = {}) {
+export const fetchSchemas = async ({ serviceIds, platformCodes, page, limit }: FetchSchemasParams) => {
   const queryParams = new URLSearchParams();
 
-  Object.entries(params).forEach(([key, value]) => {
-    if (Array.isArray(value)) {
-      value.forEach((v) => queryParams.append(key, String(v)));
-    }
-  });
+  if (serviceIds) {
+    serviceIds.forEach(serviceId => queryParams.append("serviceIds", serviceId))
+  }
+  if (platformCodes) {
+    platformCodes.forEach(platformCode => queryParams.append("platformCodes", platformCode))
+  }
+  if (page) queryParams.append("page", page.toString());
+  if (limit) queryParams.append("limit", limit.toString());
 
   const response = await fetch(`/api/schema?${queryParams.toString()}`);
-  const data = await response.json() as Schema[];
+  const paginatedData = await response.json() as PaginationResponse<Schema>;
 
-  const schemas = data.map((schema) => ({
-    ...schema,
-  })) as Schema[];
-
-  return schemas;
+  return paginatedData;
 }
 
 export async function fetchServices() {

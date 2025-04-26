@@ -3,16 +3,31 @@ import { StatusCodes } from 'http-status-codes';
 import schemaService from '../../services/schemaService';
 import { validateSchemaInput } from '../../utils/schemaUtils';
 import { handleError } from '@backend/utils/errorUtils';
+import { GetSchemaDto } from '@backend/interfaces/ISchemaService';
+
 
 export async function GET(req: NextRequest) {
   try {
-    const url = new URL(req.url);
-    const serviceId = url.searchParams.getAll("serviceIds")
-    const platformCode = url.searchParams.getAll("platformCodes")
+    const { searchParams } = new URL(req.url);
 
-
-    const schemas = await schemaService.findAllSchemas(serviceId, platformCode);
-    return NextResponse.json(schemas, { status: StatusCodes.OK });
+    const params: GetSchemaDto = Object.fromEntries(searchParams.entries())
+    if (params.serviceIds) {
+      params.serviceIds = searchParams.getAll('serviceIds');
+    }
+    if (params.platformCodes) {
+      params.platformCodes = searchParams.getAll('platformCodes');
+    }
+    
+    const {data, pagination} = await schemaService.findAllSchemas(params);
+    const response = {
+      data,
+      pagination: {
+        current_page: pagination.currentPage,
+        total_pages: pagination.totalPages,
+        total_items: pagination.totalItems,
+      },
+    };
+    return NextResponse.json(response, { status: StatusCodes.OK });
   } catch (error) {
     return handleError(error, "GET Schemas");
   }
