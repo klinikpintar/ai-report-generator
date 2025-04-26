@@ -30,14 +30,13 @@ const LoginPage = () => {
       const { success } = await FeAuthService.login(email, password);
 
       if (success) {
-        setEmailContext(email);
-        const response = await fetch ("/api/auth/token/verify", {
-          method: "GET"
-        });
-        const data = await response.json();
-        console.log(data.data);
-        localStorage.setItem("userName", data.data.name);
-        localStorage.setItem("userEmail", data.data.email);
+        const data = await FeAuthService.getUser();
+        const user = data.data.user;
+
+        setEmailContext(user.email);
+        setNameContext(user.name);
+        localStorage.setItem("userName", user.email);
+        localStorage.setItem("userEmail", user.name);
         toast.success("Login successful! Redirecting...", {
           position: "top-right",
           autoClose: 3000,
@@ -49,8 +48,11 @@ const LoginPage = () => {
 
         // Delay sebentar untuk pengguna melihat toast
         setTimeout(() => {
+          if (user.role === "ADMIN") {
+            router.push("/admin");
+          }
           router.push("/");
-        }, 500);
+        }, 200);
       } else {
         setError("Login failed. Please check your credentials.");
       }
