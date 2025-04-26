@@ -30,13 +30,6 @@ const LoginPage = () => {
       const { success } = await FeAuthService.login(email, password);
 
       if (success) {
-        const data = await FeAuthService.getUser();
-        const user = data.data.user;
-
-        setEmailContext(user.email);
-        setNameContext(user.name);
-        localStorage.setItem("userName", user.email);
-        localStorage.setItem("userEmail", user.name);
         toast.success("Login successful! Redirecting...", {
           position: "top-right",
           autoClose: 3000,
@@ -45,6 +38,12 @@ const LoginPage = () => {
           pauseOnHover: true,
           draggable: true,
         });
+        const data = await FeAuthService.getUser();
+        const user = data.data.user;
+        setEmailContext(user.email);
+        setNameContext(user.name);
+        localStorage.setItem("userEmail", email);
+        localStorage.setItem("userName", user.email);
 
         // Delay sebentar untuk pengguna melihat toast
         setTimeout(() => {

@@ -16,9 +16,12 @@ jest.mock("@frontend/login/services/feAuthService");
 
 // Mock useUser
 const setEmailContextMock = jest.fn();
+const setNameContextMock = jest.fn(); // Menambahkan mock untuk setNameContext
+
 jest.mock("@frontend/login/context/userContext", () => ({
   useUser: () => ({
     setEmailContext: setEmailContextMock,
+    setNameContext: setNameContextMock, // Menambahkan ini
   }),
 }));
 
@@ -97,9 +100,22 @@ describe("LoginPage", () => {
 
   it("calls FeAuthService.login and redirects on success", async () => {
     // Setup mocks
+    const mockUser = {
+      email: "test@example.com",
+      name: "Test User",
+      role: "BUSINESS_ANALYST" // Default role bukan admin
+    };
+    
     (FeAuthService.login as jest.Mock).mockResolvedValue({
       success: true,
       message: "Login successful"
+    });
+    
+    // Menambahkan mock untuk getUser
+    (FeAuthService.getUser as jest.Mock).mockResolvedValue({
+      data: {
+        user: mockUser
+      }
     });
   
     // Render component and fill form
@@ -115,18 +131,72 @@ describe("LoginPage", () => {
       fireEvent.click(button);
     });
   
+    // Verify FeAuthService.login was called
+    expect(FeAuthService.login).toHaveBeenCalledWith("test@example.com", "password123");
+    
+    // Verify FeAuthService.getUser was called
+    expect(FeAuthService.getUser).toHaveBeenCalled();
+  
     // Verify toast success was called
     expect(mockedToast.success).toHaveBeenCalledWith(
       "Login successful! Redirecting...",
       expect.any(Object)
     );
   
+    // Verify context setters were called with user data
+    expect(setEmailContextMock).toHaveBeenCalledWith(mockUser.email);
+    expect(setNameContextMock).toHaveBeenCalledWith(mockUser.name);
+    
+    // Verify localStorage was updated
     expect(window.localStorage.setItem).toHaveBeenCalledWith("userEmail", "test@example.com");
-    expect(setEmailContextMock).toHaveBeenCalledWith("test@example.com");
+    expect(window.localStorage.setItem).toHaveBeenCalledWith("userName", mockUser.email);
     
     // Use waitFor because of the setTimeout in the component
     await waitFor(() => {
       expect(pushMock).toHaveBeenCalledWith("/");
+    });
+  });
+  
+  // Menambahkan test case baru untuk ADMIN role
+  it("redirects admin users to the admin page", async () => {
+    // Setup mocks with ADMIN role
+    const mockAdminUser = {
+      email: "admin@example.com",
+      name: "Admin User",
+      role: "ADMIN" // Role Admin
+    };
+    
+    (FeAuthService.login as jest.Mock).mockResolvedValue({
+      success: true,
+      message: "Login successful"
+    });
+    
+    (FeAuthService.getUser as jest.Mock).mockResolvedValue({
+      data: {
+        user: mockAdminUser
+      }
+    });
+  
+    // Render component and fill form
+    renderWithUserContext();
+    const emailInput = screen.getByLabelText(/email/i);
+    const passwordInput = screen.getByLabelText(/password/i);
+    const button = screen.getByRole("button", { name: /login/i });
+  
+    fireEvent.change(emailInput, { target: { value: "admin@example.com" } });
+    fireEvent.change(passwordInput, { target: { value: "adminpass" } });
+  
+    await act(async () => {
+      fireEvent.click(button);
+    });
+  
+    // Verify context setters were called with admin data
+    expect(setEmailContextMock).toHaveBeenCalledWith(mockAdminUser.email);
+    expect(setNameContextMock).toHaveBeenCalledWith(mockAdminUser.name);
+    
+    // Admin users should be redirected to /admin
+    await waitFor(() => {
+      expect(pushMock).toHaveBeenCalledWith("/admin");
     });
   });
 
