@@ -147,6 +147,7 @@ describe("ChatBox API Integration", () => {
     schemaText: "",
     serviceId: "1",
     service: mockServices[0],
+    serviceId: ""
   };
 
   it("should receive response after send message without service selection", async () => {

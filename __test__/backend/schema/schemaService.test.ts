@@ -1,6 +1,7 @@
 import schemaService from '@backend/services/schemaService';
 import prisma from '@/lib/prisma';
 import { Schema } from '@prisma/client';
+import { GetSchemaDto } from '@backend/interfaces/ISchemaService';
 import { generateSchemaEmbeddings } from '@/lib/schema-embedding';
 
 jest.mock('@/lib/prisma', () => ({
@@ -9,6 +10,7 @@ jest.mock('@/lib/prisma', () => ({
     findMany: jest.fn(),
     update: jest.fn(),
     delete: jest.fn(),
+    count: jest.fn(),
   },
 }));
 
@@ -25,6 +27,7 @@ describe('SchemaService Unit Tests', () => {
     schemaText: 'CREATE TABLE test (id SERIAL PRIMARY KEY, name TEXT);',
     serviceId: 'db9caeca-aa1a-46f6-84de-adfe0a414c03',
     createdAt: new Date(),
+    serviceId: 'db9caeca-aa1a-46f6-84de-adfe0a414c03',
   };
 
   beforeEach(() => {
@@ -50,16 +53,16 @@ describe('SchemaService Unit Tests', () => {
 
   it('should retrieve all schemas', async () => {
     (prisma.schema.findMany as jest.Mock).mockResolvedValue([mockSchema]);
-    const result = await schemaService.findAllSchemas();
+    const result = await schemaService.findAllSchemas({});
 
     expect(prisma.schema.findMany).toHaveBeenCalledTimes(1);
-    expect(result).toEqual([mockSchema]);
+    expect(result.data).toEqual([mockSchema]);
   });
 
   it('should update a schema', async () => {
     const updatedSchema = { ...mockSchema, description: 'Updated Description' };
     (prisma.schema.update as jest.Mock).mockResolvedValue(updatedSchema);
-    
+
     const result = await schemaService.updateSchema({
       id: 1,
       description: 'Updated Description',
@@ -90,7 +93,7 @@ describe('SchemaService Unit Tests', () => {
   it('should retrieve schemas filtered by serviceIds', async () => {
     const SERVICE_ID_1 = "bd7a4c7a-1234-4c5e-b123-df12345abcd1";
     const SERVICE_ID_2 = "bd7a4c7a-1234-4c5e-b123-df12345abcd2";
-  
+
     const filteredSchemas = [
       {
         id: 1,
@@ -107,27 +110,32 @@ describe('SchemaService Unit Tests', () => {
         serviceId: SERVICE_ID_2,
       },
     ];
-  
+
     (prisma.schema.findMany as jest.Mock).mockImplementation(({ where }) => {
       return Promise.resolve(
         filteredSchemas.filter((schema) =>
-          where.serviceId.in.includes(schema.serviceId)
+          where.AND[0].serviceId.in.includes(schema.serviceId)
         )
       );
     });
-  
-    const result = await schemaService.findAllSchemas([SERVICE_ID_1, SERVICE_ID_2]);
-  
-    expect(prisma.schema.findMany).toHaveBeenCalledWith({
-      where: {
-        serviceId: { in: [SERVICE_ID_1, SERVICE_ID_2] },
-      },
-      include: {
-        service: true,
-      },
-    });
-  
-    expect(result).toEqual(filteredSchemas);
+
+    const param: GetSchemaDto = {
+      serviceIds: [SERVICE_ID_1, SERVICE_ID_2],
+    }
+    const result = await schemaService.findAllSchemas(param);
+
+    expect(prisma.schema.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: {
+          AND: [{ serviceId: { in: [SERVICE_ID_1, SERVICE_ID_2] } }, expect.anything()],
+        },
+        include: {
+          service: true,
+        },
+      })
+    );
+
+    expect(result.data).toEqual(filteredSchemas);
   });
 
   it('should handle embedding generation error during schema creation', async () => {
