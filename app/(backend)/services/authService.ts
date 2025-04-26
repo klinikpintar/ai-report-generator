@@ -61,12 +61,11 @@ class AuthService implements IAuthService, IGenerateToken, IVerifyToken {
 
     const user = await prisma.user.findUnique({
       where: { id: decoded.id },
-      select: { id: true, email: true, role: true },
+      select: { id: true, email: true, role: true, name: true, isActive: true },
     });
 
-    if (!user) {
-      throw new NotFoundResponse("User not found");
-    }
+    if (!user) throw new NotFoundResponse("User not found");
+    if (!user.isActive) throw new BadRequestResponse("User is not active");
 
     return user;
   }
