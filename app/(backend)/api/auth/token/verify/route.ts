@@ -9,8 +9,8 @@ export async function GET(req: Request) {
     const token = extractToken(cookie, "access_token");
     const user = await authService.verify(token);
     return NextResponse.json({
-      message: "Token is valid",
-      data: user,
+      message: "Token verified",
+      data: {user},
     }, { status: 200 });
   } catch (error) {
     if (error instanceof ErrorResponse) {
