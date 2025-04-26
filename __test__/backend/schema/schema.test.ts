@@ -28,6 +28,8 @@ jest.mock("@backend/utils/schemaUtils", () => {
             message: "Invalid schema format",
             path: ["name"],
             code: "invalid_type",
+            expected: "string",
+            received: "object",
           },
         ]);
       }

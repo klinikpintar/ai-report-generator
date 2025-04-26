@@ -22,7 +22,7 @@ jest.mock("@frontend/(chat)/context/sessionContext", () => ({
     error: null,
     refreshSessions: jest.fn()
   }),
-  SessionProvider: ({ children }) => <>{children}</>
+  SessionProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>
 }));
 
 jest.mock("next/navigation", () => ({
@@ -140,11 +140,12 @@ describe("ChatBox API Integration", () => {
     { id: "2", name: "Pendaftaran", platformCode: "Postgresql", createdAt: "" },
   ];
   const mockSchema: Schema = {
-    id: "1",
+    id: 1,
     name: "pasien_portal",
     description: "",
     createdAt: "",
     schemaText: "",
+    serviceId: "1",
     service: mockServices[0],
   };
 

@@ -1,6 +1,6 @@
 import { GET as GET_COLLECTION, POST } from '@/app/(backend)/api/chat-sessions/route';
 import { GET as GET_ITEM, PATCH, DELETE } from '@/app/(backend)/api/chat-sessions/[id]/route';
-import { NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { getUserFromRequest } from '@/app/(backend)/utils/authUtils';
 
 // Mock dependencies
@@ -57,8 +57,7 @@ describe('Chat Sessions API', () => {
       
       (prisma.chatSession.findMany as jest.Mock).mockResolvedValue(mockSessions);
       
-      const request = new Request('http://localhost/api/chat-sessions');
-      const response = await GET_COLLECTION(request);
+      const response = await GET_COLLECTION();
       const data = await response.json();
       
       expect(response.status).toBe(200);
@@ -77,9 +76,7 @@ describe('Chat Sessions API', () => {
     it('should return 401 if user is not authenticated', async () => {
       // Mock unauthenticated user
       (getUserFromRequest as jest.Mock).mockResolvedValue(null);
-      
-      const request = new Request('http://localhost/api/chat-sessions');
-      const response = await GET_COLLECTION(request);
+      const response = await GET_COLLECTION();
       
       expect(response.status).toBe(401);
       expect(prisma.chatSession.findMany).not.toHaveBeenCalled();
@@ -94,8 +91,7 @@ describe('Chat Sessions API', () => {
         new Error('Database connection failed')
       );
       
-      const request = new Request('http://localhost/api/chat-sessions');
-      const response = await GET_COLLECTION(request);
+      const response = await GET_COLLECTION();
       
       expect(response.status).toBe(500);
       const data = await response.json();
@@ -134,8 +130,8 @@ describe('Chat Sessions API', () => {
       
       (prisma.chatSession.findUnique as jest.Mock).mockResolvedValue(mockSession);
       
-      const request = new Request('http://localhost/api/chat-sessions/session-123');
-      const response = await GET_ITEM(request, { params: { id: 'session-123' } });
+      const request = new NextRequest('http://localhost/api/chat-sessions/session-123');
+      const response = await GET_ITEM(request, { params: Promise.resolve({ id: 'session-123' }) });
       
       expect(response.status).toBe(200);
       const data = await response.json();
@@ -149,8 +145,8 @@ describe('Chat Sessions API', () => {
       // Mock session not found
       (prisma.chatSession.findUnique as jest.Mock).mockResolvedValue(null);
       
-      const request = new Request('http://localhost/api/chat-sessions/not-found');
-      const response = await GET_ITEM(request, { params: { id: 'not-found' } });
+      const request = new NextRequest('http://localhost/api/chat-sessions/not-found');
+      const response = await GET_ITEM(request, { params: Promise.resolve({ id: 'not-found' }) });
       
       expect(response.status).toBe(404);
     });
@@ -180,8 +176,8 @@ describe('Chat Sessions API', () => {
       
       (prisma.chatSession.findUnique as jest.Mock).mockResolvedValue(mockSession);
       
-      const request = new Request('http://localhost/api/chat-sessions/session-123');
-      const response = await GET_ITEM(request, { params: { id: 'session-123' } });
+      const request = new NextRequest('http://localhost/api/chat-sessions/session-123');
+      const response = await GET_ITEM(request, { params: Promise.resolve({ id: 'session-123' }) });
       
       expect(response.status).toBe(200);
       const data = await response.json();
@@ -192,8 +188,8 @@ describe('Chat Sessions API', () => {
       // Mock unauthenticated user
       (getUserFromRequest as jest.Mock).mockResolvedValue(null);
       
-      const request = new Request('http://localhost/api/chat-sessions/session-123');
-      const response = await GET_ITEM(request, { params: { id: 'session-123' } });
+      const request = new NextRequest('http://localhost/api/chat-sessions/session-123');
+      const response = await GET_ITEM(request, { params: Promise.resolve({ id: 'session-123' }) });
       
       expect(response.status).toBe(401);
       const data = await response.json();
@@ -210,8 +206,8 @@ describe('Chat Sessions API', () => {
         new Error('Database error')
       );
       
-      const request = new Request('http://localhost/api/chat-sessions/session-123');
-      const response = await GET_ITEM(request, { params: { id: 'session-123' } });
+      const request = new NextRequest('http://localhost/api/chat-sessions/session-123');
+      const response = await GET_ITEM(request, { params: Promise.resolve({ id: 'session-123' }) });
       
       expect(response.status).toBe(500);
       const data = await response.json();
@@ -345,13 +341,13 @@ describe('Chat Sessions API', () => {
         userId: 'user-123'
       });
       
-      const request = new Request('http://localhost/api/chat-sessions/session-123', {
+      const request = new NextRequest('http://localhost/api/chat-sessions/session-123', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ title: 'New Title' })
       });
       
-      const response = await PATCH(request, { params: { id: 'session-123' } });
+      const response = await PATCH(request, { params: Promise.resolve({ id: 'session-123' }) });
       const data = await response.json();
       
       expect(response.status).toBe(200);
@@ -370,12 +366,12 @@ describe('Chat Sessions API', () => {
       (prisma.chatSession.findUnique as jest.Mock).mockResolvedValue(null);
       
       const response = await PATCH(
-        new Request('http://localhost/api/chat-sessions/bad-id', {
+        new NextRequest('http://localhost/api/chat-sessions/bad-id', {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ title: 'New Title' })
         }),
-        { params: { id: 'bad-id' } }
+        { params: Promise.resolve({ id: 'bad-id' }) }
       );
       
       expect(response.status).toBe(404);
@@ -386,12 +382,12 @@ describe('Chat Sessions API', () => {
       (getUserFromRequest as jest.Mock).mockResolvedValue(null);
       
       const response = await PATCH(
-        new Request('http://localhost/api/chat-sessions/session-123', {
+        new NextRequest('http://localhost/api/chat-sessions/session-123', {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ title: 'New Title' })
         }),
-        { params: { id: 'session-123' } }
+        { params: Promise.resolve({ id: 'session-123' }) }
       );
       
       expect(response.status).toBe(401);
@@ -410,12 +406,12 @@ describe('Chat Sessions API', () => {
       });
       
       const response = await PATCH(
-        new Request('http://localhost/api/chat-sessions/session-123', {
+        new NextRequest('http://localhost/api/chat-sessions/session-123', {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ title: 'New Title' })
         }),
-        { params: { id: 'session-123' } }
+        { params: Promise.resolve({ id: 'session-123' }) }
       );
       
       expect(response.status).toBe(404);
@@ -437,13 +433,13 @@ describe('Chat Sessions API', () => {
         new Error('Database error')
       );
       
-      const request = new Request('http://localhost/api/chat-sessions/session-123', {
+      const request = new NextRequest('http://localhost/api/chat-sessions/session-123', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ title: 'Updated Title' })
       });
       
-      const response = await PATCH(request, { params: { id: 'session-123' } });
+      const response = await PATCH(request, { params: Promise.resolve({ id: 'session-123' }) });
       
       expect(response.status).toBe(500);
       const data = await response.json();
@@ -466,8 +462,8 @@ describe('Chat Sessions API', () => {
       (prisma.chatSession.delete as jest.Mock).mockResolvedValue({});
       
       const response = await DELETE(
-        new Request('http://localhost/api/chat-sessions/session-123'),
-        { params: { id: 'session-123' } }
+        new NextRequest('http://localhost/api/chat-sessions/session-123'),
+        { params: Promise.resolve({ id: 'session-123' }) }
       );
       
       expect(response.status).toBe(200);
@@ -484,8 +480,8 @@ describe('Chat Sessions API', () => {
       (prisma.chatSession.findUnique as jest.Mock).mockResolvedValue(null);
       
       const response = await DELETE(
-        new Request('http://localhost/api/chat-sessions/bad-id'),
-        { params: { id: 'bad-id' } }
+        new NextRequest('http://localhost/api/chat-sessions/bad-id'),
+        { params: Promise.resolve({ id: 'bad-id' }) }
       );
       
       expect(response.status).toBe(404);
@@ -496,8 +492,8 @@ describe('Chat Sessions API', () => {
       (getUserFromRequest as jest.Mock).mockResolvedValue(null);
       
       const response = await DELETE(
-        new Request('http://localhost/api/chat-sessions/session-123'),
-        { params: { id: 'session-123' } }
+        new NextRequest('http://localhost/api/chat-sessions/session-123'),
+        { params: Promise.resolve({ id: 'session-123' }) }
       );
       
       expect(response.status).toBe(401);
@@ -519,10 +515,10 @@ describe('Chat Sessions API', () => {
         new Error('Database error')
       );
       
-      const request = new Request('http://localhost/api/chat-sessions/session-123', {
+      const request = new NextRequest('http://localhost/api/chat-sessions/session-123', {
         method: 'DELETE'
       });
-      const response = await DELETE(request, { params: { id: 'session-123' } });
+      const response = await DELETE(request, { params: Promise.resolve({ id: 'session-123' }) });
       
       expect(response.status).toBe(500);
       const data = await response.json();

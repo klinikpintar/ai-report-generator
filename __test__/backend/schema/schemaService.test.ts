@@ -23,6 +23,7 @@ describe('SchemaService Unit Tests', () => {
     name: 'Test Schema',
     description: 'Test Description',
     schemaText: 'CREATE TABLE test (id SERIAL PRIMARY KEY, name TEXT);',
+    serviceId: 'db9caeca-aa1a-46f6-84de-adfe0a414c03',
     createdAt: new Date(),
   };
 
