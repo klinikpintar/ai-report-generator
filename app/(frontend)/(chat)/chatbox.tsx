@@ -13,6 +13,8 @@ import ExportModal from "@/app/(frontend)/(chat)/components/ekspor/modal";
 import { CodeBlock } from "./components/CodeBlock";
 import { useSession } from "./context/sessionContext";
 import { useSearchParams } from "next/navigation";
+import { useUser } from "@frontend/login/context/userContext";
+
 
 // Definisikan tipe data pesan
 interface Message {
@@ -50,6 +52,7 @@ export default function ChatBox() {
     id: string;
     content: string;
   } | null>(null);
+  const { name } = useUser();
 
   const { activeSessionId, setActiveSessionId, createNewSession } = useSession();
   const searchParams = useSearchParams();
@@ -201,7 +204,7 @@ export default function ChatBox() {
   };
 
   return (
-    <div className="ml-64 flex flex-col h-screen pt-[72px]">
+    <div className="flex flex-col h-screen pb-20">
       <div className="flex justify-between items-center py-3">
         {/* Container untuk Select a Service */}
         <div className="flex flex-col">
@@ -214,17 +217,20 @@ export default function ChatBox() {
         </div>
       </div>
 
-      {isInitializing ? (
-        <div className="flex-1 flex items-center justify-center">
+       {isInitializing ? (
+        <div className="flex items-center justify-between items-center h-full">
           <div className="animate-spin rounded-full h-8 w-8 border-2 border-blue-500 border-t-transparent"></div>
         </div>
       ) : !hasChatted ? (
-        <h1 className="text-3xl font-bold text-center flex items-center justify-center h-full pb-24 text-blue-6">
-          Hello, Virgillia Yeala !!
+        <h1 className="text-3xl font-bold text-center flex items-center justify-center h-full text-blue-6">
+          Hello, {name} !!
         </h1>
       ) : (
-        <div ref={chatContainerRef} className="flex-1 overflow-y-auto p-4 bg-white">
-          <div className="ml-2 mt-4 flex flex-col mr-4 gap-y-6">
+        <div
+          ref={chatContainerRef}
+          className="flex-1 overflow-y-auto px-4 bg-white"
+        >
+          <div className="mt-4 flex flex-col gap-y-6">
             {messages.map((msg) => (
               <div
                 key={msg.id}
@@ -232,10 +238,12 @@ export default function ChatBox() {
                   msg.sender === "user" ? "self-end" : "self-start"
                 } flex flex-col gap-1`}
               >
-                {/* Bubble Message */}
+                {/* Bubble */}
                 <div
                   className={`p-3 rounded-lg ${
-                    msg.sender === "user" ? "bg-[#E4F6FC] text-[#00B0EB]" : "bg-gray-200 text-black"
+                    msg.sender === "user"
+                      ? "bg-[#E4F6FC] text-[#00B0EB]"
+                      : "bg-gray-200 text-black"
                   }`}
                 >
                   {msg.sender === "assistant" ? (
@@ -280,7 +288,7 @@ export default function ChatBox() {
                     <p className="whitespace-pre-wrap">{msg.content}</p>
                   )}
                 </div>
-
+  
                 {msg.sender === "assistant" && (
                   <button
                     onClick={() => {
@@ -299,9 +307,10 @@ export default function ChatBox() {
                 )}
               </div>
             ))}
+  
             {isExportModalVisible && exportModalData && (
               <ExportModal
-                key={exportModalData.id} // Add this line
+                key={exportModalData.id}
                 isVisible={!!exportModalData}
                 onClose={() => {
                   setExportModalData(null);
@@ -311,6 +320,7 @@ export default function ChatBox() {
                 title={`Laporan-${exportModalData.id}`}
               />
             )}
+  
             {isLoading && (
               <div className="p-3 rounded-lg max-w-[90%] bg-gray-200 text-black self-start">
                 AI is typing...
@@ -319,24 +329,18 @@ export default function ChatBox() {
           </div>
         </div>
       )}
-
-      <div className="w-full flex justify-center pb-5 pt-3">
-        {/* Container utama dengan max-width */}
-        <div className="w-full flex flex-col">
-          {/* Teks di atas container input */}
-          <div className="mb-1">
-            <p className="text-sm text-gray-600">
-              Service:{" "}
-              {getServiceRepresentation(
-                selectedService,
-                selectedService.length === services.length
-              )}
-            </p>
-          </div>
-
-          {/* Container untuk input dan button */}
+  
+      {/* Footer input */}
+      <div className="w-full pb-5 pt-3">
+        <div className="w-full mx-auto flex flex-col">
+          <p className="text-sm text-gray-600 mb-1">
+            Service:{" "}
+            {getServiceRepresentation(
+              selectedService,
+              selectedService.length === services.length
+            )}
+          </p>
           <div className="flex items-center p-1 gap-2">
-            {/* Textarea */}
             <textarea
               className="flex-1 border border-gray-300 rounded-xl p-4 text-black resize-none outline-none"
               placeholder="Type a message..."
@@ -345,16 +349,12 @@ export default function ChatBox() {
               onKeyDown={(e) => {
                 if (e.key === "Enter" && !e.shiftKey) {
                   e.preventDefault();
-                  if (input.trim()) {
-                    sendMessage();
-                  }
+                  if (input.trim()) sendMessage();
                 }
               }}
               rows={1}
               disabled={isLoading}
             />
-
-            {/* Button di sebelah kanan textarea */}
             <button
               className="flex items-center justify-center transition disabled:opacity-50"
               onClick={sendMessage}
@@ -363,11 +363,11 @@ export default function ChatBox() {
               <Image src="/icon-send.svg" width={45} height={45} alt="Send Icon" />
             </button>
           </div>
-          <p className="text-xs text-gray-600 text-center">
+          <p className="text-xs text-gray-600 text-center mt-1">
             This AI Report Generator can make mistakes. Check important info.
           </p>
         </div>
       </div>
     </div>
-  );
+  );  
 }

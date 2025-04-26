@@ -8,7 +8,7 @@ import FormInput from "@frontend/components/form-input";
 
 const LoginPage = () => {
   const [email, setEmail] = useState("");
-  const { setEmailContext } = useUser();
+  const { setEmailContext, setNameContext } = useUser();
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -30,7 +30,13 @@ const LoginPage = () => {
 
       if (success) {
         setEmailContext(email);
-        localStorage.setItem("userEmail", email);
+        const response = await fetch ("/api/auth/token/verify", {
+          method: "GET"
+        });
+        const data = await response.json();
+        console.log(data.data);
+        localStorage.setItem("userName", data.data.name);
+        localStorage.setItem("userEmail", data.data.email);
         router.push("/");
       } else {
         setError("Login failed. Please check your credentials.");
