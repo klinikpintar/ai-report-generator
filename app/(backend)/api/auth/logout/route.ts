@@ -11,6 +11,10 @@ export async function POST(req: Request) {
     const response = NextResponse.json({ message: "Logged out" });
     return authService.putTokenInCookie(response, "", "");
   } catch (error) {
-    return (error as ErrorResponse).generate();
+    if (error instanceof ErrorResponse) {
+      return error.generate();
+    }
+    console.error(error);
+    return new ErrorResponse("Internal server error", 500).generate();
   }
 }
