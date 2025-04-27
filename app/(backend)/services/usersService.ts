@@ -86,7 +86,9 @@ class UsersService implements IUserCreator, IUserFinder {
   }
 
   async updateUser(id: string, data: Partial<User>): Promise<User> {
-    if (!data) throw new BadRequestResponse("No data provided for update");
+    if (!data || Object.keys(data).length === 0) {
+      throw new BadRequestResponse("No data provided for update");
+    }
 
     const existingUser = await prisma.user.findUnique({
       where: { id },

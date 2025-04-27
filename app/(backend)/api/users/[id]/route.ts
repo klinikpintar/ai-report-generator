@@ -52,8 +52,9 @@ export async function PATCH(
     if (!parseQuery.success) {
       throw new BadRequestResponse(parseQuery.error.errors[0].message);
     }
+    const { id: userId, ...restData } = parseQuery.data;
 
-    const user = await usersService.updateUser(id, parseQuery.data);
+    const user = await usersService.updateUser(userId as string, restData);
     return NextResponse.json({
       message: "User updated successfully",
       data: user,
