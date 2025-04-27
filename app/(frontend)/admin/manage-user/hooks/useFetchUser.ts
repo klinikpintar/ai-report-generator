@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from "react";
+import { useCallback } from "react";
 import { useUserTableContext } from "../context/UserTableContext";
 import { fetchUsers } from "../utils/api";
 
@@ -11,7 +11,7 @@ export const useFetchUser = () => {
     return selectedRoles.length === 1 ? selectedRoles[0] : undefined;
   }, [state.filters.role.selected]);
 
-  const handleFetchUsers = async () => {
+  const refreshUsers = async () => {
     dispatch({ type: "FETCH_START" });
     try {
       const page = state.pagination.currentPage;
@@ -26,9 +26,5 @@ export const useFetchUser = () => {
     }
   };
 
-  useEffect(() => {
-    handleFetchUsers();
-  }, [state.pagination.currentPage, state.filters.role.selected]);
-
-  return { handleFetchUsers };
+  return { refreshUsers };
 };
