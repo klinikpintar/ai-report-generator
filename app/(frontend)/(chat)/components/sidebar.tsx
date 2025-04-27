@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useSession } from "../context/sessionContext";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 
 interface SidebarProps {
@@ -26,7 +26,7 @@ export default function Sidebar({ isOpen }: SidebarProps) {
   const router = useRouter();
 
   // Fetch chat sessions
-  const fetchChatSessions = async () => {
+  const fetchChatSessions = useCallback(async () => {
     setIsLoading(true);
     try {
       const response = await fetch("/api/chat-sessions");
@@ -47,7 +47,7 @@ export default function Sidebar({ isOpen }: SidebarProps) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [isNewSession]);
 
   useEffect(() => {
     if (isOpen) {
