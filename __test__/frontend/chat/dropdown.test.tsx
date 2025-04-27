@@ -210,7 +210,7 @@ describe("Dropdown Component with Context", () => {
     setup();
 
     await waitFor(() => {
-      expect(screen.getByText("Failed to fetch list of services")).toBeInTheDocument();
+      expect(screen.getByText("Gagal mengambil daftar layanan.")).toBeInTheDocument();
     });
   })
 });

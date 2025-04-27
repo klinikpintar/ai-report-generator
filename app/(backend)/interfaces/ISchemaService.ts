@@ -1,5 +1,23 @@
 import { Schema } from '@prisma/client';
 
+export interface GetSchemaDto {
+  serviceIds?: string[];
+  platformCodes?: string[];
+  page?: number;
+  limit?: number;
+}
+
+export interface PaginatedResponse<T> {
+  data: T[];
+  pagination: {
+    currentPage: number;
+    totalPages: number;
+    totalItems: number;
+  };
+}
+
+export type GetSchemaResponse = PaginatedResponse<Schema>;
+
 export interface CreateSchemaDto {
   name: string;
   description: string;
@@ -16,14 +34,14 @@ export interface UpdateSchemaDto {
 /**
  * The ISchemaService interface specifies how we'll create, read, update, and delete schemas.
  */
-export interface ISchemaService extends IReadSchemaService, IWriteSchemaService, IDeleteSchemaService {}
+export interface ISchemaService extends IReadSchemaService, IWriteSchemaService, IDeleteSchemaService { }
 
 export interface IReadSchemaService {
   /**
-   * Find all schemas by service id
+   * Find all schemas filtered by service IDs or platform codes
    * @returns Promise<Schema[]> Array of schemas
    */
-  findAllSchemas(serviceIds?: string[]): Promise<Schema[]>;
+  findAllSchemas(data: GetSchemaDto): Promise<GetSchemaResponse>;
 }
 
 

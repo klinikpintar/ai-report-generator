@@ -1,16 +1,18 @@
-import { NextResponse } from 'next/server';
+import { NextResponse, NextRequest } from 'next/server';
 import prisma from '@/lib/prisma';
 import { getUserFromRequest } from '@/app/(backend)/utils/authUtils';
 
-// Get messages for a specific chat session
-export async function GET(req: Request, { params }: { params: { id: string } }) {
+export async function GET(
+  request: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
   try {
-    const user = await getUserFromRequest(req);
+    const user = await getUserFromRequest();
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { id } = params;
+    const { id } = await context.params;
     
     // Verify user owns this session
     const session = await prisma.chatSession.findUnique({
@@ -29,20 +31,22 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
     return NextResponse.json({ messages });
   } catch (error) {
     console.error('Error fetching chat messages:', error);
-    return NextResponse.json({ error: 'Failed to fetch chat messages' }, { status: 500 });
+    return NextResponse.json({ error: 'Server error' }, { status: 500 });
   }
 }
 
-// Add a message to a chat session
-export async function POST(req: Request, { params }: { params: { id: string } }) {
+export async function POST(
+  request: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
   try {
-    const user = await getUserFromRequest(req);
+    const user = await getUserFromRequest();
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { id } = params;
-    const { content, role, modelUsed } = await req.json();
+    const { id } = await context.params;
+    const { content, role, modelUsed } = await request.json();
     
     // Verify user owns this session
     const session = await prisma.chatSession.findUnique({

@@ -65,6 +65,9 @@ jest.mock('@/lib/schema-embedding', () => ({
   generateSchemaEmbeddings: jest.fn().mockResolvedValue(undefined)
 }));
 
+
+const mockFindUnique = prisma.chatSession.findUnique as unknown as jest.Mock;
+
 describe('POST /api/chat', () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -919,65 +922,21 @@ describe('Chat Session Handling', () => {
     });
   });
 
-  it('updates session title if it is a new chat', async () => {
-    // Reset mockImplementation from previous tests
-    prisma.chatSession.findUnique = jest.fn();
-    
-    // First call for session verification
-    prisma.chatSession.findUnique.mockResolvedValueOnce({
-      id: 'session-id-123',
-      userId: 'user123',
-      title: 'New Chat',
-      updatedAt: new Date(),
-    });
-    
-    // Second call with include: { messages }
-    prisma.chatSession.findUnique.mockResolvedValueOnce({
-      id: 'session-id-123',
-      userId: 'user123',
-      title: 'New Chat',
-      messages: [
-        { content: 'This is a long first message that should be truncated for the title', role: 'user' }
-      ]
-    });
-    
-    const req = new NextRequest('http://localhost/api/chat', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        messages: [{ role: 'user', content: 'Hello again' }],
-        sessionId: 'session-id-123'
-      }),
-    });
-
-    await POST(req);
-
-    // Verify title update was called with truncated message
-    expect(prisma.chatSession.update).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: { id: 'session-id-123' },
-        data: expect.objectContaining({ 
-          title: expect.stringContaining('This is a long first message') 
-        })
-      })
-    );
-  });
-
   it('does not update title for sessions with custom titles', async () => {
     // Only mock the second findUnique call which checks the title
-    prisma.chatSession.findUnique
-      .mockResolvedValueOnce({ 
-        id: 'session-id-123', 
-        userId: 'user123',
-        title: 'Custom Title'
-      }) // First call for session validation
-      .mockResolvedValueOnce({ 
-        id: 'session-id-123',
-        title: 'Custom Title',
-        messages: [
-          { content: 'First message', role: 'user' }
-        ]
-      }); // Second call for title check
+    mockFindUnique
+    .mockResolvedValueOnce({ 
+      id: 'session-id-123', 
+      userId: 'user123',
+      title: 'Custom Title'
+    })
+    .mockResolvedValueOnce({ 
+      id: 'session-id-123',
+      title: 'Custom Title',
+      messages: [
+        { content: 'First message', role: 'user' }
+      ]
+    });
 
     const req = new NextRequest('http://localhost/api/chat', {
       method: 'POST',

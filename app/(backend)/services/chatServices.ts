@@ -76,7 +76,7 @@ export class GeminiProvider implements ModelProvider {
     const sdkMessages = messages as CoreMessage[];
     
     return generateText({
-      model: google('gemini-2.5-pro-exp-03-25'),
+      model: google('gemini-2.0-flash'),
       messages: sdkMessages,
       system: AI_INSTRUCTION,
     });
@@ -198,14 +198,26 @@ export class ResponseFormatter {
     const userPrompt = lastUserMessage ? lastUserMessage.content : '';
     
     // Create metadata object
-    const metadata: Record<string, unknown> = {
+    const metadata: {
+      finishReason: string;
+      usage: {
+        promptTokens: number;
+        completionTokens: number;
+      };
+      modelUsed: string;
+      schemaId?: string | string[] | undefined;
+      schemaIncluded?: boolean;
+      schemaName?: string;
+      resourceIds?: number[];
+      warnings?: string[];
+    } = {
       finishReason: result.finishReason || 'stop',
       usage: {
         promptTokens: result.usage?.promptTokens || 0,
         completionTokens: result.usage?.completionTokens || 0,
       },
       modelUsed: modelName,
-      schemaId: schemaId || null,
+      schemaId: schemaId || undefined,
       schemaIncluded: schemaIncluded || false,
     };
     

@@ -28,7 +28,7 @@ export async function POST(req: Request) {
   const contextEnhancer = new SchemaContextEnhancer(schemaRepository);
 
   try {
-    const user = await getUserFromRequest(req);
+    const user = await getUserFromRequest();
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -169,8 +169,7 @@ Use this schema information if relevant to answer the user's question.`;
               tanpa tanda kutip atau penjelasan.` }
           ]
         );
-        console.log(generateTitle.text)
-        const title = generateTitle.text;
+        const title = generateTitle.text.replace(/\\/g, "").trim();
         
         await prisma.chatSession.update({
           where: { id: sessionId },
