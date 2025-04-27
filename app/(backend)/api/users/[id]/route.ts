@@ -39,3 +39,30 @@ export async function DELETE(
     return new ErrorResponse("Internal server error", 500).generate();
   }
 }
+
+export async function PATCH(
+  req: Request,
+  context: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await context.params;
+    const body = await req.json();
+
+    const parseQuery = UserValidation.PATCH.safeParse({ ...body, id });
+    if (!parseQuery.success) {
+      throw new BadRequestResponse(parseQuery.error.errors[0].message);
+    }
+
+    const user = await usersService.updateUser(id, parseQuery.data);
+    return NextResponse.json({
+      message: "User updated successfully",
+      data: user,
+    });
+  } catch (error) {
+    if (error instanceof ErrorResponse) {
+      return error.generate();
+    }
+    console.error("Unexpected error during user update:", error);
+    return new ErrorResponse("Internal server error", 500).generate();
+  }
+}

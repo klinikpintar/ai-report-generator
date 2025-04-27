@@ -8,7 +8,11 @@ import {
   PaginationUser,
   User,
 } from "@backend/interfaces/IUsersService";
-import { ConflictResponse, NotFoundResponse } from "@backend/utils/exceptions";
+import {
+  BadRequestResponse,
+  ConflictResponse,
+  NotFoundResponse,
+} from "@backend/utils/exceptions";
 import bcrypt from "bcryptjs";
 
 class UsersService implements IUserCreator, IUserFinder {
@@ -74,11 +78,30 @@ class UsersService implements IUserCreator, IUserFinder {
       where: { id },
       select: { id: true, name: true, email: true, role: true, isActive: true },
     });
-    
+
     if (!existingUser) throw new NotFoundResponse("User not found");
 
     await prisma.user.delete({ where: { id } });
     return existingUser;
+  }
+
+  async updateUser(id: string, data: Partial<User>): Promise<User> {
+    if (!data) throw new BadRequestResponse("No data provided for update");
+
+    const existingUser = await prisma.user.findUnique({
+      where: { id },
+      select: { id: true, name: true, email: true, role: true, isActive: true },
+    });
+
+    if (!existingUser) throw new NotFoundResponse("User not found");
+
+    const updatedUser = await prisma.user.update({
+      where: { id },
+      data,
+      select: { id: true, name: true, email: true, role: true, isActive: true },
+    });
+
+    return updatedUser;
   }
 }
 
