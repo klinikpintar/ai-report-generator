@@ -54,7 +54,7 @@ describe("Navbar Component", () => {
     expect(logoutButton).toBeInTheDocument();
   });
 
-  it("should call logout and redirect on success", async () => {
+  it("should call logout, show success toast, and redirect on success", async () => {
     (FeAuthService.logout as jest.Mock).mockResolvedValue({ success: true });
 
     renderWithUserProvider(<Navbar />);
@@ -62,7 +62,8 @@ describe("Navbar Component", () => {
     fireEvent.click(logoutButton);
 
     await waitFor(() => {
-      expect(pushMock).toHaveBeenCalledWith("/login");
+    expect(mockedToast.success).toHaveBeenCalledWith("Successfully logged out.");
+    expect(pushMock).toHaveBeenCalledWith("/login");
     });
   });
 
@@ -75,8 +76,7 @@ describe("Navbar Component", () => {
   
     await waitFor(() => {
       expect(mockedToast.error).toHaveBeenCalledWith(
-        "Logout failed. Please try again.",
-        expect.any(Object)
+        "Logout failed. Please try again."
       );
     });
   }); 
