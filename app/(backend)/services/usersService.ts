@@ -8,7 +8,7 @@ import {
   PaginationUser,
   User,
 } from "@backend/interfaces/IUsersService";
-import { ConflictResponse } from "@backend/utils/exceptions";
+import { ConflictResponse, NotFoundResponse } from "@backend/utils/exceptions";
 import bcrypt from "bcryptjs";
 
 class UsersService implements IUserCreator, IUserFinder {
@@ -67,6 +67,19 @@ class UsersService implements IUserCreator, IUserFinder {
         totalItems: totalItems,
       },
     };
+  }
+
+  async deleteUser(id: string): Promise<User> {
+    const existingUser = await prisma.user.findUnique({
+      where: { id },
+      select: { id: true, name: true, email: true, role: true, isActive: true },
+    });
+    
+    
+    if (!existingUser) throw new NotFoundResponse("User not found");
+
+    await prisma.user.delete({ where: { id } });
+    return existingUser;
   }
 }
 
