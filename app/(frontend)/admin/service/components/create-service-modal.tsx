@@ -68,6 +68,7 @@ const CreateServiceModal = ({ isVisible, onClose }: Props) => {
         setServices(
           services.filter((service) => service.id !== serviceToDelete)
         );
+        eventBus.publish(EVENTS.SERVICE_UPDATED); // Notify other components
         toast.success("Service successfully deleted");
       } else {
         toast.error(`Failed to delete service: ${response.statusText}`);
