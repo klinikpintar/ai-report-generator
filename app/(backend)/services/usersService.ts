@@ -90,6 +90,19 @@ class UsersService implements IUserCreator, IUserFinder {
       throw new BadRequestResponse("No data provided for update");
     }
 
+    if (data.email) {
+      const emailExists = await prisma.user.count({
+        where: {
+          email: data.email,
+          id: { not: id },
+        },
+      });
+
+      if (emailExists > 0) {
+        throw new ConflictResponse("Email already exists");
+      }
+    }
+
     const existingUser = await prisma.user.findUnique({
       where: { id },
       select: { id: true, name: true, email: true, role: true, isActive: true },

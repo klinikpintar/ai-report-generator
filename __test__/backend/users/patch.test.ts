@@ -6,6 +6,7 @@ jest.mock("@/lib/prisma", () => ({
   user: {
     findUnique: jest.fn(),
     update: jest.fn(),
+    count: jest.fn(),
   },
 }));
 
@@ -96,6 +97,39 @@ describe("PATCH /api/users/[id] route (full flow including usersService)", () =>
 
     expect(response.status).toBe(404);
     expect(json.message).toBe("User not found");
+  });
+
+  // ❌ Negative Case: Email already exists (conflict)
+  it("should return 409 if email already exists (negative case)", async () => {
+    const mockExistingUser = {
+      id: validUserId,
+      name: "Old Name",
+      email: "old@example.com",
+      role: "ADMIN",
+      isActive: true,
+    };
+
+    // Mock prisma findUnique (user exists) dan prisma count (email exists)
+    (prisma.user.findUnique as jest.Mock).mockResolvedValue(mockExistingUser);
+    (prisma.user.update as jest.Mock).mockResolvedValue(mockExistingUser);
+    (prisma.user.count as jest.Mock).mockResolvedValue(1); // email duplicate
+
+    const body = {
+      email: "duplicate@example.com", // email yang udah dipakai user lain
+    };
+
+    const request = new Request("http://localhost", {
+      method: "PATCH",
+      body: JSON.stringify(body),
+    });
+
+    const params: Params = { params: Promise.resolve({ id: validUserId }) };
+
+    const response = await PATCH(request, params);
+    const json = await response.json();
+
+    expect(response.status).toBe(409);
+    expect(json.message).toBe("Email already exists");
   });
 
   // Corner Case: No data provided to update
