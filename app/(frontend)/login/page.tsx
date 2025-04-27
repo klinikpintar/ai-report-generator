@@ -12,7 +12,6 @@ const LoginPage = () => {
   const { setEmailContext } = useUser();
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
   const router = useRouter();
   const isSubmitting = useRef(false);
 
@@ -22,9 +21,7 @@ const LoginPage = () => {
     // Blokir multiple submissions instan
     if (isSubmitting.current) return;
     isSubmitting.current = true;
-
     setLoading(true);
-    setError("");
 
     try {
       const { success } = await FeAuthService.login(email, password);
@@ -32,24 +29,17 @@ const LoginPage = () => {
       if (success) {
         setEmailContext(email);
         localStorage.setItem("userEmail", email);
-        toast.success("Login successful! Redirecting...", {
-          position: "top-right",
-          autoClose: 3000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-        });
+        toast.success("Login successful! Redirecting...");
 
         // Delay sebentar untuk pengguna melihat toast
         setTimeout(() => {
           router.push("/");
         }, 500);
       } else {
-        setError("Login failed. Please check your credentials.");
+        toast.error("Login failed. Please check your credentials.");
       }
     } catch {
-      setError("Something went wrong. Please try again.");
+      toast.error("Something went wrong. Please try again.");
     } finally {
       setLoading(false);
       isSubmitting.current = false;
@@ -88,12 +78,6 @@ const LoginPage = () => {
             required
             onChange={(e) => setPassword(e.target.value)}
           />
-
-          {error && (
-            <p className="text-red-600 text-sm font-semibold text-center">
-              {error}
-            </p>
-          )}
 
           <button
             type="submit"
