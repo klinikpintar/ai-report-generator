@@ -6,7 +6,7 @@ import Image from "next/image";
 import FeAuthService from "@frontend/login/services/feAuthService";
 import { useUser } from "@frontend/login/context/userContext";
 import { toast } from "react-toastify";
-import { useUIState } from "@frontend/(chat)/layout"; // Import the context
+import { useUIState } from "@frontend/(chat)/context/uiStateContext";
 
 export default function Navbar() {
   const router = useRouter();

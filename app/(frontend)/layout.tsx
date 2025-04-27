@@ -2,7 +2,6 @@ import React from "react";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { ToastContainer } from "react-toastify";
-import Navbar from "./components/navbar";
 import { UserProvider } from "./login/context/userContext";
 
 const inter = Inter({

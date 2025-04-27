@@ -1,6 +1,5 @@
 "use client";
 import { Suspense } from "react";
-import Navbar from "@frontend/components/navbar";
 import ChatBox from "./chatbox";
 
 export default function Home() {
