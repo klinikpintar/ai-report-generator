@@ -101,6 +101,8 @@ describe("LoginPage", () => {
       success: true,
       message: "Login successful"
     });
+
+    jest.useFakeTimers();
   
     // Render component and fill form
     renderWithUserContext();
@@ -117,17 +119,21 @@ describe("LoginPage", () => {
   
     // Verify toast success was called
     expect(mockedToast.success).toHaveBeenCalledWith(
-      "Login successful! Redirecting...",
-      expect.any(Object)
+      "Login successful! Redirecting..."
     );
   
     expect(window.localStorage.setItem).toHaveBeenCalledWith("userEmail", "test@example.com");
     expect(setEmailContextMock).toHaveBeenCalledWith("test@example.com");
     
     // Use waitFor because of the setTimeout in the component
-    await waitFor(() => {
-      expect(pushMock).toHaveBeenCalledWith("/");
+    await act(async () => {
+      jest.advanceTimersByTime(500);
     });
+  
+    expect(pushMock).toHaveBeenCalledWith("/");
+    
+    // Restore real timers
+    jest.useRealTimers();
   });
 
   it("shows error message on failed login (invalid credentials)", async () => {
@@ -146,7 +152,9 @@ describe("LoginPage", () => {
       fireEvent.click(screen.getByRole("button", { name: /login/i }));
     });
 
-    expect(await screen.findByText(/login failed/i)).toBeInTheDocument();
+    expect(mockedToast.error).toHaveBeenCalledWith(
+      "Login failed. Please check your credentials."
+    );
   });
 
   it("shows generic error on exception", async () => {
@@ -165,7 +173,9 @@ describe("LoginPage", () => {
       fireEvent.click(screen.getByRole("button", { name: /login/i }));
     });
 
-    expect(await screen.findByText(/something went wrong/i)).toBeInTheDocument();
+    expect(mockedToast.error).toHaveBeenCalledWith(
+      "Something went wrong. Please try again."
+    );
   });
 
   it("displays loading state during login", async () => {
