@@ -8,7 +8,7 @@ import rehypeRaw from "rehype-raw";
 import Dropdown from "./components/dropdown";
 import { useService } from "./context/serviceContext"; // Import context
 import Bantuan from "./components/bantuan";
-import type { Service, Schema } from "@frontend/common/types";
+import type { Service } from "@frontend/common/types";
 import ExportModal from "@/app/(frontend)/(chat)/components/ekspor/modal";
 import { CodeBlock } from "./components/CodeBlock";
 import { useSession } from "./context/sessionContext";
@@ -117,10 +117,24 @@ export default function ChatBox() {
     const serviceIds = services.map((service) => service.id);
     const queryParams = new URLSearchParams();
     serviceIds.forEach((id) => queryParams.append("serviceIds", id.toString()));
+    
     const response = await fetch(`/api/schema?${queryParams.toString()}`);
     if (!response.ok) throw new Error("Failed to fetch schemas");
-    const data = (await response.json()) as Schema[];
-    return data.map((schema) => schema.id);
+    
+
+    const responseData = await response.json();
+    // console.log("Schema API response:", responseData);
+    
+    const schemas = Array.isArray(responseData) 
+      ? responseData 
+      : responseData.data;
+    
+    if (!Array.isArray(schemas)) {
+      console.error("Unexpected API response format:", responseData);
+      return []; 
+    }
+    
+    return schemas.map((schema) => schema.id);
   };
 
   const sendMessage = async () => {

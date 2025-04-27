@@ -3,9 +3,9 @@ import prisma from '@/lib/prisma';
 import { getUserFromRequest } from '@/app/(backend)/utils/authUtils';
 
 // Get all user's chat sessions
-export async function GET(req: Request) {
+export async function GET() {
   try {
-    const user = await getUserFromRequest(req);
+    const user = await getUserFromRequest();
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -30,7 +30,7 @@ export async function GET(req: Request) {
 // Create a new chat session
 export async function POST(req: Request) {
   try {
-    const user = await getUserFromRequest(req);
+    const user = await getUserFromRequest();
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }

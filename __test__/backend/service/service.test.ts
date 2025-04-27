@@ -31,6 +31,8 @@ jest.mock("@backend/utils/serviceUtils", () => {
             message: "Invalid input",
             path: ["name"],
             code: "invalid_type",
+            expected: "string",
+            received: "object",
           },
         ]);
       }
@@ -67,7 +69,7 @@ describe("CRUD of Service API (Using NextRequest)", () => {
     (prisma.service.findMany as jest.Mock).mockRejectedValue(new Error("Database error"));
 
     const request = sendRequest("GET");
-    const response = await GET(request);
+    const response = await GET();
     const json = await response.json();
 
     expect(response.status).toBe(StatusCodes.INTERNAL_SERVER_ERROR);
@@ -143,7 +145,7 @@ describe("CRUD of Service API (Using NextRequest)", () => {
     (prisma.service.findMany as jest.Mock).mockResolvedValue([]);
 
     const request = sendRequest("GET");
-    const response = await GET(request);
+    const response = await GET();
     const json = await response.json();
 
     expect(json.some((service: any) => service.name === validServiceData.name)).toBe(false);

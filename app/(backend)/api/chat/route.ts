@@ -28,7 +28,7 @@ export async function POST(req: Request) {
   const contextEnhancer = new SchemaContextEnhancer(schemaRepository);
 
   try {
-    const user = await getUserFromRequest(req);
+    const user = await getUserFromRequest();
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -161,8 +161,15 @@ Use this schema information if relevant to answer the user's question.`;
       });
       
       if (session?.title === 'New Chat' && session.messages.length > 0) {
-        const firstMsg = session.messages[0].content;
-        const title = firstMsg.substring(0, 30) + (firstMsg.length > 30 ? '...' : '');
+        const generateTitle = await provider.generateResponse(
+          [
+            { role: 'user', content: `Buatkan judul singkat maksimal 5 kata dari 
+              pertanyaan berikut, cocok untuk dijadikan nama sesi 
+              chat:\n\n"${messages[0].content}"\n\nJawaban hanya judulnya saja 
+              tanpa tanda kutip atau penjelasan.` }
+          ]
+        );
+        const title = generateTitle.text.replace(/\\/g, "").trim();
         
         await prisma.chatSession.update({
           where: { id: sessionId },
