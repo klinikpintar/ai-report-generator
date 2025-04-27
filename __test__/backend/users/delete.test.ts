@@ -1,11 +1,7 @@
 import { DELETE } from "@/app/(backend)/api/users/[id]/route";
 import authService from "@/app/(backend)/services/authService";
 import usersService from "@/app/(backend)/services/usersService";
-import {
-  UnauthorizedResponse,
-  BadRequestResponse,
-  NotFoundResponse,
-} from "@/app/(backend)/utils/exceptions";
+import { NotFoundResponse } from "@/app/(backend)/utils/exceptions";
 
 // 🛠️ Mock authService dan usersService
 jest.mock("@/app/(backend)/services/authService", () => ({
