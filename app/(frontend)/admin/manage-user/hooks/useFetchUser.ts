@@ -24,7 +24,7 @@ export const useFetchUser = () => {
     } catch {
       dispatch({ type: "FETCH_ERROR", payload: "Gagal memuat data pengguna" });
     }
-  }, [dispatch, state.pagination.currentPage, getSelectedRole]);  
+  };
 
   return { refreshUsers };
 };
