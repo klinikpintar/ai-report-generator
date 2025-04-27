@@ -107,7 +107,7 @@ describe("LoginPage", () => {
     // Render component and fill form
     renderWithUserContext();
     const emailInput = screen.getByLabelText(/email/i);
-    const passwordInput = screen.getByLabelText(/password/i);
+    const passwordInput = screen.getByPlaceholderText("Masukkan password");
     const button = screen.getByRole("button", { name: /login/i });
   
     fireEvent.change(emailInput, { target: { value: "test@example.com" } });
@@ -232,5 +232,30 @@ describe("LoginPage", () => {
       expect(loginMock).toHaveBeenCalledTimes(1);
     });
   });
-  
+
+  it("toggles password visibility when show/hide button is clicked", async () => {
+    renderWithUserContext();
+
+    const passwordInput = screen.getByPlaceholderText("Masukkan password");
+    const toggleButton = screen.getByRole("button", { name: /show password/i });
+    
+    // password is hidden by default
+    expect(passwordInput).toHaveAttribute("type", "password");
+
+    await act(async () => {
+      fireEvent.click(toggleButton);
+    });
+    
+    // ensure password is visible after clicking the button
+    expect(passwordInput).toHaveAttribute("type", "text");
+    expect(toggleButton).toHaveAttribute("aria-label", "Hide password");
+    
+    await act(async () => {
+      fireEvent.click(toggleButton);
+    });
+    
+    // ensure password is hidden again
+    expect(passwordInput).toHaveAttribute("type", "password");
+    expect(toggleButton).toHaveAttribute("aria-label", "Show password");
+  });
 });
