@@ -29,9 +29,6 @@ export default function RootLayout({
         <ToastContainer />
         <div className="h-screen overflow-hidden flex flex-col bg-white">
           <UserProvider>
-            {" "}
-            {/* Bungkus semua halaman dengan Context */}
-            <Navbar />
             {children}
           </UserProvider>
         </div>

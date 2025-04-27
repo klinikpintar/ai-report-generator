@@ -6,6 +6,7 @@ import FeAuthService from "./services/feAuthService";
 import { useUser } from "@/app/(frontend)/login/context/userContext";
 import FormInput from "@frontend/components/form-input";
 import { toast } from "react-toastify";
+import Navbar from "@frontend/components/navbar";
 
 const LoginPage = () => {
   const [email, setEmail] = useState("");
@@ -64,6 +65,7 @@ const LoginPage = () => {
 
   return (
     <div className="flex items-center justify-center min-h-screen">
+      <Navbar />
       <div className="max-w-2xl p-8">
         {/* Judul */}
         <h2 className="font-bold text-center text-blue-6 text-[32px]">

@@ -82,7 +82,7 @@ export default function Navbar() {
                 height={40}
                 alt="Profile Icon"
               />
-              <p className="text-sm text-black truncate max-w-[120px]">
+              <p className="text-sm text-black truncate max-w-full">
                 {email}
               </p>
               <button
