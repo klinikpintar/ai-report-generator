@@ -19,7 +19,7 @@ interface ChatSession {
   };
 }
 
-export default function Sidebar({ isOpen, onClose }: SidebarProps) {
+export default function Sidebar({ isOpen }: SidebarProps) {
   const { createNewSession, setActiveSessionId, isNewSession, shouldRefresh, setShouldRefresh } = useSession();
   const [chatSessions, setChatSessions] = useState<ChatSession[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -53,7 +53,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
     if (isOpen) {
       fetchChatSessions();
     }
-  }, [isOpen]);
+  }, [isOpen, fetchChatSessions]);
 
   // Listen for refresh triggers from the session context
   useEffect(() => {
@@ -61,7 +61,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
       fetchChatSessions();
       setShouldRefresh(false); // Reset the flag after fetching
     }
-  }, [shouldRefresh, setShouldRefresh]);
+  }, [shouldRefresh, setShouldRefresh, fetchChatSessions]);
 
   const handleNewChat = async () => {
     try {

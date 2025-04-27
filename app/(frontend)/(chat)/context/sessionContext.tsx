@@ -1,7 +1,6 @@
 "use client";
 
 import { createContext, useContext, useState, ReactNode, useCallback } from "react";
-import { useRouter } from "next/navigation";
 
 interface SessionContextType {
   activeSessionId: string | null; // Change sessionId to activeSessionId to match what you use
@@ -11,6 +10,7 @@ interface SessionContextType {
   refreshSessions: () => void;
   shouldRefresh: boolean;
   setShouldRefresh: (value: boolean) => void; // Add this to control refresh state
+  refreshTrigger: number; // Add this if you need it
 }
 
 const SessionContext = createContext<SessionContextType | undefined>(undefined);
@@ -55,7 +55,8 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       refreshSessions,
       isNewSession,
       shouldRefresh,
-      setShouldRefresh // Expose this so components can reset it
+      setShouldRefresh, // Expose this so components can reset it
+      refreshTrigger, // Expose it if needed
     }}>
       {children}
     </SessionContext.Provider>
