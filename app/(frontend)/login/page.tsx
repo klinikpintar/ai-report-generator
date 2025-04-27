@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import FeAuthService from "./services/feAuthService";
 import { useUser } from "@/app/(frontend)/login/context/userContext";
 import FormInput from "@frontend/components/form-input";
+import { toast } from "react-toastify";
 
 const LoginPage = () => {
   const [email, setEmail] = useState("");
@@ -31,7 +32,19 @@ const LoginPage = () => {
       if (success) {
         setEmailContext(email);
         localStorage.setItem("userEmail", email);
-        router.push("/");
+        toast.success("Login successful! Redirecting...", {
+          position: "top-right",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        });
+
+        // Delay sebentar untuk pengguna melihat toast
+        setTimeout(() => {
+          router.push("/");
+        }, 500);
       } else {
         setError("Login failed. Please check your credentials.");
       }
@@ -47,7 +60,7 @@ const LoginPage = () => {
     <div className="flex items-center justify-center min-h-screen">
       <div className="max-w-2xl p-8">
         {/* Judul */}
-        <h2 className="font-bold text-center text-[#00B0EB] text-[32px]">
+        <h2 className="font-bold text-center text-blue-6 text-[32px]">
           Sign in to your account
         </h2>
         <p className="mt-2 text-center text-base text-[18px]">
@@ -84,9 +97,8 @@ const LoginPage = () => {
 
           <button
             type="submit"
-            className={`w-full mt-4 font-semibold text-18 py-3 px-6 rounded-[50px] ${
-              loading ? "bg-[#00B0EB]/80 cursor-not-allowed" : "bg-[#00B0EB]"
-            } text-white`}
+            className={`w-full mt-4 font-semibold text-18 py-3 px-6 rounded-[50px] ${loading ? "bg-blue-6/80 cursor-not-allowed" : "bg-blue-6"
+              } text-white`}
             disabled={loading}
           >
             {loading ? "Logging in..." : "Login"}

@@ -46,7 +46,7 @@ export const UserTable = () => {
       key: "name",
       header: "Nama Lengkap",
       width: "20%",
-      renderCell: (user) => user.name,
+      renderCell: (user) => <span className="text-nowrap">{user.name}</span>,
     },
     {
       key: "email",
@@ -61,7 +61,7 @@ export const UserTable = () => {
       renderCell: (user) => (
         <Chip
           variant={"ghost"}
-          className={cn("w-full lg:w-4/5 cursor-default", getRoleColor(user.role))}
+          className={cn("w-full lg:w-4/5 cursor-default text-nowrap", getRoleColor(user.role))}
         >
           {user.role === "BUSINESS_ANALYST" ? "Business Analyst" : "Admin"}
         </Chip>
@@ -111,19 +111,17 @@ export const UserTable = () => {
   ];
 
   return (
-    <div
-      className="min-w-5xl overflow-x-scroll w-full flex flex-col gap-4"
-      data-testid="schema-table"
-    >
-      <GenericTable<User>
-        columns={columns}
-        data={state.data}
-        isLoading={state.isLoading}
-        emptyMessage="Tidak ada user ditemukan"
-        loadingMessage="Sedang memuat..."
-        keyExtractor={(user) => user.id}
-      />
+    <>
+      <div className="w-full overflow-x-auto" data-testid="schema-table">
+        <GenericTable<User>
+          columns={columns}
+          data={state.data}
+          isLoading={state.isLoading}
+          emptyMessage="Tidak ada user ditemukan"
+          keyExtractor={(user) => user.id}
+        />
+      </div>
       <TablePagination {...state.pagination} onPageChange={handlePageChange} />
-    </div>
+    </>
   );
 };

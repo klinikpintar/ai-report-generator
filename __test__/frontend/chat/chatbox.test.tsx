@@ -70,12 +70,13 @@ describe("ChatBox API Integration", () => {
     { id: "2", name: "Pendaftaran", platformCode: "Postgresql", createdAt: "" },
   ];
   const mockSchema: Schema = {
-    id: "1",
+    id: 1,
     name: "pasien_portal",
     description: "",
     createdAt: "",
     schemaText: "",
     service: mockServices[0],
+    serviceId: ""
   };
 
   it("should receive response after send message without service selection", async () => {

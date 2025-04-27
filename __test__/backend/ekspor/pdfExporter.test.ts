@@ -138,8 +138,123 @@ describe("POST /api/ekspor/pdf (handler)", () => {
     const json = await res.json();
 
     expect(res.status).toBe(500);
-    expect(json.message).toBe("Gagal mengekspor laporan");
+    expect(json.message).toBe("Gagal generate PDF");
 
     jest.dontMock("@/app/(backend)/services/pdfExporter");
   });
+
+  it("should render bold and italic content correctly", async () => {
+    const contentWithStyles = `
+      **Latar Belakang**
+      Penelitian ini menggunakan *metode* terbaru.
+      
+      * Poin pertama dengan **penekanan**
+      * Poin kedua dengan *penekanan miring*
+    `.trim();
+  
+    const req = createMockRequest({
+      reportData: {
+        title: "Styled Report",
+        content: contentWithStyles,
+        createdAt: "2025-04-07"
+      }
+    });
+  
+    const res = await POST(req);
+  
+    expect(res.status).toBe(200);
+    expect(res.headers.get("content-type")).toBe("application/pdf");
+  });
+
+  it("should not fail when content contains multiple section headings", async () => {
+    const contentWithHeadings = `
+      Latar Belakang
+      Penjelasan latar belakang...
+  
+      Tujuan
+      Penjelasan tujuan...
+  
+      Metodologi
+      Deskripsi metode yang digunakan...
+    `.trim();
+  
+    const req = createMockRequest({
+      reportData: {
+        title: "Multi Heading",
+        content: contentWithHeadings,
+        createdAt: "2025-04-07"
+      }
+    });
+  
+    const res = await POST(req);
+  
+    expect(res.status).toBe(200);
+  });
+  
+  it("should wrap long lines properly", async () => {
+    const longWordContent = {
+      reportData: {
+        title: "Test",
+        content: "ThisIsAVeryLongWordThatWillNotFitInOneLine so it should wrap.",
+        createdAt: "2025-04-07"
+      }
+    };
+  
+    const req = createMockRequest(longWordContent);
+    const res = await POST(req);
+  
+    expect(res.status).toBe(200);
+  });
+
+  it("should handle code blocks using ```sql ... ``` correctly", async () => {
+    const contentWithCode = {
+      reportData: {
+        title: "With SQL",
+        content: `
+          Berikut adalah query yang digunakan:
+  
+          \`\`\`sql
+          SELECT * FROM orders;
+          \`\`\`
+  
+          Terima kasih.
+        `,
+        createdAt: "2025-04-07"
+      }
+    };
+  
+    const req = createMockRequest(contentWithCode);
+    const res = await POST(req);
+  
+    expect(res.status).toBe(200);
+  });
+
+  it("should handle long content and add a new page when needed", async () => {
+    const longText = Array(100).fill("Isi baris panjang untuk uji pagination.").join("\n");
+  
+    const req = createMockRequest({
+      reportData: {
+        title: "Long Content",
+        content: longText,
+        createdAt: "2025-04-07"
+      }
+    });
+  
+    const res = await POST(req);
+    expect(res.status).toBe(200);
+  });
+
+  it("should trigger line break and push currentLine in wrapText", async () => {
+    const trickyLine = "ThisIsALongWord ThisIsAnotherLongWord ThatShouldWrap";
+    const req = createMockRequest({
+      reportData: {
+        title: "Wrap Trigger",
+        content: trickyLine,
+        createdAt: "2025-04-07"
+      }
+    });
+  
+    const res = await POST(req);
+    expect(res.status).toBe(200);
+  });  
 });

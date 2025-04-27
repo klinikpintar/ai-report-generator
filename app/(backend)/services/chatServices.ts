@@ -2,6 +2,7 @@ import { deepseek } from '@ai-sdk/deepseek';
 import { google } from '@ai-sdk/google';
 import { generateText, CoreMessage } from 'ai';
 import prisma from '@/lib/prisma';
+import { AI_INSTRUCTION } from '@backend/constant/ai-instruction';
 
 // Types and interfaces
 export interface Message {
@@ -61,6 +62,7 @@ export class DeepseekProvider implements ModelProvider {
     return generateText({
       model: deepseek('deepseek-chat'),
       messages: sdkMessages,
+      system: AI_INSTRUCTION,
     });
   }
 
@@ -76,6 +78,7 @@ export class GeminiProvider implements ModelProvider {
     return generateText({
       model: google('gemini-2.0-flash'),
       messages: sdkMessages,
+      system: AI_INSTRUCTION,
     });
   }
 
@@ -189,8 +192,6 @@ export class ResponseFormatter {
     schemaId?: string | string[],
     schemaIncluded?: boolean,
     schemaName?: string | null,
-    resourceIds?: number[],
-    relevantContentFound?: boolean
   ): ApiResponse {
     // Create warnings array
     const warnings: string[] = [];
@@ -198,11 +199,6 @@ export class ResponseFormatter {
     // Add schema warning if needed
     if (schemaId && !schemaIncluded) {
       warnings.push('Requested schema(s) not found or had no content');
-    }
-    
-    // Add resource warning if needed
-    if (resourceIds && resourceIds.length > 0 && !relevantContentFound) {
-      warnings.push(`No relevant content found for resource IDs: ${resourceIds.join(', ')}`);
     }
     
     return {
@@ -220,8 +216,6 @@ export class ResponseFormatter {
         ...(schemaId !== undefined && { schemaId }),
         ...(schemaIncluded !== undefined && { schemaIncluded }),
         ...(schemaName && { schemaName }),
-        // Include resourceIds in response metadata
-        ...(resourceIds?.length && { resourceIds }),
         // Only include warnings if there are any
         ...(warnings.length > 0 && { warnings })
       },

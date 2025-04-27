@@ -22,7 +22,6 @@ interface FormErrors {
 
 type InputChangeEvent = React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>;
 
- 
 export const useAddAccount = (onClose: () => void) => {
   const { refreshUsers } = useFetchUser();
   const [formData, setFormData] = useState<FormData>({
