@@ -1,19 +1,25 @@
 "use client";
 
-import { createContext, useContext, useState, ReactNode } from "react";
+import { createContext, useContext, useState, ReactNode, useCallback } from "react";
 import { useRouter } from "next/navigation";
 
 interface SessionContextType {
-  activeSessionId: string | null;
-  setActiveSessionId: (id: string | null) => void;
+  activeSessionId: string | null; // Change sessionId to activeSessionId to match what you use
+  isNewSession: boolean;
+  setActiveSessionId: (sessionId: string) => void;
   createNewSession: () => Promise<string>;
+  refreshSessions: () => void;
+  shouldRefresh: boolean;
+  setShouldRefresh: (value: boolean) => void; // Add this to control refresh state
 }
 
 const SessionContext = createContext<SessionContextType | undefined>(undefined);
 
 export function SessionProvider({ children }: { children: ReactNode }) {
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
-  const router = useRouter();
+  const [isNewSession, setIsNewSession] = useState(false);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [shouldRefresh, setShouldRefresh] = useState(false);
   
   const createNewSession = async (): Promise<string> => {
     try {
@@ -27,7 +33,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       
       const { session } = await response.json();
       setActiveSessionId(session.id);
-      router.push(`/?sessionId=${session.id}`);
+      setIsNewSession(true); // Mark this as a new session
       return session.id;
     } catch (error) {
       console.error("Error creating session:", error);
@@ -35,11 +41,21 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const refreshSessions = useCallback(() => {
+    setShouldRefresh(true); // Set shouldRefresh to true
+    setRefreshTrigger(prev => prev + 1);
+    setIsNewSession(false);
+  }, []);
+
   return (
     <SessionContext.Provider value={{
       activeSessionId,
       setActiveSessionId,
       createNewSession,
+      refreshSessions,
+      isNewSession,
+      shouldRefresh,
+      setShouldRefresh // Expose this so components can reset it
     }}>
       {children}
     </SessionContext.Provider>
