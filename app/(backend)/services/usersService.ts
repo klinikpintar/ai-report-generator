@@ -75,7 +75,6 @@ class UsersService implements IUserCreator, IUserFinder {
       select: { id: true, name: true, email: true, role: true, isActive: true },
     });
     
-    
     if (!existingUser) throw new NotFoundResponse("User not found");
 
     await prisma.user.delete({ where: { id } });

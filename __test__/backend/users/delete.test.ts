@@ -1,6 +1,4 @@
 import { DELETE } from "@/app/(backend)/api/users/[id]/route";
-import usersService from "@/app/(backend)/services/usersService";
-import { NotFoundResponse } from "@/app/(backend)/utils/exceptions";
 import { Role } from "@prisma/client";
 
 // 🛠️ Langsung mock prisma disini aja
