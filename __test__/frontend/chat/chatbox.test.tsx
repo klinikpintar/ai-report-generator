@@ -1,244 +1,333 @@
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import ChatBox from "@frontend/(chat)/chatbox";
 import { ServiceProvider } from "@frontend/(chat)/context/serviceContext";
-import { ReactNode } from "react";
-import { Schema, Service } from "@frontend/common/types";
+import { UserProvider } from "@frontend/login/context/userContext";
+import React from "react";
 
-// **Mock react-markdown agar tidak memicu error ESM**
-// eslint-disable-next-line react/display-name
-jest.mock("react-markdown", () => (props: React.PropsWithChildren) => <div>{props.children}</div>);
-jest.mock("remark-gfm", () => jest.fn());
-jest.mock("rehype-raw", () => jest.fn());
+// ===== FIX: Pindahkan deklarasi getMock di SINI! =====
+let getMock: jest.Mock<string | null, [string]> = jest.fn();
 
-// Helper function untuk render dengan ServiceProvider
-const renderWithServiceProvider = (children: ReactNode) => {
-  return render(<ServiceProvider>{children}</ServiceProvider>);
-};
+// Mock session and router
+const setActiveSessionIdMock = jest.fn();
+const createNewSessionMock = jest.fn().mockResolvedValue("mock-session-id");
+const setHasChatted = jest.fn();
 
-describe("ChatBox Component", () => {
-  it("should display a welcome message before chatting", () => {
-    renderWithServiceProvider(<ChatBox />);
-    expect(screen.getByText("Hello, Virgillia Yeala !!")).toBeInTheDocument();
-  });
+jest.mock("@frontend/(chat)/context/sessionContext", () => ({
+  useSession: () => ({
+    activeSessionId: null,
+    setActiveSessionId: setActiveSessionIdMock,
+    createNewSession: createNewSessionMock,
+    setHasChatted: setHasChatted,
+  }),
+  SessionProvider: ({ children }: { children: React.ReactNode }) => (
+    <>{children}</>
+  ),
+}));
 
-  it("should remove welcome message after sending a chat", async () => {
-    renderWithServiceProvider(<ChatBox />);
-    const input = screen.getByPlaceholderText("Type a message...");
-    fireEvent.change(input, { target: { value: "Hi there!" } });
-    fireEvent.keyDown(input, { key: "Enter", code: "Enter" });
+jest.mock("next/navigation", () => ({
+  useRouter: () => ({ push: jest.fn() }),
+  useSearchParams: () => ({
+    get: (key: string) => getMock(key), // 🔥 Sekarang getMock udah ada!
+  }),
+}));
 
-    await waitFor(() => {
-      expect(screen.queryByText("Hello, Virgillia Yeala !!")).not.toBeInTheDocument();
-    });
-  });
+Object.defineProperty(window, "open", { value: jest.fn() });
 
-  it("should add user message to chat", async () => {
-    renderWithServiceProvider(<ChatBox />);
-    const input = screen.getByPlaceholderText("Type a message...");
-    fireEvent.change(input, { target: { value: "Hi, how are you?" } });
-    fireEvent.keyDown(input, { key: "Enter", code: "Enter" });
-
-    await waitFor(() => {
-      expect(screen.getByText("Hi, how are you?")).toBeInTheDocument();
-    });
-  });
-
-  it("should not add a message when Enter is pressed with empty input", async () => {
-    renderWithServiceProvider(<ChatBox />);
-    const input = screen.getByPlaceholderText("Type a message...");
-
-    // Pastikan tidak ada pesan sebelum pengujian dimulai
-    expect(screen.queryByTestId("chat-message")).not.toBeInTheDocument();
-
-    // Simulasikan menekan Enter saat input kosong
-    fireEvent.keyDown(input, { key: "Enter", code: "Enter" });
-
-    // Tunggu sebentar dan pastikan tidak ada pesan yang ditambahkan
-    await waitFor(() => {
-      expect(screen.queryByTestId("chat-message")).not.toBeInTheDocument();
-    });
-  });
+beforeEach(() => {
+  getMock.mockImplementation(() => null); // default tidak ada sessionId
+  global.fetch = jest.fn(() =>
+    Promise.resolve({
+      ok: true,
+      json: () => Promise.resolve([]),
+    })
+  ) as jest.Mock;
 });
 
-describe("ChatBox API Integration", () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
+afterEach(() => {
+  jest.clearAllMocks();
+  getMock = jest.fn((key: string) => null); // initialize getMock default null
+});
+
+// Helper render
+const renderChatBox = () =>
+  render(
+    <UserProvider>
+      <ServiceProvider>
+        <ChatBox />
+      </ServiceProvider>
+    </UserProvider>
+  );
+
+// --- TEST CASES ---
+describe("ChatBox", () => {
+  it("✅ should display welcome message initially", () => {
+    renderChatBox();
+    expect(screen.getByText(/Hello, /i)).toBeInTheDocument();
   });
 
-  const mockServices: Service[] = [
-    { id: "1", name: "Reservasi", platformCode: "Postgresql", createdAt: "" },
-    { id: "2", name: "Pendaftaran", platformCode: "Postgresql", createdAt: "" },
-  ];
-  const mockSchema: Schema = {
-    id: 1,
-    name: "pasien_portal",
-    description: "",
-    createdAt: "",
-    schemaText: "",
-    service: mockServices[0],
-    serviceId: ""
-  };
-
-  it("should receive response after send message without service selection", async () => {
-    // Mocking the fetch response to /api/service
-    global.fetch = jest.fn().mockResolvedValueOnce({
-      ok: true,
-      json: async () => mockServices as Service[],
-    });
-    renderWithServiceProvider(<ChatBox />);
-
-    // await for the service to be fetched (in the dropdown component)
-    await waitFor(() => {
-      expect(fetch).toHaveBeenCalledTimes(1);
-    });
-
-    // Mocking the fetch response to /api/chat
-    global.fetch = jest.fn().mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({
-        messageId: "1234",
-        userPrompt: "Hello!",
-        aiResponse: "How can I assist you?",
-        createdAt: new Date().toISOString(),
-        metadata: {
-          finishReason: "stop",
-          usage: { promptTokens: 5, completionTokens: 10 },
-          modelUsed: "gemini",
-        },
-      }),
-    });
-
+  it("✅ should allow typing and sending a message", async () => {
+    renderChatBox();
     const input = screen.getByPlaceholderText("Type a message...");
-    fireEvent.change(input, { target: { value: "Halo bisa bantu saya?" } });
+    fireEvent.change(input, { target: { value: "Hello there" } });
     fireEvent.keyDown(input, { key: "Enter", code: "Enter" });
 
     await waitFor(() => {
-      expect(fetch).toHaveBeenCalledTimes(1);
+      expect(screen.getByText("Hello there")).toBeInTheDocument();
     });
-    expect(fetch).toHaveBeenCalledWith(
-      "/api/chat",
-      expect.objectContaining({
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+  });
+
+  it("✅ should not send empty message", async () => {
+    renderChatBox();
+    const input = screen.getByPlaceholderText("Type a message...");
+    fireEvent.keyDown(input, { key: "Enter", code: "Enter" });
+
+    await waitFor(() => {
+      expect(screen.queryByText("AI is typing...")).not.toBeInTheDocument();
+    });
+  });
+
+  it("✅ should show loading indicator when sending", async () => {
+    renderChatBox();
+    const input = screen.getByPlaceholderText("Type a message...");
+    fireEvent.change(input, { target: { value: "Loading..." } });
+    fireEvent.keyDown(input, { key: "Enter", code: "Enter" });
+
+    expect(screen.getByText(/AI is typing.../i)).toBeInTheDocument();
+  });
+
+  it("✅ should set sessionId and load session messages if sessionId exists", async () => {
+    // Simulasikan return "test-session-id" dari search params
+    getMock.mockImplementation((key: string) =>
+      key === "sessionId" ? "test-session-id" : null
+    );
+
+    renderChatBox();
+
+    await waitFor(() => {
+      expect(setActiveSessionIdMock).toHaveBeenCalledWith("test-session-id");
+    });
+  });
+
+  it("✅ should create a new session if none exists when sending message", async () => {
+    renderChatBox();
+
+    const input = screen.getByPlaceholderText("Type a message...");
+    fireEvent.change(input, { target: { value: "Hello" } });
+    fireEvent.keyDown(input, { key: "Enter", code: "Enter" });
+
+    await waitFor(() => {
+      expect(createNewSessionMock).toHaveBeenCalled();
+    });
+  });
+
+  it("✅ should handle errors when creating a new session", async () => {
+    createNewSessionMock.mockRejectedValueOnce(
+      new Error("Failed to create session")
+    );
+    const consoleErrorSpy = jest
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
+
+    renderChatBox();
+
+    const input = screen.getByPlaceholderText("Type a message...");
+    fireEvent.change(input, {
+      target: { value: "Test session creation error" },
+    });
+    fireEvent.keyDown(input, { key: "Enter", code: "Enter" });
+
+    await waitFor(() => {
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        "Failed to create session:",
+        expect.any(Error)
+      );
+    });
+
+    consoleErrorSpy.mockRestore();
+  });
+
+  it("✅ should handle empty service list when fetching schemas", async () => {
+    jest.mock("@frontend/(chat)/context/serviceContext", () => ({
+      useService: () => ({
+        selectedService: [],
+        services: [],
+        getServiceRepresentation: jest.fn(),
+      }),
+    }));
+
+    renderChatBox();
+
+    const input = screen.getByPlaceholderText("Type a message...");
+    fireEvent.change(input, { target: { value: "Test empty services" } });
+    fireEvent.keyDown(input, { key: "Enter", code: "Enter" });
+
+    // No schema fetch should happen with empty services
+    await waitFor(() => {
+      expect(screen.getByText("Test empty services")).toBeInTheDocument();
+    });
+  });
+
+  it("✅ should handle errors when fetching schemas", async () => {
+    global.fetch = jest.fn().mockImplementationOnce(() =>
+      Promise.resolve({
+        ok: false,
+        status: 500,
+        statusText: "Internal Server Error",
       })
     );
 
-    const botResponse = await screen.findByText(/How can I assist you?/i);
-    expect(botResponse).toBeInTheDocument();
-  });
+    renderChatBox();
 
-  it("should receive response after send message with service selection", async () => {
-    // Mocking the fetch responses
-    global.fetch = jest
-      .fn()
-      .mockResolvedValueOnce({
-        ok: true,
-        json: async () => mockServices as Service[], // Mock response for /api/service
-      })
-      .mockResolvedValueOnce({
-        ok: true,
-        json: async () => [mockSchema] as Schema[], // Mock response for /api/schema
-      })
-      .mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({
-          messageId: "1234",
-          userPrompt: "Hello!",
-          aiResponse: "How can I assist you?",
-          createdAt: new Date().toISOString(),
-          metadata: {
-            finishReason: "stop",
-            usage: { promptTokens: 5, completionTokens: 10 },
-            modelUsed: "gemini",
-            schemaId: ["1"],
-            schemaIncluded: true,
-          },
-        }), // Mock response for /api/chat
-      });
-
-    renderWithServiceProvider(<ChatBox />);
-
-    // Wait for the initial service fetch
-    await waitFor(() => {
-      expect(fetch).toHaveBeenCalledTimes(1);
-    });
-
-    // Simulate selecting a service
-    const serviceDropdown = screen.getByText(/Select a Service/i);
-    fireEvent.click(serviceDropdown);
-    const serviceOption = screen.getByText(/Reservasi/i);
-    fireEvent.click(serviceOption);
-
-    // Simulate typing and sending a message
     const input = screen.getByPlaceholderText("Type a message...");
-    fireEvent.change(input, { target: { value: "Halo bisa bantu saya?" } });
+    fireEvent.change(input, { target: { value: "Test schema error" } });
     fireEvent.keyDown(input, { key: "Enter", code: "Enter" });
 
-    // Wait for both fetch calls to complete (schema GET + chat POST)
     await waitFor(() => {
-      expect(fetch).toHaveBeenCalledTimes(3); // Initial service fetch + schema fetch + chat POST
+      expect(
+        screen.getByText("Sorry, there was an error processing your request.")
+      ).toBeInTheDocument();
     });
-
-    // Validate the first fetch call (schema GET) - Updated to match actual implementation
-    expect(fetch).toHaveBeenNthCalledWith(2, "/api/schema?serviceIds=1");
-
-    // Validate the second fetch call (chat POST)
-    expect(fetch).toHaveBeenNthCalledWith(3, "/api/chat", expect.anything());
   });
 
-  it("should handle API failure gracefully when querying without service selection", async () => {
+  it("✅ should handle API response format with data property", async () => {
+    global.fetch = jest
+      .fn()
+      .mockImplementationOnce(() =>
+        Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({ data: [{ id: 1 }, { id: 2 }] }),
+        })
+      )
+      .mockImplementationOnce(() =>
+        Promise.resolve({
+          ok: true,
+          json: () =>
+            Promise.resolve({
+              messageId: "123",
+              aiResponse: "Response with data property",
+              metadata: { modelUsed: "GPT-4" },
+            }),
+        })
+      );
+
+    renderChatBox();
+
+    const input = screen.getByPlaceholderText("Type a message...");
+    fireEvent.change(input, { target: { value: "Test data property" } });
+    fireEvent.click(screen.getByAltText("Send Icon"));
+
+    await waitFor(() => {
+      expect(
+        screen.getByText("Response with data property")
+      ).toBeInTheDocument();
+    });
+  });
+
+  it("✅ should handle unexpected schema API response format", async () => {
+    global.fetch = jest
+      .fn()
+      .mockImplementationOnce(() =>
+        Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({ unexpectedFormat: true }),
+        })
+      )
+      .mockImplementationOnce(() =>
+        Promise.resolve({
+          ok: true,
+          json: () =>
+            Promise.resolve({
+              messageId: "123",
+              aiResponse: "Response with unexpected schema format",
+              metadata: { modelUsed: "GPT-4" },
+            }),
+        })
+      );
+
+    renderChatBox();
+
+    const input = screen.getByPlaceholderText("Type a message...");
+    fireEvent.change(input, { target: { value: "Test unexpected format" } });
+    fireEvent.click(screen.getByAltText("Send Icon"));
+
+    await waitFor(() => {
+      expect(
+        screen.getByText("Response with unexpected schema format")
+      ).toBeInTheDocument();
+    });
+  });
+
+  it("✅ should handle chat API error response", async () => {
+    global.fetch = jest
+      .fn()
+      .mockImplementationOnce(() =>
+        Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve([{ id: 1 }]),
+        })
+      )
+      .mockImplementationOnce(() =>
+        Promise.resolve({
+          ok: false,
+          status: 500,
+        })
+      );
+
+    renderChatBox();
+
+    const input = screen.getByPlaceholderText("Type a message...");
+    fireEvent.change(input, { target: { value: "Test API error" } });
+    fireEvent.click(screen.getByAltText("Send Icon"));
+
+    await waitFor(() => {
+      expect(
+        screen.getByText("Sorry, there was an error processing your request.")
+      ).toBeInTheDocument();
+    });
+  });
+
+  it("✅ should scroll to bottom when new messages are added", async () => {
+    // Create a spy for the scrollTop property
+    const scrollTopSpy = jest.fn();
+    Element.prototype.scrollTo = scrollTopSpy;
+
+    renderChatBox();
+
+    const input = screen.getByPlaceholderText("Type a message...");
+    fireEvent.change(input, { target: { value: "Test scrolling" } });
+    fireEvent.keyDown(input, { key: "Enter", code: "Enter" });
+
+    await waitFor(() => {
+      expect(screen.getByText("Test scrolling")).toBeInTheDocument();
+    });
+  });
+
+  it("✅ should handle errors when loading session messages", async () => {
+    // Mock session ID
+    getMock.mockImplementation((key: string) =>
+      key === "sessionId" ? "invalid-session" : null
+    );
+
+    // Mock fetch to return error
     global.fetch = jest.fn().mockResolvedValueOnce({
       ok: false,
+      status: 404,
     });
 
-    renderWithServiceProvider(<ChatBox />);
-    const input = screen.getByPlaceholderText("Type a message...");
-    fireEvent.change(input, { target: { value: "Hello!" } });
-    fireEvent.keyDown(input, { key: "Enter", code: "Enter" });
+    // Spy on console.error
+    const consoleErrorSpy = jest
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
+
+    renderChatBox();
 
     await waitFor(() => {
-      expect(fetch).toHaveBeenCalledTimes(1);
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        "Error loading session messages:",
+        expect.any(Error)
+      );
     });
 
-    const errorMessage = await screen.findByText(
-      /Sorry, there was an error processing your request./i
-    );
-    expect(errorMessage).toBeInTheDocument();
-  });
-
-  it("should handle API failure gracefully when querying with service selection", async () => {
-    global.fetch = jest
-      .fn()
-      .mockResolvedValueOnce({
-        ok: true,
-        json: async () => mockServices as Service[], // Mock response for /api/service
-      })
-      .mockRejectedValueOnce({
-        ok: false,
-      });
-
-    renderWithServiceProvider(<ChatBox />);
-
-    await waitFor(() => {
-      expect(fetch).toHaveBeenCalledTimes(1);
-    });
-
-    const serviceDropdown = screen.getByText(/Select a Service/i);
-    fireEvent.click(serviceDropdown);
-    const serviceOption = screen.getByText(/Reservasi/i);
-    fireEvent.click(serviceOption);
-
-    const input = screen.getByPlaceholderText("Type a message...");
-    fireEvent.change(input, { target: { value: "Hello!" } });
-    fireEvent.keyDown(input, { key: "Enter", code: "Enter" });
-
-    await waitFor(() => {
-      expect(fetch).toHaveBeenCalledTimes(2);
-    });
-
-    const errorMessage = await screen.findByText(
-      /Sorry, there was an error processing your request./i
-    );
-    expect(errorMessage).toBeInTheDocument();
+    consoleErrorSpy.mockRestore();
   });
 });

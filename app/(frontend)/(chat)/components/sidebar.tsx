@@ -1,32 +1,54 @@
 "use client";
 
 import Image from "next/image";
+import { useSession } from "../context/sessionContext";
 
-export default function Sidebar() {
+interface SidebarProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+export default function Sidebar({ isOpen, onClose }: SidebarProps) {
+  const { createNewSession } = useSession();
+
+  const handleNewChat = async () => {
+    try {
+      await createNewSession();
+      onClose(); // Optional: auto close
+    } catch (error) {
+      console.error("Failed to create new chat:", error);
+    }
+  };
+
   return (
     <aside
-      className="bg-white border-r-2 text-black h-screen fixed left-0 top-[72px] w-64 px-4 py-4 border-teal-7"
+      className={`fixed top-[72px] left-0 h-full w-64 bg-white text-black z-50 shadow-md border-r-2 border-teal-700 transform transition-transform duration-300 ${
+        isOpen ? "translate-x-0" : "-translate-x-full"
+      }`}
     >
-      <button className="flex items-center gap-3 p-2 hover:bg-gray-200 w-full text-left">
-        <Image
-          src="/icon-plus.svg"
-          width={20}
-          height={20}
-          alt="New Chat"
-        />
-        <h1 className="text-sm font-medium">New Chat</h1>
-      </button>
 
-      <div className="mt-6">
-        <h2 className="text-sm font-semibold text-gray-600">Recent</h2>
-        <div className="flex items-center gap-3 p-2 hover:bg-gray-200 mt-2">
-          <Image
-            src="/icon-align-left.svg"
-            width={20}
-            height={20}
-            alt="Rekomendasi Icon"
-          />
-          <p className="text-sm font-medium leading-tight">Rekomendasi Query <br /> Rekam Media</p>
+      <div className="px-4 py-2">
+        <button
+          className="flex items-center gap-3 p-2 hover:bg-gray-200 w-full text-left"
+          onClick={handleNewChat}
+        >
+          <Image src="/icon-plus.svg" width={20} height={20} alt="New Chat" />
+          <h1 className="text-sm font-medium">New Chat</h1>
+        </button>
+
+        <div className="mt-6">
+          <h2 className="text-sm font-semibold text-gray-600">Recent</h2>
+          <div className="flex items-center gap-3 p-2 hover:bg-gray-200 mt-2">
+            <Image
+              src="/icon-align-left.svg"
+              width={20}
+              height={20}
+              alt="Rekomendasi Icon"
+            />
+            <p className="text-sm font-medium leading-tight">
+              Rekomendasi Query <br /> Rekam Media
+            </p>
+          </div>
         </div>
       </div>
     </aside>

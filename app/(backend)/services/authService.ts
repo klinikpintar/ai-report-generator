@@ -46,11 +46,12 @@ class AuthService implements IAuthService, IGenerateToken, IVerifyToken {
   }
 
   async logout(token: string): Promise<void> {
-    if (!token || !this.verifyToken(token, config.JWT_ACCESS_SECRET)) {
+    const payload = this.verifyToken(token, config.JWT_ACCESS_SECRET);
+    if (!token || !payload) {
       throw new UnauthenticatedResponse("Invalid or expired access token");
     }
 
-    await prisma.refreshToken.deleteMany({ where: { token } });
+    await prisma.refreshToken.deleteMany({ where: { userId: payload.id } });
   }
 
   async verify(token: string): Promise<Payload> {

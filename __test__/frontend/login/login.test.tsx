@@ -16,9 +16,12 @@ jest.mock("@frontend/login/services/feAuthService");
 
 // Mock useUser
 const setEmailContextMock = jest.fn();
+const setNameContextMock = jest.fn();
+
 jest.mock("@frontend/login/context/userContext", () => ({
   useUser: () => ({
     setEmailContext: setEmailContextMock,
+    setNameContext: setNameContextMock,
   }),
 }));
 
@@ -30,6 +33,13 @@ jest.mock("react-toastify", () => ({
   ToastContainer: jest.fn().mockImplementation(() => <div data-testid="toast-container" />),
 }));
 
+// Mock Navbar component to avoid testing complexity
+jest.mock("@frontend/components/navbar", () => {
+  return function MockedNavbar() {
+    return <div data-testid="navbar">Navbar</div>;
+  };
+});
+
 const originalLocalStorage = global.localStorage;
 
 const renderWithUserContext = () => {
@@ -38,6 +48,7 @@ const renderWithUserContext = () => {
 
 describe("LoginPage", () => {
   beforeEach(() => {
+    // Setup localStorage mock
     Object.defineProperty(window, 'localStorage', {
       value: {
         getItem: jest.fn(),
@@ -52,7 +63,7 @@ describe("LoginPage", () => {
   });
 
   afterAll(() => {
-    // Restore original localStorage setelah semua test
+    // Restore original localStorage after all tests
     Object.defineProperty(window, 'localStorage', {
       value: originalLocalStorage,
       writable: true
@@ -97,15 +108,27 @@ describe("LoginPage", () => {
 
   it("calls FeAuthService.login and redirects on success", async () => {
     // Setup mocks
+    const mockUser = {
+      email: "test@example.com",
+      name: "Test User",
+      role: "BUSINESS_ANALYST" // Default role is not admin
+    };
+    
     (FeAuthService.login as jest.Mock).mockResolvedValue({
       success: true,
       message: "Login successful"
     });
+    
+    (FeAuthService.getUser as jest.Mock).mockResolvedValue({
+      data: {
+        user: mockUser
+      }
+    });
   
     // Render component and fill form
     renderWithUserContext();
-    const emailInput = screen.getByLabelText(/email/i);
-    const passwordInput = screen.getByLabelText(/password/i);
+    const emailInput = screen.getByPlaceholderText(/Masukkan email/i);
+    const passwordInput = screen.getByPlaceholderText(/Masukkan password/i);
     const button = screen.getByRole("button", { name: /login/i });
   
     fireEvent.change(emailInput, { target: { value: "test@example.com" } });
@@ -115,23 +138,79 @@ describe("LoginPage", () => {
       fireEvent.click(button);
     });
   
+    // Verify FeAuthService.login was called
+    expect(FeAuthService.login).toHaveBeenCalledWith("test@example.com", "password123");
+    
+    // Verify FeAuthService.getUser was called
+    expect(FeAuthService.getUser).toHaveBeenCalled();
+  
     // Verify toast success was called
     expect(mockedToast.success).toHaveBeenCalledWith(
       "Login successful! Redirecting...",
       expect.any(Object)
     );
   
+    // Verify context setters were called with user data
+    expect(setEmailContextMock).toHaveBeenCalledWith(mockUser.email);
+    expect(setNameContextMock).toHaveBeenCalledWith(mockUser.name);
+    
+    // Verify localStorage was updated
     expect(window.localStorage.setItem).toHaveBeenCalledWith("userEmail", "test@example.com");
-    expect(setEmailContextMock).toHaveBeenCalledWith("test@example.com");
+    expect(window.localStorage.setItem).toHaveBeenCalledWith("userName", mockUser.email);
     
     // Use waitFor because of the setTimeout in the component
     await waitFor(() => {
       expect(pushMock).toHaveBeenCalledWith("/");
     });
   });
+  
+  it("redirects admin users to the admin page", async () => {
+    // Setup mocks with ADMIN role
+    const mockAdminUser = {
+      email: "admin@example.com",
+      name: "Admin User",
+      role: "ADMIN" // Admin role
+    };
+    
+    (FeAuthService.login as jest.Mock).mockResolvedValue({
+      success: true,
+      message: "Login successful"
+    });
+    
+    (FeAuthService.getUser as jest.Mock).mockResolvedValue({
+      data: {
+        user: mockAdminUser
+      }
+    });
+  
+    // Render component and fill form
+    renderWithUserContext();
+    const emailInput = screen.getByPlaceholderText(/Masukkan email/i);
+    const passwordInput = screen.getByPlaceholderText(/Masukkan password/i);
+    const button = screen.getByRole("button", { name: /login/i });
+  
+    fireEvent.change(emailInput, { target: { value: "admin@example.com" } });
+    fireEvent.change(passwordInput, { target: { value: "adminpass" } });
+  
+    await act(async () => {
+      fireEvent.click(button);
+    });
+  
+    // Verify context setters were called with admin data
+    expect(setEmailContextMock).toHaveBeenCalledWith(mockAdminUser.email);
+    expect(setNameContextMock).toHaveBeenCalledWith(mockAdminUser.name);
+    
+    // Admin users should be redirected to /admin
+    await waitFor(() => {
+      expect(pushMock).toHaveBeenCalledWith("/admin");
+    });
+  });
 
   it("shows error message on failed login (invalid credentials)", async () => {
-    (FeAuthService.login as jest.Mock).mockResolvedValue({ success: false });
+    (FeAuthService.login as jest.Mock).mockResolvedValue({ 
+      success: false,
+      message: "Login failed" 
+    });
 
     renderWithUserContext();
 
@@ -146,7 +225,7 @@ describe("LoginPage", () => {
       fireEvent.click(screen.getByRole("button", { name: /login/i }));
     });
 
-    expect(await screen.findByText(/login failed/i)).toBeInTheDocument();
+    expect(screen.getByText(/Login failed. Please check your credentials./i)).toBeInTheDocument();
   });
 
   it("shows generic error on exception", async () => {
@@ -165,13 +244,15 @@ describe("LoginPage", () => {
       fireEvent.click(screen.getByRole("button", { name: /login/i }));
     });
 
-    expect(await screen.findByText(/something went wrong/i)).toBeInTheDocument();
+    expect(screen.getByText(/Something went wrong. Please try again./i)).toBeInTheDocument();
   });
 
   it("displays loading state during login", async () => {
-    let resolveLogin: any;
+    let resolveLogin: (value: any) => void;
     (FeAuthService.login as jest.Mock).mockImplementation(
-      () => new Promise((resolve) => (resolveLogin = resolve))
+      () => new Promise((resolve) => {
+        resolveLogin = resolve;
+      })
     );
 
     renderWithUserContext();
@@ -198,6 +279,17 @@ describe("LoginPage", () => {
   it("should prevent multiple submissions", async () => {
     const loginMock = jest.fn().mockResolvedValue({ success: true });
     (FeAuthService.login as jest.Mock).mockImplementation(loginMock);
+    
+    // Mock getUser as well to avoid errors
+    (FeAuthService.getUser as jest.Mock).mockResolvedValue({
+      data: {
+        user: {
+          email: "user@example.com",
+          name: "Test User",
+          role: "BUSINESS_ANALYST"
+        }
+      }
+    });
   
     renderWithUserContext();
   
@@ -222,5 +314,4 @@ describe("LoginPage", () => {
       expect(loginMock).toHaveBeenCalledTimes(1);
     });
   });
-  
 });
