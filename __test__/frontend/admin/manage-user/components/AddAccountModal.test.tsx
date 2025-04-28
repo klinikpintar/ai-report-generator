@@ -303,7 +303,7 @@ describe('AddAccountModal', () => {
   })
 
   it('should toggle password visibility when the show password button is clicked', async () => {
-    render(<AddAccountModal isVisible={true} onClose={mockOnClose} />);
+    renderWithWrapper(<AddAccountModal isVisible={true} onClose={mockOnClose} />);
   
     // Find password fields and toggle buttons
     const passwordInput = screen.getByLabelText('Password');
@@ -330,7 +330,7 @@ describe('AddAccountModal', () => {
   });
 
   it('should toggle confirm password visibility when the show confirm password button is clicked', async () => {
-    render(<AddAccountModal isVisible={true} onClose={mockOnClose} />);
+    renderWithWrapper(<AddAccountModal isVisible={true} onClose={mockOnClose} />);
   
     // Find password fields and toggle buttons
     const passwordInput = screen.getByLabelText('Password');
@@ -357,7 +357,7 @@ describe('AddAccountModal', () => {
   });
 
   it('should update aria-label when toggling password visibility', async () => {
-    render(<AddAccountModal isVisible={true} onClose={mockOnClose} />);
+    renderWithWrapper(<AddAccountModal isVisible={true} onClose={mockOnClose} />);
     
     const showPasswordButton = screen.getByLabelText('Show password');
     
