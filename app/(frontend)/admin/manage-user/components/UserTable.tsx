@@ -1,6 +1,6 @@
 "use client";
 import { GenericTable, GenericTableColumn, TablePagination } from "@frontend/components/table";
-import React from "react";
+import React, { useEffect } from "react";
 import { User, UserRole } from "../types/user";
 import { Chip } from "@/components/ui/chip";
 import { cn } from "@/lib/utils";
@@ -14,8 +14,12 @@ import { useUserTablePagination } from "../hooks/useUserTablePagination";
 export const UserTable = () => {
   const { state } = useUserTableContext();
 
-  const { handleFetchUsers } = useFetchUser();
-  const { handlePageChange } = useUserTablePagination(handleFetchUsers);
+  const { refreshUsers } = useFetchUser();
+  const { handlePageChange } = useUserTablePagination(refreshUsers);
+
+  useEffect(() => {
+    refreshUsers();
+  }, [state.pagination.currentPage, state.filters.role.selected]);
 
   React.useEffect(() => {
     if (state.error) {
