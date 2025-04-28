@@ -1,8 +1,9 @@
+import axios from "axios";
+
 export const useUserActions = () => {
-  const handleDeleteUser = (userId: string) => {
-    // TODO: implement DELETE /api/users/{id}
+  const handleDeleteUser = async (userId: string) => {
     console.log(userId)
-    // await axios.delete(`/api/users/${user.id}`);
+    await axios.delete(`/api/users/${userId}`);
     return true
   }
   return {

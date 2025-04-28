@@ -14,16 +14,17 @@ interface EditAccountModalProps {
     status: string;
     role: string;
   };
+  onSuccess?: () => void;
 }
 
-const EditAccountModal: React.FC<EditAccountModalProps> = ({ isVisible, onClose, user }) => {
+const EditAccountModal: React.FC<EditAccountModalProps> = ({ isVisible, onClose, user, onSuccess }) => {
   const {
     formData,
     errors,
     handleChange,
     handleSubmit,
     setErrors,
-  } = useEditAccount(user, onClose);
+  } = useEditAccount(user, onClose, onSuccess);
 
   const handleCancel = () => {
     setErrors({});

@@ -10,20 +10,29 @@ import AddAccountModal from "../components/addAccountModal";
 import EditAccountModal from "../components/editAccountModal";
 import { ConfirmationDialog } from "@frontend/components/ConfirmationDialog";
 import { useUserActions } from "@frontend/admin/manage-user/hooks/useUserAction";
+import { useFetchUser } from "@frontend/admin/manage-user/hooks/useFetchUser";
 
 export const UserTableSection = () => {
   const [userToEdit, setUserToEdit] = useState<User | null>(null);
   const [userToDelete, setUserToDelete] = useState<User | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
 
+  const { handleFetchUsers } = useFetchUser();
   const { handleDeleteUser } = useUserActions();
 
   const handleConfirmDelete = async () => {
     const success = await handleDeleteUser(userToDelete!.id);
     if (success) {
       setUserToDelete(null);
+      await handleFetchUsers();
     }
   };
+
+  const handleEditUser = async (user: User) => {
+    setUserToEdit(user)
+    console.log("KOK GA DI EDTI")
+    await handleFetchUsers();
+  }
 
   return (
     <section className="container max-w-screen-xl mx-auto mt-6 flex flex-col items-center justify-center space-y-10">
@@ -32,7 +41,7 @@ export const UserTableSection = () => {
       </div>
 
       <UserTable
-        onEditUser={(user) => setUserToEdit(user)}
+        onEditUser={handleEditUser}
         onDeleteUser={(user) => setUserToDelete(user)}
       />
 
@@ -61,6 +70,7 @@ export const UserTableSection = () => {
             status: userToEdit.isActive ? "Aktif" : "Nonaktif",
             role: userToEdit.role
           }}
+          onSuccess={handleFetchUsers}
         />
       )}
 

@@ -28,7 +28,7 @@ interface User {
   role: string;
 }
 
-export const useEditAccount = (user: User, onClose: () => void) => {
+export const useEditAccount = (user: User, onClose: () => void, onSuccess?: () => void) => {
   const [formData, setFormData] = useState<FormData>({
     fullName: user.fullName,
     email: user.email,
@@ -67,18 +67,21 @@ export const useEditAccount = (user: User, onClose: () => void) => {
       const updatedData = {
         name: formData.fullName,
         email: formData.email,
-        role: formData.role === "ADMIN" ? "Admin" : "Business Analyst",
+        role: formData.role,
         status: formData.status,
       };
 
-      // TODO: implement PUT /api/users/{id}
       console.log(user.id, updatedData)
-      await axios.put(`/api/users/${user.id}`, updatedData);
+      await axios.patch(`/api/users/${user.id}`, updatedData);
 
       toast.success("User successfully updated", {
         position: "top-right",
         autoClose: 3000,
       });
+
+      if (onSuccess) {
+        onSuccess(); // <<<<<< Panggil refetch table kalau ada
+      }
 
       onClose();
     } catch (error) {
