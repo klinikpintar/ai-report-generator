@@ -1,9 +1,8 @@
 import { DELETE } from "@/app/(backend)/api/users/[id]/route";
 import authService from "@/app/(backend)/services/authService";
-import usersService from "@/app/(backend)/services/usersService";
-import { NotFoundResponse } from "@/app/(backend)/utils/exceptions";
+import prisma from "@/lib/prisma";
 
-// 🛠️ Mock authService dan usersService
+// 🛠️ Hanya mock authService dan prisma, usersService REAL
 jest.mock("@/app/(backend)/services/authService", () => ({
   __esModule: true,
   default: {
@@ -11,21 +10,20 @@ jest.mock("@/app/(backend)/services/authService", () => ({
   },
 }));
 
-jest.mock("@/app/(backend)/services/usersService", () => ({
-  __esModule: true,
-  default: {
-    deleteUser: jest.fn(),
+jest.mock("@/lib/prisma", () => ({
+  user: {
+    findUnique: jest.fn(),
+    delete: jest.fn(),
   },
 }));
 
 type Params = { params: Promise<{ id: string }> };
 
-// 🛠️ Gunakan UUID valid untuk id
 const validLoginUserId = "550e8400-e29b-41d4-a716-446655440000";
 const validTargetUserId = "660e8400-e29b-41d4-a716-446655440001";
 const differentUserId = "770e8400-e29b-41d4-a716-446655440002";
 
-describe("DELETE /api/users/[id]", () => {
+describe("DELETE /api/users/[id] route (full flow including usersService)", () => {
   afterEach(() => {
     jest.clearAllMocks();
   });
@@ -42,7 +40,8 @@ describe("DELETE /api/users/[id]", () => {
     };
 
     (authService.getUserLogin as jest.Mock).mockResolvedValue(fakeUserLogin);
-    (usersService.deleteUser as jest.Mock).mockResolvedValue(fakeTargetUser);
+    (prisma.user.findUnique as jest.Mock).mockResolvedValue(fakeTargetUser);
+    (prisma.user.delete as jest.Mock).mockResolvedValue({});
 
     const request = {} as Request;
     const params: Params = {
@@ -100,7 +99,7 @@ describe("DELETE /api/users/[id]", () => {
     const request = {} as Request;
     const params: Params = {
       params: Promise.resolve({ id: "invalid-id-format" }),
-    }; // ❌ not uuid
+    };
 
     const response = await DELETE(request, params);
     const json = await response.json();
@@ -114,12 +113,12 @@ describe("DELETE /api/users/[id]", () => {
     (authService.getUserLogin as jest.Mock).mockResolvedValue({
       id: validLoginUserId,
     });
-    (usersService.deleteUser as jest.Mock).mockRejectedValue(
-      new NotFoundResponse("User not found")
-    );
+    (prisma.user.findUnique as jest.Mock).mockResolvedValue(null);
 
     const request = {} as Request;
-    const params: Params = { params: Promise.resolve({ id: differentUserId }) };
+    const params: Params = {
+      params: Promise.resolve({ id: differentUserId }),
+    };
 
     const response = await DELETE(request, params);
     const json = await response.json();
@@ -133,7 +132,7 @@ describe("DELETE /api/users/[id]", () => {
     (authService.getUserLogin as jest.Mock).mockResolvedValue({
       id: validLoginUserId,
     });
-    (usersService.deleteUser as jest.Mock).mockRejectedValue(
+    (prisma.user.findUnique as jest.Mock).mockRejectedValue(
       new Error("Unexpected failure")
     );
 
