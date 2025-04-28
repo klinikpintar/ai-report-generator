@@ -8,11 +8,18 @@ jest.mock("@frontend/admin/manage-ai/utils/api", () => ({
   patchApiKey: jest.fn(),
 }));
 
+const onCloseMock = jest.fn();
+
 const setup = () => {
   render(
     <>
       <ToastContainer />
-      <EditAPIKeyModal isVisible={true} onClose={() => {}} providerId="1" providerName="Gemini" />
+      <EditAPIKeyModal
+        isVisible={true}
+        onClose={onCloseMock}
+        providerId="1"
+        providerName="Gemini"
+      />
     </>
   );
 };
@@ -21,6 +28,7 @@ const mockApiKey = "AIzaSyDNSjz";
 
 describe("EditAPIKeyModal Display", () => {
   beforeEach(() => {
+    jest.clearAllMocks();
     setup();
   });
 
@@ -113,5 +121,12 @@ describe("EditAPIKeyModal Functionality", () => {
       const errorMessage = await screen.findByText(/Failed to update API Key/i);
       expect(errorMessage).toBeInTheDocument();
     });
+  });
+
+  it("should call onClose when the cancel button is clicked", async () => {
+    const cancelButton = await screen.findByText(/Batal/i);
+    await userEvent.click(cancelButton);
+
+    expect(onCloseMock).toHaveBeenCalled();
   });
 });
