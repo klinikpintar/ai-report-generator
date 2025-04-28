@@ -3,6 +3,8 @@ import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { ChevronDown } from "lucide-react";
 import { useState } from "react";
 import RadioButton from "./radioButton";
+import { Button } from "@/components/ui/button";
+import { EditAPIKeyModal } from "./EditAPIKeyModal";
 
 interface AIBoxProps {
   modelName: string;
@@ -22,6 +24,7 @@ const AIBox: React.FC<AIBoxProps> = ({
   testOpenDropdown = false,
 }) => {
   const [selectedModel, setSelectedModel] = useState<string>("Pilih Model");
+  const [isEditModalOpen, setIsEditModalOpen] = useState<boolean>(false);
 
   return (
     <div className="flex items-start gap-4">
@@ -33,13 +36,11 @@ const AIBox: React.FC<AIBoxProps> = ({
       {/* Main content */}
       <div className="relative border-2 border-teal-700 rounded-lg p-6 w-[280px] min-h-[240px] shadow-sm bg-white flex flex-col justify-between">
         <div className="flex items-center justify-between w-full mb-4">
-          <Image
-            src={logoPath}
-            alt={`${modelName} Logo`}
-            width={50}
-            height={50}
-          />
-          <div className="w-10 h-10 bg-sky-500 rounded-full flex items-center justify-center overflow-hidden shrink-0">
+          <Image src={logoPath} alt={`${modelName} Logo`} width={50} height={50} />
+          <Button
+            onClick={() => setIsEditModalOpen(true)}
+            className="w-10 h-10 bg-sky-500 hover:bg-sky-500/80 rounded-full flex items-center justify-center overflow-hidden shrink-0 p-0"
+          >
             <Image
               src="/icon-key.svg"
               alt="icon-key"
@@ -47,14 +48,12 @@ const AIBox: React.FC<AIBoxProps> = ({
               height={22}
               className="object-contain invert"
             />
-          </div>
+          </Button>
         </div>
 
         <div className="flex flex-col items-start gap-2 -ml-1 flex-grow">
           <h2 className="text-2xl font-semibold text-teal-700">{modelName}</h2>
-          <h3 className="text-sm text-slate-600">
-            Pilih model AI untuk provider {modelName}:
-          </h3>
+          <h3 className="text-sm text-slate-600">Pilih model AI untuk provider {modelName}:</h3>
         </div>
 
         <div className="mt-5 w-full">
@@ -88,6 +87,16 @@ const AIBox: React.FC<AIBoxProps> = ({
           </DropdownMenu.Root>
         </div>
       </div>
+
+      {/* Edit API Key Modal */}
+      <EditAPIKeyModal
+        isVisible={isEditModalOpen}
+        onClose={() => {
+          setIsEditModalOpen(false);
+        }}
+        providerId={modelName}
+        providerName={modelName}
+      />
     </div>
   );
 };
