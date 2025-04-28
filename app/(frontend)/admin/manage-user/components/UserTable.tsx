@@ -23,7 +23,7 @@ export const UserTable: React.FC<UserTableProps> = ({
   const { state } = useUserTableContext();
 
   const { refreshUsers } = useFetchUser();
-  const { handlePageChange } = useUserTablePagination(refreshUsers);
+  const { handlePageChange } = useUserTablePagination();
 
   useEffect(() => {
     refreshUsers();
