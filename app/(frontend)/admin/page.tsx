@@ -6,6 +6,7 @@ import SchemaModule from "@frontend/admin/schema";
 import { ManageUserSection } from "@frontend/admin/manage-user/sections/manageUserSection";
 import ServiceModule from "./service";
 import Shortcut from "@frontend/admin/shortcut";
+import ManageAIModule from "./manage-ai";
 
 const AdminDashboardPage = () => {
   const configRef = useRef<HTMLDivElement>(null);
@@ -21,7 +22,7 @@ const AdminDashboardPage = () => {
       <Shortcut onShortcutClick={scrollToSection} />
       <ManageUserSection />
       <div ref={configRef} className="mt-12 ">
-        {/* Konten konfigurasi AI */}
+        <ManageAIModule />
       </div>
       <ServiceModule />
       <div ref={schemaRef} className="mt-12">
