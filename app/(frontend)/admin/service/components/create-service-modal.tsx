@@ -52,8 +52,6 @@ const CreateServiceModal = ({ isVisible, onClose }: Props) => {
   }, []);
 
   const confirmDelete = async () => {
-    if (!serviceToDelete) return;
-
     try {
       const response = await fetch("/api/service", {
         method: "DELETE",
