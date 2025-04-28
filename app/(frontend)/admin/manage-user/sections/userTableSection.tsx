@@ -17,21 +17,21 @@ export const UserTableSection = () => {
   const [userToDelete, setUserToDelete] = useState<User | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
 
-  const { handleFetchUsers } = useFetchUser();
+  const { refreshUsers } = useFetchUser();
   const { handleDeleteUser } = useUserActions();
 
   const handleConfirmDelete = async () => {
     const success = await handleDeleteUser(userToDelete!.id);
     if (success) {
       setUserToDelete(null);
-      await handleFetchUsers();
+      await refreshUsers();
     }
   };
 
   const handleEditUser = async (user: User) => {
     setUserToEdit(user)
     console.log("KOK GA DI EDTI")
-    await handleFetchUsers();
+    await refreshUsers();
   }
 
   return (
@@ -70,7 +70,7 @@ export const UserTableSection = () => {
             status: userToEdit.isActive ? "Aktif" : "Nonaktif",
             role: userToEdit.role
           }}
-          onSuccess={handleFetchUsers}
+          onSuccess={refreshUsers}
         />
       )}
 
