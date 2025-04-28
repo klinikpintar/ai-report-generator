@@ -7,13 +7,13 @@ import { useUser } from "@/app/(frontend)/login/context/userContext";
 import FormInput from "@frontend/components/form-input";
 import { toast } from "react-toastify";
 import Navbar from "@frontend/components/navbar";
+import PasswordInput from "@frontend/components/password-input";
 
 const LoginPage = () => {
   const [email, setEmail] = useState("");
   const { setEmailContext, setNameContext } = useUser();
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
   const router = useRouter();
   const isSubmitting = useRef(false);
 
@@ -23,9 +23,7 @@ const LoginPage = () => {
     // Blokir multiple submissions instan
     if (isSubmitting.current) return;
     isSubmitting.current = true;
-
     setLoading(true);
-    setError("");
 
     try {
       const { success } = await FeAuthService.login(email, password);
@@ -54,10 +52,10 @@ const LoginPage = () => {
           router.push("/");
         }, 200);
       } else {
-        setError("Login failed. Please check your credentials.");
+        toast.error("Login failed. Please check your credentials.");
       }
     } catch {
-      setError("Something went wrong. Please try again.");
+      toast.error("Something went wrong. Please try again.");
     } finally {
       setLoading(false);
       isSubmitting.current = false;
@@ -88,21 +86,15 @@ const LoginPage = () => {
             required
             onChange={(e) => setEmail(e.target.value)}
           />
-          <FormInput
+
+          <PasswordInput
             label="Password"
             name="password"
-            type="password"
             value={password}
             placeholder="Masukkan password"
             required
             onChange={(e) => setPassword(e.target.value)}
           />
-
-          {error && (
-            <p className="text-red-600 text-sm font-semibold text-center">
-              {error}
-            </p>
-          )}
 
           <button
             type="submit"

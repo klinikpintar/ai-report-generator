@@ -28,16 +28,10 @@ export default function Navbar() {
   async function handleLogout() {
     const logoutResponse = await FeAuthService.logout();
     if (logoutResponse.success) {
+      toast.success("Successfully logged out.");
       router.push("/login");
     } else {
-      toast.error("Logout failed. Please try again.", {
-        position: "top-right",
-        autoClose: 3000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-      });
+      toast.error("Logout failed. Please try again.");
     }
   }
 
