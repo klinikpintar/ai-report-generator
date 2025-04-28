@@ -60,4 +60,8 @@ export class UserValidation {
         message: "Role must be either BUSINESS_ANALYST or ADMIN",
       }) as z.ZodType<"BUSINESS_ANALYST" | "ADMIN" | undefined>,
   });
+
+  static readonly DELETE = z.object({
+    id: z.string().uuid({ message: "Invalid user ID format" }),
+  });
 }
