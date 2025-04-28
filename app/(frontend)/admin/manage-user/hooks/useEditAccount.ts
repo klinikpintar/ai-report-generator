@@ -68,7 +68,7 @@ export const useEditAccount = (user: User, onClose: () => void, onSuccess?: () =
         name: formData.fullName,
         email: formData.email,
         role: formData.role,
-        status: formData.status,
+        isActive: formData.status == "Aktif" ? true : false,
       };
 
       console.log(user.id, updatedData)
