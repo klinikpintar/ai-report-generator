@@ -65,7 +65,7 @@ describe('EditAccountModal', () => {
   });
 
   it("should submit form with valid data", async () => {
-    mockedAxios.put.mockResolvedValueOnce({ data: { success: true } });
+    mockedAxios.patch.mockResolvedValueOnce({ data: { success: true } });
 
     render(<EditAccountModal isVisible={true} onClose={mockOnClose} user={mockUser} />);
 
@@ -78,11 +78,11 @@ describe('EditAccountModal', () => {
     await userEvent.click(screen.getByText("Simpan"));
 
     await waitFor(() => {
-      expect(mockedAxios.put).toHaveBeenCalledWith(`/api/users/${mockUser.id}`, {
+      expect(mockedAxios.patch).toHaveBeenCalledWith(`/api/users/${mockUser.id}`, {
         name: "Updated Name",
         email: mockUser.email,
         status: "Aktif",
-        role: "Admin"
+        role: "ADMIN"
       });
       expect(mockOnClose).toHaveBeenCalled();
     });
@@ -90,7 +90,7 @@ describe('EditAccountModal', () => {
 
   it("should show error toast on API error", async () => {
     const errorMessage = "Update failed";
-    mockedAxios.put.mockRejectedValueOnce({
+    mockedAxios.patch.mockRejectedValueOnce({
       response: {
         data: {
           message: errorMessage
@@ -112,7 +112,7 @@ describe('EditAccountModal', () => {
   });
 
   it("should show success toast on success", async () => {
-    mockedAxios.put.mockResolvedValueOnce({ data: { success: true } });
+    mockedAxios.patch.mockResolvedValueOnce({ data: { success: true } });
 
     render(<EditAccountModal isVisible={true} onClose={mockOnClose} user={mockUser} />);
 

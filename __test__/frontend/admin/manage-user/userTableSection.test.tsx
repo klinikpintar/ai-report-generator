@@ -114,10 +114,18 @@ describe('UserTableSection', () => {
         <UserTableSection />
       </UserTableProvider>
     );
+    
     fireEvent.click(screen.getByText('Mock Delete Button'));
+
+    expect(screen.getByText('Confirm Delete')).toBeInTheDocument();
+    
     fireEvent.click(screen.getByText('Confirm Delete'));
-    expect(await screen.findByText('ConfirmationDialog Open')).toBeInTheDocument();
+  
+    await waitFor(() => {
+      expect(screen.queryByText('Confirm Delete')).not.toBeInTheDocument();
+    });
   });
+  
 
   it('closes ConfirmationDialog when cancel is clicked', () => {
     render(
