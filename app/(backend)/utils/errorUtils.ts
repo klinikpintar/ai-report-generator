@@ -2,10 +2,15 @@ import { ZodError } from 'zod';
 import { StatusCodes } from 'http-status-codes';
 import { NextResponse } from 'next/server';
 import { Prisma } from '@prisma/client';
+import { ErrorResponse } from './exceptions';
 
 type AppError = ZodError | Prisma.PrismaClientKnownRequestError | Error | unknown;
 
 export const handleError = (error: AppError, context: string) => {
+  if (error instanceof ErrorResponse) {
+    return error.generate();
+  }
+
   if (error instanceof ZodError) {
     return NextResponse.json(
       { error: `${context}: Invalid input`, details: error.errors },

@@ -68,8 +68,6 @@ const CreateServiceModal = ({ isVisible, onClose }: Props) => {
           services.filter((service) => service.id !== serviceToDelete)
         );
         toast.success("Service successfully deleted");
-      } else {
-        toast.error(`Failed to delete service: ${response.statusText}`);
       }
     } catch (error) {
       toast.error(`Error deleting service: ${error}`);
@@ -125,8 +123,6 @@ const CreateServiceModal = ({ isVisible, onClose }: Props) => {
         toast.success("Service successfully added");
         setFormData({ name: "", platform: "" });
         onClose();
-      } else {
-        toast.error(`Failed to submit service: ${response.statusText}`);
       }
     } catch (error) {
       toast.error(`Error submitting service: ${error}`);
