@@ -15,7 +15,6 @@ import { useSession } from "./context/sessionContext";
 import { useSearchParams } from "next/navigation";
 import { useUser } from "@frontend/login/context/userContext";
 
-
 // Definisikan tipe data pesan
 interface Message {
   id: string;
@@ -48,13 +47,19 @@ export default function ChatBox() {
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const { selectedService, services, getServiceRepresentation } = useService(); // Ambil service dari context
   const [isExportModalVisible, setIsExportModalVisible] = useState(false);
+  const {
+    activeSessionId,
+    setActiveSessionId,
+    createNewSession,
+    isNewSession,
+    refreshSessions,
+  } = useSession();
   const [exportModalData, setExportModalData] = useState<{
     id: string;
     content: string;
   } | null>(null);
   const { name } = useUser();
 
-  const { activeSessionId, setActiveSessionId, createNewSession } = useSession();
   const searchParams = useSearchParams();
 
   // Check for sessionId in URL on load
@@ -86,15 +91,17 @@ export default function ChatBox() {
       }
 
       // Convert session messages to your format
-      const formattedMessages = data.session.messages.map((msg: SessionMessage) => ({
-        id: msg.id,
-        sender: msg.role === "user" ? "user" : "assistant",
-        content: msg.content,
-        modelUsed: msg.modelUsed || undefined,
-      }));
+      const formattedMessages = data.session.messages.map(
+        (msg: SessionMessage) => ({
+          id: msg.id,
+          sender: msg.role === "user" ? "user" : "assistant",
+          content: msg.content,
+          modelUsed: msg.modelUsed || undefined,
+        })
+      );
 
       setMessages(formattedMessages);
-      
+
       // Add this line to show chat history if messages exist
       if (formattedMessages.length > 0) {
         setHasChatted(true);
@@ -107,7 +114,8 @@ export default function ChatBox() {
   // Auto-scroll ke pesan terbaru setiap kali messages diperbarui
   useEffect(() => {
     if (chatContainerRef.current) {
-      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+      chatContainerRef.current.scrollTop =
+        chatContainerRef.current.scrollHeight;
     }
   }, [messages]);
 
@@ -117,23 +125,22 @@ export default function ChatBox() {
     const serviceIds = services.map((service) => service.id);
     const queryParams = new URLSearchParams();
     serviceIds.forEach((id) => queryParams.append("serviceIds", id.toString()));
-    
+
     const response = await fetch(`/api/schema?${queryParams.toString()}`);
     if (!response.ok) throw new Error("Failed to fetch schemas");
-    
 
     const responseData = await response.json();
-    // console.log("Schema API response:", responseData);
-    
-    const schemas = Array.isArray(responseData) 
-      ? responseData 
+    // ("Schema API response:", responseData);
+
+    const schemas = Array.isArray(responseData)
+      ? responseData
       : responseData.data;
-    
+
     if (!Array.isArray(schemas)) {
       console.error("Unexpected API response format:", responseData);
-      return []; 
+      return [];
     }
-    
+
     return schemas.map((schema) => schema.id);
   };
 
@@ -141,20 +148,20 @@ export default function ChatBox() {
     // Store the message content before any async operations
     const messageContent = input.trim();
     if (!messageContent) return;
-    
+
     // Create user message object
     const userMessage: Message = {
       id: Date.now().toString(),
       sender: "user", // This is correct for your frontend interface
-      content: messageContent
+      content: messageContent,
     };
 
     // Update UI immediately
-    setMessages(prevMessages => [...prevMessages, userMessage]);
+    setMessages((prevMessages) => [...prevMessages, userMessage]);
     setInput("");
     setHasChatted(true);
     setIsLoading(true);
-    
+
     // Handle session (create if needed)
     let currentSessionId = activeSessionId;
     if (!currentSessionId) {
@@ -167,7 +174,7 @@ export default function ChatBox() {
         return;
       }
     }
-    
+
     try {
       const schemaIds = await getRelatedSchemaIds(selectedService);
 
@@ -197,10 +204,19 @@ export default function ChatBox() {
         id: data.messageId || `${Date.now()}-ai`,
         sender: "assistant", // This is correct for your frontend interface
         content: data.aiResponse,
-        modelUsed: data.metadata?.modelUsed
+        modelUsed: data.metadata?.modelUsed,
       };
 
-      setMessages(prevMessages => [...prevMessages, assistantMessage]);
+      setMessages((prevMessages) => [...prevMessages, assistantMessage]);
+      
+      // Add this after successfully submitting the first message
+      if (isNewSession) {
+        refreshSessions(); 
+      }
+      
+      if (!isNewSession && messages.length === 0) {
+        refreshSessions(); 
+      }
     } catch (error) {
       console.error("Error sending message:", error);
 
@@ -217,6 +233,26 @@ export default function ChatBox() {
     }
   };
 
+  // Your useEffect hooks
+  useEffect(() => {
+    const sessionId = searchParams.get("sessionId");
+    setIsInitializing(true);
+
+    if (sessionId) {
+      setActiveSessionId(sessionId);
+      loadSessionMessages(sessionId).finally(() => setIsInitializing(false));
+    } else {
+      setIsInitializing(false);
+    }
+  }, [searchParams, setActiveSessionId]);
+
+  useEffect(() => {
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop =
+        chatContainerRef.current.scrollHeight;
+    }
+  }, [messages]);
+
   return (
     <div className="flex flex-col h-screen pb-20">
       <div className="flex justify-between items-center py-3">
@@ -231,7 +267,7 @@ export default function ChatBox() {
         </div>
       </div>
 
-       {isInitializing ? (
+      {isInitializing ? (
         <div className="flex items-center justify-between items-center h-full">
           <div className="animate-spin rounded-full h-8 w-8 border-2 border-blue-500 border-t-transparent"></div>
         </div>
@@ -265,12 +301,22 @@ export default function ChatBox() {
                       remarkPlugins={[remarkGfm]}
                       rehypePlugins={[rehypeRaw]}
                       components={{
-                        h1: (props) => <h1 className="text-2xl font-bold my-4" {...props} />,
-                        h2: (props) => <h2 className="text-xl font-bold my-3" {...props} />,
-                        h3: (props) => <h3 className="text-lg font-bold my-2" {...props} />,
+                        h1: (props) => (
+                          <h1 className="text-2xl font-bold my-4" {...props} />
+                        ),
+                        h2: (props) => (
+                          <h2 className="text-xl font-bold my-3" {...props} />
+                        ),
+                        h3: (props) => (
+                          <h3 className="text-lg font-bold my-2" {...props} />
+                        ),
                         p: (props) => <p className="my-2" {...props} />,
-                        ul: (props) => <ul className="list-disc pl-5 my-2" {...props} />,
-                        ol: (props) => <ol className="list-decimal pl-5 my-2" {...props} />,
+                        ul: (props) => (
+                          <ul className="list-disc pl-5 my-2" {...props} />
+                        ),
+                        ol: (props) => (
+                          <ol className="list-decimal pl-5 my-2" {...props} />
+                        ),
                         li: (props) => <li className="my-1" {...props} />,
                         code: ({
                           inline,
@@ -289,7 +335,10 @@ export default function ChatBox() {
                               value={String(children).replace(/\n$/, "")}
                             />
                           ) : (
-                            <code className="bg-gray-100 px-1 rounded text-sm" {...props}>
+                            <code
+                              className="bg-gray-100 px-1 rounded text-sm"
+                              {...props}
+                            >
                               {children}
                             </code>
                           );
@@ -302,7 +351,7 @@ export default function ChatBox() {
                     <p className="whitespace-pre-wrap">{msg.content}</p>
                   )}
                 </div>
-  
+
                 {msg.sender === "assistant" && (
                   <button
                     onClick={() => {
@@ -321,7 +370,7 @@ export default function ChatBox() {
                 )}
               </div>
             ))}
-  
+
             {isExportModalVisible && exportModalData && (
               <ExportModal
                 key={exportModalData.id}
@@ -334,7 +383,7 @@ export default function ChatBox() {
                 title={`Laporan-${exportModalData.id}`}
               />
             )}
-  
+
             {isLoading && (
               <div className="p-3 rounded-lg max-w-[90%] bg-gray-200 text-black self-start">
                 AI is typing...
@@ -343,7 +392,7 @@ export default function ChatBox() {
           </div>
         </div>
       )}
-  
+
       {/* Footer input */}
       <div className="w-full pb-5 pt-3">
         <div className="w-full mx-auto flex flex-col">
@@ -374,7 +423,12 @@ export default function ChatBox() {
               onClick={sendMessage}
               disabled={isLoading || !input.trim()}
             >
-              <Image src="/icon-send.svg" width={45} height={45} alt="Send Icon" />
+              <Image
+                src="/icon-send.svg"
+                width={45}
+                height={45}
+                alt="Send Icon"
+              />
             </button>
           </div>
           <p className="text-xs text-gray-600 text-center mt-1">
@@ -383,5 +437,5 @@ export default function ChatBox() {
         </div>
       </div>
     </div>
-  );  
+  );
 }
