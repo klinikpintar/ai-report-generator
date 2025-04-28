@@ -15,7 +15,7 @@ export const UserTable = () => {
   const { state } = useUserTableContext();
 
   const { refreshUsers } = useFetchUser();
-  const { handlePageChange } = useUserTablePagination(refreshUsers);
+  const { handlePageChange } = useUserTablePagination();
 
   useEffect(() => {
     refreshUsers();
