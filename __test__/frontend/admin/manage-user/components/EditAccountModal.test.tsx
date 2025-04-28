@@ -81,7 +81,7 @@ describe('EditAccountModal', () => {
       expect(mockedAxios.patch).toHaveBeenCalledWith(`/api/users/${mockUser.id}`, {
         name: "Updated Name",
         email: mockUser.email,
-        status: "Aktif",
+        isActive: true,
         role: "ADMIN"
       });
       expect(mockOnClose).toHaveBeenCalled();

@@ -118,7 +118,7 @@ describe('useEditAccount Hook', () => {
       name: mockUser.fullName,
       email: mockUser.email,
       role: mockUser.role,
-      status: mockUser.status,
+      isActive: mockUser.status == "Aktif" ? true : false,
     });
     expect(toast.success).toHaveBeenCalledWith("User successfully updated", expect.any(Object));
     expect(mockOnSuccess).toHaveBeenCalled();
