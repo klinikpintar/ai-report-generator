@@ -8,6 +8,9 @@ import {
   Message 
 } from '../../services/chatServices';
 import { findRelevantSchemaContent } from '@/lib/schema-embedding';
+import { getUserFromRequest } from '@/app/(backend)/utils/authUtils';
+import prisma from '@/lib/prisma';
+import { NextResponse } from 'next/server';
 
 // Define an interface for the relevant content items
 export interface RelevantSchemaContentItem {
@@ -25,7 +28,24 @@ export async function POST(req: Request) {
   const contextEnhancer = new SchemaContextEnhancer(schemaRepository);
 
   try {
-    const { messages, model = 'gemini', schemaId } = await req.json();
+    const user = await getUserFromRequest();
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Extract sessionId from request (keep other params as they are)
+    const { messages, model = 'gemini', schemaId, sessionId } = await req.json();
+
+    // Verify this session belongs to the user if sessionId is provided
+    if (sessionId) {
+      const session = await prisma.chatSession.findUnique({
+        where: { id: sessionId, userId: user.id },
+      });
+      
+      if (!session) {
+        return NextResponse.json({ error: 'Session not found' }, { status: 404 });
+      }
+    }
     
     // Log received schema IDs
     console.log(`📋 Chat request received with schema IDs: ${JSON.stringify(schemaId)}`);
@@ -97,6 +117,59 @@ Use this schema information if relevant to answer the user's question.`;
       schemaIncluded || relevantContentFound,
       schemaName
     );
+
+    const aiResponse = response.aiResponse;;
+    const metadata = { modelUsed: provider.getModelName() };
+
+    // Save the conversation to history if sessionId is provided
+    if (sessionId) {
+      // Save the user message - the last message in the array
+      await prisma.chatMessage.create({
+        data: {
+          sessionId,
+          content: messages[messages.length - 1].content,
+          role: 'user',
+        }
+      });
+      
+      // Save the AI response
+      await prisma.chatMessage.create({
+        data: {
+          sessionId,
+          content: aiResponse,
+          role: 'assistant',
+          modelUsed: metadata.modelUsed
+        }
+      });
+      
+      // Update session timestamp to show as most recent
+      await prisma.chatSession.update({
+        where: { id: sessionId },
+        data: { updatedAt: new Date() }
+      });
+      
+      // If it's a new session, update title based on first message
+      const session = await prisma.chatSession.findUnique({
+        where: { id: sessionId },
+        include: { 
+          messages: { 
+            where: { role: 'user' },
+            orderBy: { createdAt: 'asc' },
+            take: 1 
+          }
+        }
+      });
+      
+      if (session?.title === 'New Chat' && session.messages.length > 0) {
+        const firstMsg = session.messages[0].content;
+        const title = firstMsg.substring(0, 30) + (firstMsg.length > 30 ? '...' : '');
+        
+        await prisma.chatSession.update({
+          where: { id: sessionId },
+          data: { title }
+        });
+      }
+    }
     
     return new Response(JSON.stringify(response), {
       status: 200,

@@ -1,5 +1,8 @@
+"use client";
+
 import React from "react";
 import { ServiceProvider } from "./context/serviceContext";
+import { SessionProvider } from "./context/sessionContext";
 
 type LayoutProps = {
   children: React.ReactNode;
@@ -7,10 +10,12 @@ type LayoutProps = {
 
 export default function Layout({ children }: LayoutProps) {
   return (
-    <ServiceProvider>
-      <div className="min-h-screen bg-white flex flex-col">
-        {children}
-      </div>
-    </ServiceProvider>
+    <SessionProvider>
+      <ServiceProvider>
+        <div className="min-h-screen bg-white flex flex-col">
+          {children}
+        </div>
+      </ServiceProvider>
+    </SessionProvider>
   );
 }

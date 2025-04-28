@@ -60,4 +60,27 @@ export class UserValidation {
         message: "Role must be either BUSINESS_ANALYST or ADMIN",
       }) as z.ZodType<"BUSINESS_ANALYST" | "ADMIN" | undefined>,
   });
+
+  static readonly DELETE = z.object({
+    id: z.string().uuid({ message: "Invalid user ID format" }),
+  });
+
+  static readonly PATCH = z.object({
+    id: z.string().uuid({ message: "Invalid user ID format" }).optional(),
+
+    email: z
+      .string()
+      .email({ message: "Invalid email format" })
+      .min(1, { message: "Email cannot be empty" })
+      .optional(),
+
+    name: z.string().min(1, { message: "Name cannot be empty" }).optional(),
+
+    role: z
+      .enum(["BUSINESS_ANALYST", "ADMIN"])
+      .transform((val) => val.toUpperCase() as "BUSINESS_ANALYST" | "ADMIN")
+      .optional(),
+
+    isActive: z.boolean().optional(),
+  });
 }

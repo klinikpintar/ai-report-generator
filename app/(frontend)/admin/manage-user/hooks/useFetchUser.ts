@@ -2,7 +2,6 @@ import { useCallback } from "react";
 import { useUserTableContext } from "../context/UserTableContext";
 import { fetchUsers } from "../utils/api";
 
-
 export const useFetchUser = () => {
   const { dispatch, state } = useUserTableContext();
 
