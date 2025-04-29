@@ -1,4 +1,10 @@
-import { render, screen, fireEvent, waitFor, act } from "@testing-library/react";
+import {
+  render,
+  screen,
+  fireEvent,
+  waitFor,
+  act,
+} from "@testing-library/react";
 import LoginPage from "@frontend/login/page";
 import FeAuthService from "@frontend/login/services/feAuthService";
 import { toast as mockedToast, ToastContainer } from "react-toastify";
@@ -30,7 +36,9 @@ jest.mock("react-toastify", () => ({
     error: jest.fn(),
     success: jest.fn(),
   },
-  ToastContainer: jest.fn().mockImplementation(() => <div data-testid="toast-container" />),
+  ToastContainer: jest
+    .fn()
+    .mockImplementation(() => <div data-testid="toast-container" />),
 }));
 
 // Mock Navbar component to avoid testing complexity
@@ -78,7 +86,9 @@ describe("LoginPage", () => {
   it("renders title and subtitle", () => {
     renderWithUserContext();
     expect(screen.getByText(/Sign in to your account/i)).toBeInTheDocument();
-    expect(screen.getByText(/Selamat Datang di AI Report Generator/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/Selamat Datang di AI Report Generator/i)
+    ).toBeInTheDocument();
     expect(screen.getByText(/Klinik Pintar/i)).toBeInTheDocument();
   });
 
@@ -112,6 +122,9 @@ describe("LoginPage", () => {
   });
 
   it("calls FeAuthService.login and redirects on success", async () => {
+    // Setup fake timers
+    jest.useFakeTimers();
+
     // Setup mocks
     const mockUser = {
       email: "test@example.com",
@@ -130,8 +143,6 @@ describe("LoginPage", () => {
       },
     });
 
-    jest.useFakeTimers();
-
     // Render component and fill form
     renderWithUserContext();
     const emailInput = screen.getByPlaceholderText(/Masukkan email/i);
@@ -146,30 +157,39 @@ describe("LoginPage", () => {
     });
 
     // Verify FeAuthService.login was called
-    expect(FeAuthService.login).toHaveBeenCalledWith("test@example.com", "password123");
+    expect(FeAuthService.login).toHaveBeenCalledWith(
+      "test@example.com",
+      "password123"
+    );
 
     // Verify FeAuthService.getUser was called
     expect(FeAuthService.getUser).toHaveBeenCalled();
 
     // Verify toast success was called
     expect(mockedToast.success).toHaveBeenCalledWith(
-      "Login successful! Redirecting...",
-      expect.anything()
+      "Login successful! Redirecting..."
     );
 
     // Verify context setters were called with user data
     expect(setEmailContextMock).toHaveBeenCalledWith(mockUser.email);
     expect(setNameContextMock).toHaveBeenCalledWith(mockUser.name);
 
-    // Verify localStorage was updated
-    expect(window.localStorage.setItem).toHaveBeenCalledWith("userEmail", "test@example.com");
-    expect(window.localStorage.setItem).toHaveBeenCalledWith("userName", mockUser.email);
+    // PERBAIKAN: Verify localStorage was updated - perhatikan user.name, bukan email
+    expect(window.localStorage.setItem).toHaveBeenCalledWith(
+      "userEmail",
+      "test@example.com"
+    );
+    expect(window.localStorage.setItem).toHaveBeenCalledWith(
+      "userName",
+      mockUser.name
+    );
 
-    // Use waitFor because of the setTimeout in the component
-    await waitFor(() => {
-      expect(pushMock).toHaveBeenCalledWith("/");
+    // Jalankan semua timer termasuk setTimeout
+    await act(async () => {
+      jest.advanceTimersByTime(300); // Lebih dari 200ms yang ada di setTimeout
     });
 
+    // Sekarang verifikasi router.push seharusnya dipanggil
     expect(pushMock).toHaveBeenCalledWith("/");
 
     // Restore real timers
@@ -177,6 +197,9 @@ describe("LoginPage", () => {
   });
 
   it("redirects admin users to the admin page", async () => {
+    // Setup fake timers
+    jest.useFakeTimers();
+
     // Setup mocks with ADMIN role
     const mockAdminUser = {
       email: "admin@example.com",
@@ -212,52 +235,16 @@ describe("LoginPage", () => {
     expect(setEmailContextMock).toHaveBeenCalledWith(mockAdminUser.email);
     expect(setNameContextMock).toHaveBeenCalledWith(mockAdminUser.name);
 
-    // Admin users should be redirected to /admin
-    await waitFor(() => {
-      expect(pushMock).toHaveBeenCalledWith("/admin");
-    });
-  });
-
-  it("redirects admin users to the admin page", async () => {
-    // Setup mocks with ADMIN role
-    const mockAdminUser = {
-      email: "admin@example.com",
-      name: "Admin User",
-      role: "ADMIN", // Admin role
-    };
-
-    (FeAuthService.login as jest.Mock).mockResolvedValue({
-      success: true,
-      message: "Login successful",
-    });
-
-    (FeAuthService.getUser as jest.Mock).mockResolvedValue({
-      data: {
-        user: mockAdminUser,
-      },
-    });
-
-    // Render component and fill form
-    renderWithUserContext();
-    const emailInput = screen.getByPlaceholderText(/Masukkan email/i);
-    const passwordInput = screen.getByPlaceholderText(/Masukkan password/i);
-    const button = screen.getByRole("button", { name: /login/i });
-
-    fireEvent.change(emailInput, { target: { value: "admin@example.com" } });
-    fireEvent.change(passwordInput, { target: { value: "adminpass" } });
-
+    // Jalankan semua timer termasuk setTimeout
     await act(async () => {
-      fireEvent.click(button);
+      jest.advanceTimersByTime(300);
     });
-
-    // Verify context setters were called with admin data
-    expect(setEmailContextMock).toHaveBeenCalledWith(mockAdminUser.email);
-    expect(setNameContextMock).toHaveBeenCalledWith(mockAdminUser.name);
 
     // Admin users should be redirected to /admin
-    await waitFor(() => {
-      expect(pushMock).toHaveBeenCalledWith("/admin");
-    });
+    expect(pushMock).toHaveBeenCalledWith("/admin");
+
+    // Restore real timers
+    jest.useRealTimers();
   });
 
   it("shows error message on failed login (invalid credentials)", async () => {
@@ -279,14 +266,20 @@ describe("LoginPage", () => {
       fireEvent.click(screen.getByRole("button", { name: /login/i }));
     });
 
-    expect(mockedToast.error).toHaveBeenCalledWith("Login failed. Please check your credentials.");
+    expect(mockedToast.error).toHaveBeenCalledWith(
+      "Login failed. Please check your credentials."
+    );
     waitFor(() => {
-      expect(screen.getByText(/Login failed. Please check your credentials./i)).toBeInTheDocument();
+      expect(
+        screen.getByText(/Login failed. Please check your credentials./i)
+      ).toBeInTheDocument();
     });
   });
 
   it("shows generic error on exception", async () => {
-    (FeAuthService.login as jest.Mock).mockRejectedValue(new Error("Internal error"));
+    (FeAuthService.login as jest.Mock).mockRejectedValue(
+      new Error("Internal error")
+    );
 
     renderWithUserContext();
 
@@ -302,7 +295,9 @@ describe("LoginPage", () => {
     });
 
     waitFor(() => {
-      expect(screen.getByText(/Something went wrong. Please try again./i)).toBeInTheDocument();
+      expect(
+        screen.getByText(/Something went wrong. Please try again./i)
+      ).toBeInTheDocument();
     });
   });
 
@@ -328,7 +323,9 @@ describe("LoginPage", () => {
       fireEvent.click(screen.getByRole("button", { name: /login/i }));
     });
 
-    expect(screen.getByRole("button", { name: /logging in/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /logging in/i })
+    ).toBeInTheDocument();
 
     // Resolve login to clean up
     await act(async () => {
