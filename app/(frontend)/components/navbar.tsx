@@ -35,7 +35,7 @@ export default function Navbar() {
   
   return (
     <nav
-      className={`flex items-center h-[72px] justify-between px-8 py-2 bg-white fixed top-0 w-screen pl-20
+      className={`flex items-center h-[72px] justify-between px-8 py-2 bg-white fixed top-0 w-screen pl-20 z-50
         ${pathname === "/login" ? "border-none" : "border-b-2 border-teal-7"}`}
     >
       {isLoaded && (
