@@ -4,6 +4,16 @@ import { generateReportContent } from "@/app/(backend)/utils/generateReportConte
 import { PDFDocument, PDFFont, rgb, StandardFonts, PDFPage } from "pdf-lib";
 import fs from "fs";
 
+interface FormattedTextOptions {
+  page: PDFPage;
+  fonts: {
+    normal: PDFFont;
+    bold: PDFFont;
+    italic: PDFFont;
+  };
+  fontSize: number;
+}
+
 function wrapText(text: string, maxWidth: number, font: PDFFont, size: number) {
   const words = text.split(" ");
   const lines: string[] = [];
@@ -25,31 +35,21 @@ function wrapText(text: string, maxWidth: number, font: PDFFont, size: number) {
   return lines;
 }
 
-// 🔧 Fungsi untuk menggambar teks dengan inline bold (**...**)
-function drawFormattedText(
-  line: string,
-  xStart: number,
-  y: number,
-  fontSize: number,
-  page: PDFPage,
-  font: PDFFont,
-  fontBold: PDFFont,
-  fontItalic: PDFFont
-) {
-  // Match urutan **bold**, *italic*, dan plain teks
+function drawFormattedText(line: string, xStart: number, y: number, options: FormattedTextOptions) {
+  const { page, fonts, fontSize } = options;
   const parts = line.split(/(\*\*.*?\*\*|\*.*?\*)/);
   let x = xStart;
 
   for (const part of parts) {
     let text = part;
-    let usedFont = font;
+    let usedFont = fonts.normal;
 
     if (text.startsWith("**") && text.endsWith("**")) {
       text = text.slice(2, -2);
-      usedFont = fontBold;
+      usedFont = fonts.bold;
     } else if (text.startsWith("*") && text.endsWith("*")) {
       text = text.slice(1, -1);
-      usedFont = fontItalic;
+      usedFont = fonts.italic;
     }
 
     page.drawText(text, {
@@ -67,52 +67,35 @@ function drawFormattedText(
 export class PdfExporter implements IExporter {
   async export(reportData: ReportDTO): Promise<Buffer> {
     const pdfDoc = await PDFDocument.create();
+    const fonts = await this.embedFonts(pdfDoc);
     let page = pdfDoc.addPage();
     const { width, height } = page.getSize();
-
-    const imageBytes = await fs.promises.readFile("public/logo-kp.png");
-    const logoImage = await pdfDoc.embedPng(imageBytes);
-    const logoDims = logoImage.scale(0.15);
-
-    const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
-    const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
-    const fontItalic = await pdfDoc.embedFont(StandardFonts.HelveticaOblique);
-    const fontMono = await pdfDoc.embedFont(StandardFonts.Courier);
     const fontSize = 12;
-
-    const content = generateReportContent(reportData);
-    const lines = content.split("\n");
     const headerHeight = 60;
     let y = height - headerHeight - 40;
 
-    const logoY = height - 60;
-    page.drawImage(logoImage, {
-      x: 50,
-      y: logoY,
-      width: logoDims.width,
-      height: logoDims.height,
-    });
+    await this.drawLogo(pdfDoc, page, width, height);
+
+    const content = generateReportContent(reportData);
+    const lines = content.split("\n");
 
     let inCodeBlock = false;
 
     for (const line of lines) {
       const trimmed = line.trim();
 
-      if (trimmed === "```sql") {
+      if (this.isCodeBlockStart(trimmed)) {
         inCodeBlock = true;
         continue;
       }
 
-      if (trimmed === "```") {
+      if (this.isCodeBlockEnd(trimmed)) {
         inCodeBlock = false;
         continue;
       }
 
-      const isBullet = trimmed.startsWith("* ");
-      const bulletOffset = isBullet ? 10 : 0;
-      const contentLine = isBullet ? trimmed.slice(1).trimStart() : line;
-
-      const wrappedLines = wrapText(contentLine, width - 100 - bulletOffset, font, fontSize);
+      const { isBullet, contentLine } = this.processLine(trimmed, line);
+      const wrappedLines = wrapText(contentLine, width - 100 - (isBullet ? 10 : 0), fonts.normal, fontSize);
 
       for (const wrappedLine of wrappedLines) {
         if (y < 50) {
@@ -121,27 +104,12 @@ export class PdfExporter implements IExporter {
         }
 
         if (inCodeBlock) {
-          page.drawText(wrappedLine, {
-            x: 50,
-            y,
-            font: fontMono,
-            size: fontSize,
-            color: rgb(0, 0, 0),
-          });
+          this.drawCodeLine(page, wrappedLine, fonts.mono, fontSize, y);
+        } else if (isBullet && wrappedLine === wrappedLines[0]) {
+          this.drawBullet(page, fonts.normal, fontSize, y);
+          drawFormattedText(wrappedLine, 65, y, { page, fonts, fontSize });
         } else {
-          if (isBullet && wrappedLine === wrappedLines[0]) {
-            page.drawText("•", {
-              x: 50,
-              y,
-              font,
-              size: fontSize,
-              color: rgb(0, 0, 0),
-            });
-            drawFormattedText(wrappedLine, 65, y, fontSize, page, font, fontBold, fontItalic);
-
-          } else {
-            drawFormattedText(wrappedLine, 50, y, fontSize, page, font, fontBold, fontItalic);
-          }
+          drawFormattedText(wrappedLine, 50, y, { page, fonts, fontSize });
         }
 
         y -= fontSize + 6;
@@ -158,5 +126,61 @@ export class PdfExporter implements IExporter {
 
   getFileName(createdAt: string): string {
     return `report-${createdAt}.pdf`;
+  }
+
+  private async embedFonts(pdfDoc: PDFDocument) {
+    const normal = await pdfDoc.embedFont(StandardFonts.Helvetica);
+    const bold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+    const italic = await pdfDoc.embedFont(StandardFonts.HelveticaOblique);
+    const mono = await pdfDoc.embedFont(StandardFonts.Courier);
+    return { normal, bold, italic, mono };
+  }
+
+  private async drawLogo(pdfDoc: PDFDocument, page: PDFPage, width: number, height: number) {
+    const imageBytes = await fs.promises.readFile("public/logo-kp.png");
+    const logoImage = await pdfDoc.embedPng(imageBytes);
+    const logoDims = logoImage.scale(0.15);
+
+    const logoY = height - 60;
+    page.drawImage(logoImage, {
+      x: 50,
+      y: logoY,
+      width: logoDims.width,
+      height: logoDims.height,
+    });
+  }
+
+  private isCodeBlockStart(trimmedLine: string) {
+    return trimmedLine === "```sql";
+  }
+
+  private isCodeBlockEnd(trimmedLine: string) {
+    return trimmedLine === "```";
+  }
+
+  private processLine(trimmed: string, original: string) {
+    const isBullet = trimmed.startsWith("* ");
+    const contentLine = isBullet ? trimmed.slice(1).trimStart() : original;
+    return { isBullet, contentLine };
+  }
+
+  private drawCodeLine(page: PDFPage, text: string, font: PDFFont, size: number, y: number) {
+    page.drawText(text, {
+      x: 50,
+      y,
+      font,
+      size,
+      color: rgb(0, 0, 0),
+    });
+  }
+
+  private drawBullet(page: PDFPage, font: PDFFont, size: number, y: number) {
+    page.drawText("•", {
+      x: 50,
+      y,
+      font,
+      size,
+      color: rgb(0, 0, 0),
+    });
   }
 }
