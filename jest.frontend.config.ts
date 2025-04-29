@@ -17,7 +17,13 @@ const frontendConfig: Config = {
   moduleNameMapper: {
     '^@frontend/(.*)$': '<rootDir>/app/(frontend)/$1',
     '^@/(.*)$': '<rootDir>/$1',
+    '^react-markdown$': '<rootDir>/__mocks__/react-markdown.tsx',
+    '^rehype-raw$': '<rootDir>/__mocks__/rehype-raw.jsx',
+    '^remark-gfm$': '<rootDir>/__mocks__/remark-gfm.jsx',
   },
+  transformIgnorePatterns: [
+    "node_modules/(?!react-markdown|remark-gfm|rehype-raw)",
+  ],
   coveragePathIgnorePatterns: [
     '/node_modules/',
     '/components/ui/'

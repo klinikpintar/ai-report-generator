@@ -12,12 +12,18 @@ const config: Config = {
     "**/*.{ts,tsx, js, jsx}",
     "!app/config.ts",
     "!app/utils/exceptions.ts",
-  ],
+  ],  
   moduleNameMapper: {
     '^@frontend/(.*)$': '<rootDir>/app/(frontend)/$1',
     '^@backend/(.*)$': '<rootDir>/app/(backend)/$1',
     '^@/(.*)$': '<rootDir>/$1',
+    '^react-markdown$': '<rootDir>/__mocks__/react-markdown.tsx', 
+    '^rehype-raw$': '<rootDir>/__mocks__/rehype-raw.jsx',         
+    '^remark-gfm$': '<rootDir>/__mocks__/remark-gfm.jsx',         
   },
+  transformIgnorePatterns: [
+    "node_modules/(?!react-markdown|remark-gfm|rehype-raw)", 
+  ],
   coverageThreshold: {
     global: {
       branches: 85,

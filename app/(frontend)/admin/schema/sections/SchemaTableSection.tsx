@@ -9,6 +9,7 @@ import EditSchemaModal from "../components/EditSchemaModal";
 import { useSchemaActions } from "../hooks";
 import { useState } from "react";
 import { Schema } from "@frontend/common/types";
+import { useRefreshSchema } from "../hooks/useRefreshSchema";
 
 export const SchemaTableSection = () => {
   const [schemaToEdit, setSchemaToEdit] = useState<Schema | null>(null);
@@ -17,6 +18,7 @@ export const SchemaTableSection = () => {
   const [showAddModal, setShowAddModal] = useState(false);
 
   const { handleDeleteSchema } = useSchemaActions();
+  const { refreshSchemas } = useRefreshSchema();
 
   const handleConfirmDelete = async () => {
     const success = await handleDeleteSchema(schemaToDelete!.id);
@@ -24,6 +26,16 @@ export const SchemaTableSection = () => {
       setSchemaToDelete(null);
     }
   };
+
+  const onAddModalClose = async () => {
+    setShowAddModal(false);
+    await refreshSchemas();
+  };
+
+  const onEditModalClose = async () => {
+    setSchemaToEdit(null)
+    await refreshSchemas();
+  }
 
   return (
     <>
@@ -46,14 +58,12 @@ export const SchemaTableSection = () => {
       </div>
 
       {/* Modals */}
-      {showAddModal && (
-        <AddSchemaModal isVisible={showAddModal} onClose={() => setShowAddModal(false)} />
-      )}
+      {showAddModal && <AddSchemaModal isVisible={showAddModal} onClose={onAddModalClose} />}
 
       {schemaToEdit && (
         <EditSchemaModal
           isVisible={true}
-          onClose={() => setSchemaToEdit(null)}
+          onClose={onEditModalClose}
           schema={{
             id: schemaToEdit.id,
             name: schemaToEdit.name,

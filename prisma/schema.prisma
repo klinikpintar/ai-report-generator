@@ -24,6 +24,7 @@ model User {
   role      Role    @default(BUSINESS_ANALYST)
 
   refreshToken RefreshToken?
+  chatSessions ChatSession[] // Add this line to create the relation
 }
 
 enum Role {
@@ -62,7 +63,7 @@ model SchemaEmbedding {
 
 model Service {
   id            String   @id @default(uuid()) @db.Uuid
-  name          String   @db.VarChar(255)
+  name          String   @unique @db.VarChar(255)
   platformCode  String   @db.VarChar(255)
   createdAt     DateTime @default(now())
 
@@ -92,4 +93,25 @@ model AIModel {
   isAvailable     Boolean   @default(true)
   
   @@unique([providerId, name])
+
+}
+
+model ChatSession {
+  id          String   @id @default(uuid()) @db.Uuid
+  title       String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  userId      String   @db.Uuid
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages    ChatMessage[]
+}
+
+model ChatMessage {
+  id          String   @id @default(uuid()) @db.Uuid
+  content     String   @db.Text
+  role        String   // 'user' or 'assistant'
+  createdAt   DateTime @default(now())
+  sessionId   String   @db.Uuid
+  session     ChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  modelUsed   String?  // For tracking which AI model was used
 }

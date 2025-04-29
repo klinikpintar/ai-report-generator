@@ -15,6 +15,7 @@ import {
   UnauthenticatedResponse,
   UnauthorizedResponse,
 } from "../utils/exceptions";
+import { cookies } from "next/headers";
 
 class AuthService implements IAuthService, IGenerateToken, IVerifyToken {
   async login(
@@ -46,11 +47,12 @@ class AuthService implements IAuthService, IGenerateToken, IVerifyToken {
   }
 
   async logout(token: string): Promise<void> {
-    if (!token || !this.verifyToken(token, config.JWT_ACCESS_SECRET)) {
+    const payload = this.verifyToken(token, config.JWT_ACCESS_SECRET);
+    if (!token || !payload) {
       throw new UnauthenticatedResponse("Invalid or expired access token");
     }
 
-    await prisma.refreshToken.deleteMany({ where: { token } });
+    await prisma.refreshToken.deleteMany({ where: { userId: payload.id } });
   }
 
   async verify(token: string): Promise<Payload> {
@@ -154,6 +156,25 @@ class AuthService implements IAuthService, IGenerateToken, IVerifyToken {
     });
 
     return response;
+  }
+
+  async getUserLogin(): Promise<Payload | null> {
+    try {
+      const cookieStore = await cookies();
+      const accessToken = cookieStore.get("access_token")?.value;
+      if (!accessToken) return null;
+
+      const decoded = this.verifyToken(accessToken, config.JWT_ACCESS_SECRET);
+      if (!decoded) return null;
+
+      return await prisma.user.findUnique({
+        where: { id: decoded.id },
+        select: { id: true, email: true, role: true },
+      });
+    } catch (error) {
+      console.error("Error getting user from request:", error);
+      return null;
+    }
   }
 }
 

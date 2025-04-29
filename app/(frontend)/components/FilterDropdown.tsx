@@ -64,15 +64,16 @@ export function FilterDropdown<T>({
         <DropdownMenuCheckboxItem checked={isAllSelected} onSelect={handleSelectAll}>
           Select All
         </DropdownMenuCheckboxItem>
-        {items.map((item) => (
-          <DropdownMenuCheckboxItem
-            key={getKey(item)}
-            checked={isItemSelected(item)}
-            onSelect={handleSelectItem(item)}
-          >
-            {renderItem(item)}
-          </DropdownMenuCheckboxItem>
-        ))}
+        {Array.isArray(items) &&
+          items.map((item) => (
+            <DropdownMenuCheckboxItem
+              key={getKey(item)}
+              checked={isItemSelected(item)}
+              onSelect={handleSelectItem(item)}
+            >
+              {renderItem(item)}
+            </DropdownMenuCheckboxItem>
+          ))}
       </DropdownMenuContent>
     </DropdownMenu>
   );

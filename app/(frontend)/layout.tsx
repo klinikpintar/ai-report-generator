@@ -2,7 +2,6 @@ import React from "react";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { ToastContainer } from "react-toastify";
-import Navbar from "./components/navbar";
 import { UserProvider } from "./login/context/userContext";
 
 const inter = Inter({
@@ -29,9 +28,6 @@ export default function RootLayout({
         <ToastContainer />
         <div className="h-screen overflow-hidden flex flex-col bg-white">
           <UserProvider>
-            {" "}
-            {/* Bungkus semua halaman dengan Context */}
-            <Navbar />
             {children}
           </UserProvider>
         </div>
