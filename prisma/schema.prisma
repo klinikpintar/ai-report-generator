@@ -70,6 +70,32 @@ model Service {
   schemas       Schema[]
 }
 
+model Provider {
+  id             String    @id @default(uuid()) @db.Uuid
+  name           String    @unique @db.VarChar(255)
+  displayName    String    @db.VarChar(255)
+  apiKey         String    @db.Text
+  isActive       Boolean   @default(false)
+  isDefault      Boolean   @default(false)
+  activeModelId  String?   @unique @db.Uuid
+  activeModel    AIModel?  @relation("ActiveModel", fields: [activeModelId], references: [id])
+  models         AIModel[] @relation("ProviderModels")
+}
+
+model AIModel {
+  id              String    @id @default(uuid()) @db.Uuid
+  name            String    @db.VarChar(255)
+  modelIdentifier String    @db.VarChar(255)
+  providerId      String    @db.Uuid
+  provider        Provider  @relation("ProviderModels", fields: [providerId], references: [id], onDelete: Cascade)
+  activeFor       Provider? @relation("ActiveModel")
+  isDefault       Boolean   @default(false)
+  isAvailable     Boolean   @default(true)
+  
+  @@unique([providerId, name])
+
+}
+
 model ChatSession {
   id          String   @id @default(uuid()) @db.Uuid
   title       String
