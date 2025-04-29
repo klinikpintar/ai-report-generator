@@ -1,4 +1,4 @@
-import { patchApiKey } from "@frontend/admin/manage-ai/utils/api";
+import { patchApiKey } from "@frontend/admin/manage-ai/utils/api/patch-api-key";
 
 describe("patchApiKey", () => {
   const mockParams = {
@@ -23,14 +23,14 @@ describe("patchApiKey", () => {
 
     const result = await patchApiKey(mockParams);
 
-    expect(global.fetch).toHaveBeenCalledWith("/api/manage-ai/api-key", {
+    expect(global.fetch).toHaveBeenCalledWith("/api/ai/key", {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        id_ai: mockParams.providerId,
-        api_key: mockParams.apiKey,
+        providerId: mockParams.providerId,
+        apiKey: mockParams.apiKey,
       }),
     });
 
@@ -50,14 +50,14 @@ describe("patchApiKey", () => {
 
     const result = await patchApiKey(mockParams);
 
-    expect(global.fetch).toHaveBeenCalledWith("/api/manage-ai/api-key", {
+    expect(global.fetch).toHaveBeenCalledWith("/api/ai/key", {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        id_ai: mockParams.providerId,
-        api_key: mockParams.apiKey,
+        providerId: mockParams.providerId,
+        apiKey: mockParams.apiKey,
       }),
     });
 
@@ -69,14 +69,14 @@ describe("patchApiKey", () => {
 
     const result = await patchApiKey(mockParams);
 
-    expect(global.fetch).toHaveBeenCalledWith("/api/manage-ai/api-key", {
+    expect(global.fetch).toHaveBeenCalledWith("/api/ai/key", {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        id_ai: mockParams.providerId,
-        api_key: mockParams.apiKey,
+        providerId: mockParams.providerId,
+        apiKey: mockParams.apiKey,
       }),
     });
 
