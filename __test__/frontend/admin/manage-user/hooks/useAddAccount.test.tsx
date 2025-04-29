@@ -1,15 +1,19 @@
 import { renderHook, act } from '@testing-library/react';
 import { useAddAccount } from '@frontend/admin/manage-user/hooks/useAddAccount';
+import { UserTableProvider } from '@frontend/admin/manage-user/context/UserTableContext';
 
 describe('useAddAccount Hook', () => {
   const mockOnClose = jest.fn();
+  const wrapper = ({ children }: { children: React.ReactNode }) => (
+    <UserTableProvider>{children}</UserTableProvider>
+  );
 
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
   it('should initialize with empty form data and no errors', () => {
-    const { result } = renderHook(() => useAddAccount(mockOnClose));
+    const { result } = renderHook(() => useAddAccount(mockOnClose), {wrapper});
 
     expect(result.current.formData).toEqual({
       fullName: '',
@@ -22,7 +26,7 @@ describe('useAddAccount Hook', () => {
   });
 
   it('should not update formData for invalid role input', () => {
-    const { result } = renderHook(() => useAddAccount(mockOnClose));
+    const { result } = renderHook(() => useAddAccount(mockOnClose), {wrapper});
     
     act(() => {
       result.current.handleChange({
@@ -34,7 +38,7 @@ describe('useAddAccount Hook', () => {
   });
   
   it('should update formData for valid role input', () => {
-    const { result } = renderHook(() => useAddAccount(mockOnClose));
+    const { result } = renderHook(() => useAddAccount(mockOnClose), {wrapper});
     
     act(() => {
       result.current.handleChange({
@@ -46,7 +50,7 @@ describe('useAddAccount Hook', () => {
   });
 
   it('should validate password length', async () => {
-    const { result } = renderHook(() => useAddAccount(mockOnClose));
+    const { result } = renderHook(() => useAddAccount(mockOnClose), {wrapper});
 
     // Fill form with short password
     act(() => {
@@ -65,7 +69,7 @@ describe('useAddAccount Hook', () => {
   });
 
   it('should validate password match', async () => {
-    const { result } = renderHook(() => useAddAccount(mockOnClose));
+    const { result } = renderHook(() => useAddAccount(mockOnClose), {wrapper});
 
     // Fill form with mismatched passwords
     act(() => {
@@ -87,7 +91,7 @@ describe('useAddAccount Hook', () => {
   });
 
   it('should clear errors after user fill/fix the input of the error fields', () => {
-    const { result } = renderHook(() => useAddAccount(mockOnClose));
+    const { result } = renderHook(() => useAddAccount(mockOnClose), {wrapper});
 
     // Set an error
     act(() => {

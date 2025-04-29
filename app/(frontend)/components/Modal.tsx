@@ -38,7 +38,7 @@ const Modal: React.FC<ModalProps> = (props) => {
     <div
       role="button"
       tabIndex={0}
-      className={`fixed inset-0 flex justify-center cursor-default items-center ${
+      className={`fixed inset-0 flex justify-center cursor-default items-center z-50 ${
         isVisible
           ? "visible animate-in fade-in bg-black-9 bg-opacity-70"
           : "invisible animate-out fade-out"

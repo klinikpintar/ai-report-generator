@@ -1,6 +1,6 @@
 import { SchemaProvider } from "@frontend/admin/schema/context/SchemaContext";
 import { SchemaTableSection } from "@frontend/admin/schema/sections";
-import { mockSchemas, mockPlatforms, mockServices } from "@/__mocks__/schema-data";
+import { mockPaginatedSchemas, mockPlatforms, mockServices } from "@/__mocks__/schema-data";
 import { render, screen, waitFor } from "@testing-library/react";
 import {
   deleteSchema,
@@ -39,7 +39,7 @@ const renderComponent = () => {
 const setup = () => {
   (fetchPlatforms as jest.Mock).mockResolvedValueOnce(mockPlatforms);
   (fetchServices as jest.Mock).mockResolvedValueOnce(mockServices);
-  (fetchSchemas as jest.Mock).mockResolvedValueOnce(mockSchemas);
+  (fetchSchemas as jest.Mock).mockResolvedValueOnce(mockPaginatedSchemas);
   renderComponent();
 };
 
@@ -250,7 +250,7 @@ describe("Integration between action button and modal", () => {
     await userEvent.click(viewButton[0]);
 
     // Check if the modal is displayed
-    const viewModal = await screen.findByText(`Skema ${mockSchemas[0].name}`);
+    const viewModal = await screen.findByText(`Skema ${mockPaginatedSchemas.data[0].name}`);
     expect(viewModal).toBeInTheDocument();
   });
 });

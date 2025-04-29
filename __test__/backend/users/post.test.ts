@@ -197,4 +197,30 @@ describe("User API - Create User", () => {
     expect(response.status).toBe(400);
     expect(json).toHaveProperty("message");
   });
+
+  // ❌ Corner Path - Server error (simulated)
+  test("Should return 500 for server error", async () => {
+    (prisma.user.count as jest.Mock).mockImplementation(() => {
+      throw new Error("Database error");
+    });
+
+    const request = new NextRequest(new URL(BASE_API_URL_USERS), {
+      method: "POST",
+      body: JSON.stringify({
+        name: "John Doe",
+        email: "johndoe@example.com",
+        password: "Secure123!",
+        confirmPassword: "Secure123!",
+        role: "BUSINESS_ANALYST",
+      }),
+      headers: { "Content-Type": "application/json" },
+    });
+
+    const response = await createUserHandler(request);
+    const json = await response.json();
+
+    expect(response.status).toBe(500);
+    expect(json).toHaveProperty("message", "Internal server error");
+
+  });
 });
