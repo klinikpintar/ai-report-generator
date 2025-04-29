@@ -17,10 +17,8 @@ class ProviderService {
    * Mendapatkan semua provider dengan model-modelnya
    */
   async getAllProviders(
-    optionsInput?: z.infer<typeof ProviderValidation.GET>
+    options?: z.infer<typeof ProviderValidation.GET>
   ): Promise<z.infer<typeof ProviderValidation.RESPONSE>[] | z.infer<typeof ProviderValidation.RESPONSE_WITH_MODELS>[]> {
-    // Validasi input dengan Zod
-    const options = ProviderValidation.GET.parse(optionsInput || {});
 
     const query: {
       where?: { isActive?: boolean };
@@ -30,14 +28,16 @@ class ProviderService {
           orderBy: { name: 'asc' };
         };
       };
+      orderBy?: { name: 'asc' };
     } = {
       include: {
         activeModel: true,
-      }
+      },
+      orderBy: { name: 'asc' },
     };
 
     // Buat query filter berdasarkan options
-    if (options.onlyActive) {
+    if (options?.onlyActive) {
       query.where = { isActive: true };
     }
 
@@ -47,7 +47,7 @@ class ProviderService {
     };
 
     // Include models jika diminta
-    if (options.includeModels) {
+    if (options?.includeModels) {
       query.include.models = {
         orderBy: { name: 'asc' },
       };
@@ -57,7 +57,7 @@ class ProviderService {
 
     // Transform output menggunakan skema Zod yang sesuai
     return providers.map(provider =>
-      options.includeModels
+      options?.includeModels
         ? ProviderValidation.RESPONSE_WITH_MODELS.parse(provider)
         : ProviderValidation.RESPONSE.parse(provider)
     );
