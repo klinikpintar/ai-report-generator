@@ -96,7 +96,7 @@ export default function ChatBox() {
           id: msg.id,
           sender: msg.role === "user" ? "user" : "assistant",
           content: msg.content,
-          modelUsed: msg.modelUsed || undefined,
+          modelUsed: msg.modelUsed ?? undefined,
         })
       );
 
@@ -201,21 +201,21 @@ export default function ChatBox() {
 
       // When adding the AI response, use the functional form to preserve existing messages
       const assistantMessage: Message = {
-        id: data.messageId || `${Date.now()}-ai`,
+        id: data.messageId ?? `${Date.now()}-ai`,
         sender: "assistant", // This is correct for your frontend interface
         content: data.aiResponse,
         modelUsed: data.metadata?.modelUsed,
       };
 
       setMessages((prevMessages) => [...prevMessages, assistantMessage]);
-      
+
       // Add this after successfully submitting the first message
       if (isNewSession) {
-        refreshSessions(); 
+        refreshSessions();
       }
-      
+
       if (!isNewSession && messages.length === 0) {
-        refreshSessions(); 
+        refreshSessions();
       }
     } catch (error) {
       console.error("Error sending message:", error);
@@ -267,131 +267,155 @@ export default function ChatBox() {
         </div>
       </div>
 
-      {isInitializing ? (
-        <div className="flex items-center justify-between items-center h-full">
-          <div className="animate-spin rounded-full h-8 w-8 border-2 border-blue-500 border-t-transparent"></div>
-        </div>
-      ) : !hasChatted ? (
-        <h1 className="text-3xl font-bold text-center flex items-center justify-center h-full text-blue-6">
-          Hello, {name} !!
-        </h1>
-      ) : (
-        <div
-          ref={chatContainerRef}
-          className="flex-1 overflow-y-auto px-4 bg-white"
-        >
-          <div className="mt-4 flex flex-col gap-y-6">
-            {messages.map((msg) => (
-              <div
-                key={msg.id}
-                className={`max-w-[90%] ${
-                  msg.sender === "user" ? "self-end" : "self-start"
-                } flex flex-col gap-1`}
-              >
-                {/* Bubble */}
+      {(() => {
+        if (isInitializing) {
+          return (
+            <div className="flex items-center justify-between items-center h-full">
+              <div className="animate-spin rounded-full h-8 w-8 border-2 border-blue-500 border-t-transparent"></div>
+            </div>
+          );
+        }
+
+        if (!hasChatted) {
+          return (
+            <h1 className="text-3xl font-bold text-center flex items-center justify-center h-full text-blue-6">
+              Hello, {name} !!
+            </h1>
+          );
+        }
+
+        return (
+          <div
+            ref={chatContainerRef}
+            className="flex-1 overflow-y-auto px-4 bg-white"
+          >
+            <div className="mt-4 flex flex-col gap-y-6">
+              {messages.map((msg) => (
                 <div
-                  className={`p-3 rounded-lg ${
-                    msg.sender === "user"
-                      ? "bg-[#E4F6FC] text-[#00B0EB]"
-                      : "bg-gray-200 text-black"
-                  }`}
+                  key={msg.id}
+                  className={`max-w-[90%] ${
+                    msg.sender === "user" ? "self-end" : "self-start"
+                  } flex flex-col gap-1`}
                 >
-                  {msg.sender === "assistant" ? (
-                    <ReactMarkdown
-                      remarkPlugins={[remarkGfm]}
-                      rehypePlugins={[rehypeRaw]}
-                      components={{
-                        h1: (props) => (
-                          <h1 className="text-2xl font-bold my-4" {...props} />
-                        ),
-                        h2: (props) => (
-                          <h2 className="text-xl font-bold my-3" {...props} />
-                        ),
-                        h3: (props) => (
-                          <h3 className="text-lg font-bold my-2" {...props} />
-                        ),
-                        p: (props) => <p className="my-2" {...props} />,
-                        ul: (props) => (
-                          <ul className="list-disc pl-5 my-2" {...props} />
-                        ),
-                        ol: (props) => (
-                          <ol className="list-decimal pl-5 my-2" {...props} />
-                        ),
-                        li: (props) => <li className="my-1" {...props} />,
-                        code: ({
-                          inline,
-                          className,
-                          children,
-                          ...props
-                        }: {
-                          inline?: boolean;
-                          className?: string;
-                          children?: React.ReactNode;
-                        }) => {
-                          const match = /language-(\w+)/.exec(className || "");
-                          return !inline && match ? (
-                            <CodeBlock
-                              language={match[1]}
-                              value={String(children).replace(/\n$/, "")}
-                            />
-                          ) : (
-                            <code
-                              className="bg-gray-100 px-1 rounded text-sm"
+                  {/* Bubble */}
+                  <div
+                    className={`p-3 rounded-lg ${
+                      msg.sender === "user"
+                        ? "bg-[#E4F6FC] text-[#00B0EB]"
+                        : "bg-gray-200 text-black"
+                    }`}
+                  >
+                    {msg.sender === "assistant" ? (
+                      <ReactMarkdown
+                        remarkPlugins={[remarkGfm]}
+                        rehypePlugins={[rehypeRaw]}
+                        components={{
+                          h1: (props) => (
+                            <h1
+                              className="text-2xl font-bold my-4"
                               {...props}
-                            >
-                              {children}
-                            </code>
-                          );
-                        },
+                            />
+                          ),
+                          h2: (props) => (
+                            <h2 className="text-xl font-bold my-3" {...props} />
+                          ),
+                          h3: (props) => (
+                            <h3 className="text-lg font-bold my-2" {...props} />
+                          ),
+                          p: (props) => <p className="my-2" {...props} />,
+                          ul: (props) => (
+                            <ul className="list-disc pl-5 my-2" {...props} />
+                          ),
+                          ol: (props) => (
+                            <ol className="list-decimal pl-5 my-2" {...props} />
+                          ),
+                          li: (props) => <li className="my-1" {...props} />,
+                          code: ({
+                            inline,
+                            className,
+                            children,
+                            ...props
+                          }: {
+                            inline?: boolean;
+                            className?: string;
+                            children?: React.ReactNode;
+                          }) => {
+                            const match = /language-(\w+)/.exec(
+                              className ?? ""
+                            );
+                            return !inline && match ? (
+                              <CodeBlock
+                                language={match[1]}
+                                value={
+                                  typeof children === "string"
+                                    ? children.replace(/\n$/, "")
+                                    : Array.isArray(children)
+                                    ? children.join("").replace(/\n$/, "")
+                                    : ""
+                                }                                
+                              />
+                            ) : (
+                              <code
+                                className="bg-gray-100 px-1 rounded text-sm"
+                                {...props}
+                              >
+                                {children}
+                              </code>
+                            );
+                          },
+                        }}
+                      >
+                        {msg.content}
+                      </ReactMarkdown>
+                    ) : (
+                      <p className="whitespace-pre-wrap">{msg.content}</p>
+                    )}
+                  </div>
+
+                  {msg.sender === "assistant" && (
+                    <button
+                      onClick={() => {
+                        setIsExportModalVisible(true);
+                        setExportModalData({
+                          id: msg.id,
+                          content: msg.content,
+                        });
                       }}
                     >
-                      {msg.content}
-                    </ReactMarkdown>
-                  ) : (
-                    <p className="whitespace-pre-wrap">{msg.content}</p>
+                      <Image
+                        src="/icon-download.svg"
+                        width={20}
+                        height={20}
+                        alt="Download"
+                        className="cursor-pointer"
+                      />
+                    </button>
                   )}
                 </div>
+              ))}
 
-                {msg.sender === "assistant" && (
-                  <button
-                    onClick={() => {
-                      setIsExportModalVisible(true);
-                      setExportModalData({ id: msg.id, content: msg.content });
-                    }}
-                  >
-                    <Image
-                      src="/icon-download.svg"
-                      width={20}
-                      height={20}
-                      alt="Download"
-                      className="cursor-pointer"
-                    />
-                  </button>
-                )}
-              </div>
-            ))}
+              {isExportModalVisible && exportModalData && (
+                <ExportModal
+                  key={exportModalData.id}
+                  isVisible={!!exportModalData}
+                  onClose={() => {
+                    setExportModalData(null);
+                    setIsExportModalVisible(false);
+                  }}
+                  content={exportModalData.content}
+                  title={`Laporan-${exportModalData.id}`}
+                />
+              )}
 
-            {isExportModalVisible && exportModalData && (
-              <ExportModal
-                key={exportModalData.id}
-                isVisible={!!exportModalData}
-                onClose={() => {
-                  setExportModalData(null);
-                  setIsExportModalVisible(false);
-                }}
-                content={exportModalData.content}
-                title={`Laporan-${exportModalData.id}`}
-              />
-            )}
-
-            {isLoading && (
-              <div className="p-3 rounded-lg max-w-[90%] bg-gray-200 text-black self-start">
-                AI is typing...
-              </div>
-            )}
+              {isLoading && (
+                <div className="p-3 rounded-lg max-w-[90%] bg-gray-200 text-black self-start">
+                  AI is typing...
+                </div>
+              )}
+            </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* Footer input */}
       <div className="w-full pb-5 pt-3">
@@ -421,7 +445,7 @@ export default function ChatBox() {
             <button
               className="flex items-center justify-center transition disabled:opacity-50"
               onClick={sendMessage}
-              disabled={isLoading || !input.trim()}
+              disabled={isLoading ?? !input.trim()}
             >
               <Image
                 src="/icon-send.svg"
