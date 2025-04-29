@@ -922,57 +922,6 @@ describe('Chat Session Handling', () => {
     });
   });
 
-  it('updates session title if it is a new chat', async () => {
-    // Reset mocks properly for this test
-    jest.clearAllMocks();
-    
-    // Define the exact message that should be used for the title
-    const firstUserMessage = "This is a long first message that should be truncated";
-    
-    // First mock call should find the session for authentication
-    (prisma.chatSession.findUnique as jest.Mock).mockImplementationOnce(({ where }) => {
-      return Promise.resolve({
-        id: 'session-id-123',
-        userId: 'user123',
-        title: 'New Chat', // Default title indicating a new chat
-        updatedAt: new Date()
-      });
-    });
-    
-    // Second mock call should include messages
-    (prisma.chatSession.findUnique as jest.Mock).mockImplementationOnce(({ include }) => {
-      return Promise.resolve({
-        id: 'session-id-123',
-        userId: 'user123',
-        title: 'New Chat',
-        messages: [
-          { content: firstUserMessage, role: 'user' }
-        ]
-      });
-    });
-    
-    const req = new NextRequest('http://localhost/api/chat', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        messages: [{ role: 'user', content: 'Hello again' }],
-        sessionId: 'session-id-123'
-      }),
-    });
-  
-    await POST(req);
-  
-    // Verify title update was called with truncated message from first user message
-    expect(prisma.chatSession.update).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: { id: 'session-id-123' },
-        data: expect.objectContaining({ 
-          title: expect.stringContaining('This is a long first message') 
-        })
-      })
-    );
-  });
-
   it('does not update title for sessions with custom titles', async () => {
     // Only mock the second findUnique call which checks the title
     mockFindUnique

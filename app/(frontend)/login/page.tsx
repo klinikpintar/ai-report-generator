@@ -6,11 +6,12 @@ import FeAuthService from "./services/feAuthService";
 import { useUser } from "@/app/(frontend)/login/context/userContext";
 import FormInput from "@frontend/components/form-input";
 import { toast } from "react-toastify";
+import Navbar from "@frontend/components/navbar";
 import PasswordInput from "@frontend/components/password-input";
 
 const LoginPage = () => {
   const [email, setEmail] = useState("");
-  const { setEmailContext } = useUser();
+  const { setEmailContext, setNameContext } = useUser();
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
@@ -28,14 +29,21 @@ const LoginPage = () => {
       const { success } = await FeAuthService.login(email, password);
 
       if (success) {
-        setEmailContext(email);
+        const data = await FeAuthService.getUser();
+        const user = data.data.user;
+        setEmailContext(user.email);
+        setNameContext(user.name);
         localStorage.setItem("userEmail", email);
+        localStorage.setItem("userName", user.name);
         toast.success("Login successful! Redirecting...");
 
         // Delay sebentar untuk pengguna melihat toast
         setTimeout(() => {
+          if (user.role === "ADMIN") {
+            router.push("/admin");
+          }
           router.push("/");
-        }, 500);
+        }, 200);
       } else {
         toast.error("Login failed. Please check your credentials.");
       }
@@ -49,6 +57,7 @@ const LoginPage = () => {
 
   return (
     <div className="flex items-center justify-center min-h-screen">
+      <Navbar />
       <div className="max-w-2xl p-8">
         {/* Judul */}
         <h2 className="font-bold text-center text-blue-6 text-[32px]">
@@ -82,8 +91,9 @@ const LoginPage = () => {
 
           <button
             type="submit"
-            className={`w-full mt-4 font-semibold text-18 py-3 px-6 rounded-[50px] ${loading ? "bg-blue-6/80 cursor-not-allowed" : "bg-blue-6"
-              } text-white`}
+            className={`w-full mt-4 font-semibold text-18 py-3 px-6 rounded-[50px] ${
+              loading ? "bg-blue-6/80 cursor-not-allowed" : "bg-blue-6"
+            } text-white`}
             disabled={loading}
           >
             {loading ? "Logging in..." : "Login"}
