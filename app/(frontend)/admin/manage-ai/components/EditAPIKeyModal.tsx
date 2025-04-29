@@ -2,7 +2,7 @@ import ButtonSubmit from "@frontend/components/button-submit";
 import FormInput from "@frontend/components/form-input";
 import Modal from "@frontend/components/Modal";
 import React, { useState } from "react";
-import { patchApiKey } from "../utils/api";
+import { patchApiKey } from "../utils/api/patch-api-key";
 import { toast } from "react-toastify";
 
 interface Props {
@@ -19,6 +19,10 @@ export const EditAPIKeyModal = ({ isVisible, onClose, providerId, providerName }
     setApiKey(event.target.value);
   };
 
+  const clearForm = () => {
+    setApiKey("");
+  }
+
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     const response = await patchApiKey({ providerId, apiKey });
@@ -28,6 +32,7 @@ export const EditAPIKeyModal = ({ isVisible, onClose, providerId, providerName }
       toast.error("Failed to update API Key: " + response.message);
     }
     onClose();
+    clearForm();
   };
 
   return (
@@ -56,7 +61,7 @@ export const EditAPIKeyModal = ({ isVisible, onClose, providerId, providerName }
             onClick={(e) => {
               e.preventDefault();
               onClose();
-              // clearForm();
+              clearForm();
             }}
           >
             Batal
