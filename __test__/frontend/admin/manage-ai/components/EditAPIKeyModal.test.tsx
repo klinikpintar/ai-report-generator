@@ -2,9 +2,9 @@ import { EditAPIKeyModal } from "@frontend/admin/manage-ai/components/EditAPIKey
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { ToastContainer } from "react-toastify";
-import { patchApiKey } from "@frontend/admin/manage-ai/utils/api";
+import { patchApiKey } from "@frontend/admin/manage-ai/utils/api/patch-api-key";
 
-jest.mock("@frontend/admin/manage-ai/utils/api", () => ({
+jest.mock("@frontend/admin/manage-ai/utils/api/patch-api-key", () => ({
   patchApiKey: jest.fn(),
 }));
 

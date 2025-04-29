@@ -1,16 +1,11 @@
 import { render, screen, fireEvent } from "@testing-library/react";
-import AIBox from "@frontend/admin/manage-ai/components/ai-box";
-import '@testing-library/jest-dom';
-import { JSX, ClassAttributes, ImgHTMLAttributes } from "react";
+import AIBox, { AIBoxProps } from "@frontend/admin/manage-ai/components/ai-box";
+import "@testing-library/jest-dom";
+import { mockAiProviders } from "@/__mocks__/ai-providers-data";
 
-jest.mock("next/image", () => (props: JSX.IntrinsicAttributes & ClassAttributes<HTMLImageElement> & ImgHTMLAttributes<HTMLImageElement>) => {
-  return <img {...props} />;
-});
-
-const mockProps = {
-  modelName: "DeepSeek",
-  logoPath: "/logo-deepseek.png",
-  models: ["o4", "o3-mini", "deepseek-coder", "deepseek-chat"],
+const mockProps:AIBoxProps = {
+  provider: mockAiProviders[0],
+  refreshProviders: jest.fn(),
 };
 
 describe("AIBox", () => {

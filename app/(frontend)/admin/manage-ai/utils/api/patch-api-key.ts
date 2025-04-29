@@ -11,14 +11,14 @@ type PatchApiKeyResponse = {
 
 export const patchApiKey = async ({ providerId, apiKey }: PatchApiKeyParams) => {
   try {
-    const response = await fetch('/api/manage-ai/api-key', {
+    const response = await fetch('/api/ai/key', {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        id_ai: providerId,
-        api_key: apiKey,
+        providerId,
+        apiKey,
       }),
     });
     const data: PatchApiKeyResponse = await response.json();
@@ -27,7 +27,11 @@ export const patchApiKey = async ({ providerId, apiKey }: PatchApiKeyParams) => 
       throw new Error(data.message);
     }
 
-    return data;
+    return {
+      success: true,
+      message: 'API key updated successfully',
+    } as PatchApiKeyResponse;
+    
   } catch (error) {
     return {
       success: false,
