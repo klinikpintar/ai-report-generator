@@ -25,9 +25,8 @@ export default function ExportModal({
     }
 
     try {
-      const token = localStorage.getItem("access_token");
       const createdAt = new Date().toISOString().split("T")[0];
-      const fileName = `report-${createdAt}`;
+      const fileName = `Klinik Pintar Laporan - ${title}`;
 
       const endpoint =
         selectedFormat === "markdown"
@@ -38,7 +37,6 @@ export default function ExportModal({
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           reportData: {
@@ -51,7 +49,7 @@ export default function ExportModal({
 
       if (!res.ok) {
         const error = await res.json();
-        setErrorMessage(error.message || "Terjadi kesalahan saat mengekspor laporan.");
+        setErrorMessage(error.message ?? "Terjadi kesalahan saat mengekspor laporan.");
         return;
       }
 

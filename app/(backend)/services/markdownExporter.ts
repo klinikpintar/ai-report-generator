@@ -12,7 +12,7 @@ export class MarkdownExporter implements IExporter {
     return "text/markdown";
   }
 
-  getFileName(): string {
-    return `report-${Date.now()}.md`;
+  getFileName(title: string): string {
+    return `Klinik Pintar Laporan - ${title}.md`;
   }
 }

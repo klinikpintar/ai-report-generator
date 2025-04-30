@@ -17,12 +17,6 @@ interface RoleConfig {
   restrictedPaths: string[];
 }
 
-interface ApiRule {
-  paths: string[];
-  allowedRoles: ROLE[];
-  methods: string[];
-}
-
 // Constants
 const FIVE_MINUTES_IN_SECONDS = 300;
 
@@ -43,27 +37,59 @@ const ROLE_REDIRECTS: Record<ROLE, RoleConfig> = {
   },
 };
 
-const API_ACCESS_RULES: ApiRule[] = [
+const API_ACCESS_RULES: {
+  path: string;
+  permissions: Record<ROLE, string[]>;
+}[] = [
   {
-    paths: ["/chat", "/ekspor"],
-    allowedRoles: ["BUSINESS_ANALYST"],
-    methods: ["GET", "POST", "PUT", "DELETE"],
+    path: "/chat",
+    permissions: {
+      BUSINESS_ANALYST: ["POST"],
+      ADMIN: [],
+    },
   },
   {
-    paths: ["/users"],
-    allowedRoles: ["ADMIN"],
-    methods: ["GET", "POST", "PUT", "DELETE"],
+    path: "/ekspor",
+    permissions: {
+      BUSINESS_ANALYST: ["POST"],
+      ADMIN: [],
+    },
   },
   {
-    paths: ["/service", "/schema"],
-    allowedRoles: ["ADMIN", "BUSINESS_ANALYST"],
-    methods: ["GET"],
+    path: "/users",
+    permissions: {
+      ADMIN: ["GET", "POST", "DELETE", "PATCH"],
+      BUSINESS_ANALYST: [],
+    },
   },
   {
-    paths: ["/service", "/schema"],
-    allowedRoles: ["ADMIN"],
-    methods: ["POST", "PUT", "DELETE"],
+    path: "/service",
+    permissions: {
+      ADMIN: ["GET", "POST", "DELETE"],
+      BUSINESS_ANALYST: ["GET"],
+    },
   },
+  {
+    path: "/schema",
+    permissions: {
+      ADMIN: ["GET", "POST", "PATCH", "DELETE"],
+      BUSINESS_ANALYST: ["GET"],
+    },
+  },
+  {
+    path: "/chat-session",
+    permissions: {
+      ADMIN: [],
+      BUSINESS_ANALYST: ["GET", "POST", "DELETE", "PATCH"],
+    },
+  },
+  {
+    path: "/ai",
+    permissions: {
+      ADMIN: ["PATCH"],
+      BUSINESS_ANALYST: ["GET"],
+    },
+  }
 ];
 
 // Token management functions
@@ -141,19 +167,26 @@ function checkApiAccess(
   role: ROLE,
   method: string
 ): NextResponse | null {
-  for (const rule of API_ACCESS_RULES) {
-    const pathMatches = rule.paths.some((path) => pathname.includes(path));
-    if (pathMatches) {
-      const isAllowedRole = rule.allowedRoles.includes(role);
-      const isAllowedMethod = rule.methods.includes(method);
+  const matchingRule = API_ACCESS_RULES.find((rule) =>
+    pathname.includes(rule.path)
+  );
 
-      if (!isAllowedRole || !isAllowedMethod) {
-        return NextResponse.json({ message: "Unauthorized" }, { status: 403 });
-      }
+  if (matchingRule) {
+    const allowedMethods = matchingRule.permissions[role] || [];
+
+    if (allowedMethods.length === 0) {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 403 });
+    }
+
+    if (!allowedMethods.includes(method)) {
+      return NextResponse.json(
+        { message: "Method Not Allowed" },
+        { status: 405 }
+      );
     }
   }
 
-  return null; // Access granted
+  return null;
 }
 
 function getRedirectURL(role: ROLE, pathname: string): string | null {
@@ -203,17 +236,13 @@ export async function middleware(req: NextRequest, event: NextFetchEvent) {
   }
 
   if (user.exp && isTokenAboutToExpire(user.exp)) {
-    event.waitUntil(handleBackgroundTokenRefresh(refreshToken || ""));
+    event.waitUntil(handleBackgroundTokenRefresh(refreshToken ?? ""));
   }
 
   if (isApiRoute(pathname)) {
     event.waitUntil(logAccess(user.id, pathname, user.role));
-
     const accessResult = checkApiAccess(pathname, user.role, req.method);
-    if (accessResult) {
-      return accessResult;
-    }
-
+    if (accessResult) return accessResult;
     return NextResponse.next();
   }
 

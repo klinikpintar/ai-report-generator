@@ -38,12 +38,10 @@ const LoginPage = () => {
         toast.success("Login successful! Redirecting...");
 
         // Delay sebentar untuk pengguna melihat toast
-        setTimeout(() => {
-          if (user.role === "ADMIN") {
-            router.push("/admin");
-          }
-          router.push("/");
-        }, 200);
+        if (user.role === "ADMIN") {
+          router.push("/admin");
+        }
+        router.push("/");
       } else {
         toast.error("Login failed. Please check your credentials.");
       }

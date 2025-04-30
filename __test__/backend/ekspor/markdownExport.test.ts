@@ -24,8 +24,8 @@ describe("MarkdownExporter", () => {
 
   it("should generate a valid file name", () => {
     const exporter = new MarkdownExporter();
-    const filename = exporter.getFileName();
-    expect(filename).toMatch(/^report-\d+\.md$/);
+    const filename = exporter.getFileName(mockData.title);
+    expect(filename).toBe(`Klinik Pintar Laporan - ${mockData.title}.md`);
   });
 });
 
