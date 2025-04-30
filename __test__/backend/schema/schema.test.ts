@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import { StatusCodes } from "http-status-codes";
 import { POST, GET, PATCH, DELETE } from "@backend/api/schema/route";
 import prisma from "@/lib/prisma";
-import { Prisma } from "@prisma/client";
+import { Prisma, Schema } from "@prisma/client";
 import { ZodError } from "zod";
 
 jest.mock("@/lib/prisma", () => ({
@@ -13,6 +13,7 @@ jest.mock("@/lib/prisma", () => ({
     findUnique: jest.fn().mockResolvedValue(null),
     update: jest.fn().mockResolvedValue({ id: 1, description: "Updated table description" }),
     delete: jest.fn().mockResolvedValue({ id: 1 }),
+    count: jest.fn().mockResolvedValue(1),
   },
 }));
 
@@ -28,6 +29,8 @@ jest.mock("@backend/utils/schemaUtils", () => {
             message: "Invalid schema format",
             path: ["name"],
             code: "invalid_type",
+            expected: "string",
+            received: "object",
           },
         ]);
       }
@@ -51,7 +54,7 @@ const invalidSchemaData = {
   name: "invalid_schema",
 };
 
-const sendRequest = (method: string, body?: any) => {
+const sendRequest = (method: string, body?: Record<string, unknown>) => {
   return new NextRequest(new URL("http://localhost/api/schema"), {
     method,
     headers: { "Content-Type": "application/json" },
@@ -59,24 +62,11 @@ const sendRequest = (method: string, body?: any) => {
   });
 };
 
-describe("CRUD of Schema API (Using NextRequest)", () => {
+describe("CUD of Schema API (Using NextRequest)", () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
-  it("should return INTERNAL_SERVER_ERROR when GET fails", async () => {
-  
-    (prisma.schema.findMany as jest.Mock).mockRejectedValue(new Error("Database error"));
-  
-    const request = sendRequest("GET");
-    const response = await GET(request);
-    const json = await response.json();
-  
-  
-    expect(response.status).toBe(StatusCodes.INTERNAL_SERVER_ERROR);
-    expect(json.error).toBe("GET Schemas: Internal Server Error");
-  });
-  
 
   it("should create a schema", async () => {
     const request = sendRequest("POST", validSchemaData);
@@ -108,41 +98,41 @@ describe("CRUD of Schema API (Using NextRequest)", () => {
   });
 
   it("should return NOT_FOUND when deleting a non-existing schema", async () => {
-  
+
     (prisma.schema.delete as jest.Mock).mockRejectedValue(
       new Prisma.PrismaClientKnownRequestError("Record to delete does not exist.", {
         code: "P2025",
         clientVersion: "4.10.0",
       })
     );
-  
+
     const response = await DELETE(sendRequest("DELETE", { id: NON_EXISTING_ID }));
     const json = await response.json();
-  
-  
+
+
     expect(response.status).toBe(StatusCodes.NOT_FOUND);
     expect(json.error).toBe("Instance not found");
   });
-  
+
   it("should update a schema successfully", async () => {
-  
+
     (prisma.schema.update as jest.Mock).mockResolvedValue({
       id: 1,
       name: "products",
       description: "Updated table description",
       schemaText: "CREATE TABLE products (id SERIAL PRIMARY KEY, name TEXT);",
     });
-  
+
     const request = sendRequest("PATCH", { id: 1, description: "Updated table description" });
     const response = await PATCH(request);
     const json = await response.json();
-  
-  
+
+
     expect(response.status).toBe(StatusCodes.OK);
     expect(json.description).toBe("Updated table description");
   });
 
-  
+
   it("should return CONFLICT when updating schema to an existing schema name", async () => {
     (prisma.schema.update as jest.Mock).mockRejectedValue(
       new Prisma.PrismaClientKnownRequestError("Unique constraint failed", {
@@ -181,85 +171,32 @@ describe("CRUD of Schema API (Using NextRequest)", () => {
   });
 
   it("should delete a schema", async () => {
-  
+
     (prisma.schema.findUnique as jest.Mock).mockResolvedValue({ id: 1, name: "products" });
-  
-  
+
+
     (prisma.schema.delete as jest.Mock).mockResolvedValue({ id: 1 });
-  
+
     const request = sendRequest("DELETE", { id: 1 });
     const response = await DELETE(request);
     const json = await response.json();
-  
-  
+
+
     expect(response.status).toBe(StatusCodes.OK);
     expect(json.message).toBe("Schema deleted successfully");
   });
-  
+
 
   it("should remove schema from list after deletion", async () => {
     await DELETE(sendRequest("DELETE", { id: 1 }));
+    (prisma.schema.count as jest.Mock).mockResolvedValue(0);
     (prisma.schema.findMany as jest.Mock).mockResolvedValue([]);
 
     const request = sendRequest("GET");
     const response = await GET(request);
     const json = await response.json();
 
-    expect(json.some((schema: any) => schema.name === validSchemaData.name)).toBe(false);
+    expect(json.data.some((schema: Schema) => schema.name === validSchemaData.name)).toBe(false);
   });
 
-  it("should return schemas filtered by serviceIds (UUIDs)", async () => {
-    const SERVICE_ID_1 = "bd7a4c7a-1234-4c5e-b123-df12345abcd1";
-    const SERVICE_ID_2 = "bd7a4c7a-1234-4c5e-b123-df12345abcd2";
-  
-    const filteredSchemas = [
-      {
-        id: 1,
-        name: "products",
-        description: "Table for product info",
-        schemaText: "CREATE TABLE products (id SERIAL PRIMARY KEY);",
-        serviceId: SERVICE_ID_1,
-      },
-      {
-        id: 2,
-        name: "users",
-        description: "Table for user info",
-        schemaText: "CREATE TABLE users (id SERIAL PRIMARY KEY);",
-        serviceId: SERVICE_ID_2,
-      },
-    ];
-  
-    (prisma.schema.findMany as jest.Mock).mockImplementation(({ where }) => {
-      return Promise.resolve(
-        filteredSchemas.filter((schema) =>
-          where.serviceId.in.includes(schema.serviceId)
-        )
-      );
-    });
-  
-    const request = new NextRequest(
-      new URL(
-        `http://localhost/api/schema?serviceIds=${SERVICE_ID_1}&serviceIds=${SERVICE_ID_2}`
-      ),
-      {
-        method: "GET",
-      }
-    );
-  
-    const response = await GET(request);
-    const json = await response.json();
-  
-    expect(prisma.schema.findMany).toHaveBeenCalledWith({
-      where: { serviceId: { in: [SERVICE_ID_1, SERVICE_ID_2] } },
-      include: {
-        service: true,
-      },
-    });
-  
-    expect(response.status).toBe(StatusCodes.OK);
-    expect(json.length).toBe(2);
-    expect(json[0].serviceId).toBe(SERVICE_ID_1);
-    expect(json[1].serviceId).toBe(SERVICE_ID_2);
-  });
-  
 });

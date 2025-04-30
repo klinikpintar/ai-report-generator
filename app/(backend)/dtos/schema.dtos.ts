@@ -6,3 +6,31 @@ export const CreateSchemaDto = z.object({
   schemaText: z.string().min(1, 'Schema text is required'),
   serviceId: z.string().uuid('Service ID is required'),
 });
+
+const PLATFORM_CODES = ['POSTGRESQL', 'MYSQL', 'MONGODB'];
+
+export const GetSchemaDto = z.object({
+  page: z
+    .string()
+    .optional()
+    .transform((val) => parseInt(val ?? "1"))
+    .refine((val) => val > 0, { message: "Page must be greater than 0" }),
+
+  limit: z
+    .string()
+    .optional()
+    .transform((val) => parseInt(val ?? "10"))
+    .refine((val) => val > 0, { message: "Limit must be greater than 0" }),
+
+  serviceIds: z
+    .array(z.string().uuid({ message: 'Service ID must be a valid UUID' }))
+    .optional(),
+
+  platformCodes: z
+    .array(z.string())
+    .transform((val) => val.map((code) => code.toUpperCase()))
+    .refine((val) => val.every((code) => PLATFORM_CODES.includes(code)), {
+      message: `Platform codes must be one of: ${PLATFORM_CODES.join(', ')}`,
+    })
+    .optional(),
+})

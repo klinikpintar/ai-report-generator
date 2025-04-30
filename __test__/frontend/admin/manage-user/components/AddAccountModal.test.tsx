@@ -3,6 +3,7 @@ import AddAccountModal from "@frontend/admin/manage-user/components/addAccountMo
 import userEvent from "@testing-library/user-event";
 import { toast } from "react-toastify";
 import axios from "axios";
+import { UserTableProvider } from "@frontend/admin/manage-user/context/UserTableContext";
 
 jest.mock("axios");
 const mockedAxios = axios as jest.Mocked<typeof axios>;
@@ -18,23 +19,33 @@ const mockedToast = toast as jest.Mocked<typeof toast>;
 describe('AddAccountModal', () => {
   const mockOnClose = jest.fn();
 
+  const renderWithWrapper = (
+    component: React.ReactNode
+  ) => {
+    return render(
+      <UserTableProvider>
+        {component}
+      </UserTableProvider>
+    );
+  }
+
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
   it("should be hidden when first rendered", () => {
-    render(<AddAccountModal isVisible={false} onClose={() => { }} />);
+    renderWithWrapper(<AddAccountModal isVisible={false} onClose={() => { }} />);
 
     expect(screen.getByText("Sign up new account")).toHaveAttribute("aria-hidden", "true");
   });
 
   it('should render correctly when visible', () => {
-    render(<AddAccountModal isVisible={true} onClose={mockOnClose} />);
+    renderWithWrapper(<AddAccountModal isVisible={true} onClose={mockOnClose} />);
     expect(screen.getByText('Sign up new account')).toBeVisible();
   });
 
   it('should call handleClose and clear the form when Batal button is clicked', async () => {
-    render(<AddAccountModal isVisible={true} onClose={mockOnClose} />);
+    renderWithWrapper(<AddAccountModal isVisible={true} onClose={mockOnClose} />);
 
     await userEvent.type(screen.getByLabelText('Nama Lengkap'), 'John Doe');
 
@@ -43,14 +54,14 @@ describe('AddAccountModal', () => {
     expect(mockOnClose).toHaveBeenCalled();
 
     // re-render the component, simulate reopen the modal
-    render(<AddAccountModal isVisible={true} onClose={mockOnClose} />);
+    renderWithWrapper(<AddAccountModal isVisible={true} onClose={mockOnClose} />);
 
     // Check that the field is empty in the new render
     expect(screen.getByLabelText('Nama Lengkap')).toHaveValue('');
   });
 
   it('should show validate required field that is not handled by HTML form validation', async () => {
-    render(<AddAccountModal isVisible={true} onClose={mockOnClose} />);
+    renderWithWrapper(<AddAccountModal isVisible={true} onClose={mockOnClose} />);
 
     const button = screen.getByRole('button', { name: /simpan/i });
     const form = button.closest('form');
@@ -63,7 +74,7 @@ describe('AddAccountModal', () => {
   });
 
   it('should validate password length', async () => {
-    render(<AddAccountModal isVisible={true} onClose={mockOnClose} />);
+    renderWithWrapper(<AddAccountModal isVisible={true} onClose={mockOnClose} />);
 
     // Fill in all fields except password is too short
     await userEvent.type(screen.getByLabelText('Nama Lengkap'), 'John Doe');
@@ -86,7 +97,7 @@ describe('AddAccountModal', () => {
   });
 
   it('should validate password match', async () => {
-    render(<AddAccountModal isVisible={true} onClose={mockOnClose} />);
+    renderWithWrapper(<AddAccountModal isVisible={true} onClose={mockOnClose} />);
 
     // Fill form with mismatched passwords
     await userEvent.type(screen.getByLabelText('Nama Lengkap'), 'John Doe');
@@ -112,7 +123,7 @@ describe('AddAccountModal', () => {
     // Mock successful API response
     mockedAxios.post.mockResolvedValueOnce({ data: { success: true } });
 
-    render(<AddAccountModal isVisible={true} onClose={mockOnClose} />);
+    renderWithWrapper(<AddAccountModal isVisible={true} onClose={mockOnClose} />);
 
     // Fill form with valid data
     await userEvent.type(screen.getByLabelText('Nama Lengkap'), 'John Doe');
@@ -152,7 +163,7 @@ describe('AddAccountModal', () => {
       }
     });
 
-    render(<AddAccountModal isVisible={true} onClose={mockOnClose} />);
+    renderWithWrapper(<AddAccountModal isVisible={true} onClose={mockOnClose} />);
 
     // Fill form with valid data
     await userEvent.type(screen.getByLabelText('Nama Lengkap'), 'John Doe');
@@ -177,7 +188,7 @@ describe('AddAccountModal', () => {
     // Mock successful API response
     mockedAxios.post.mockResolvedValueOnce({ data: { success: true } });
 
-    render(<AddAccountModal isVisible={true} onClose={mockOnClose} />);
+    renderWithWrapper(<AddAccountModal isVisible={true} onClose={mockOnClose} />);
 
     // Fill form with valid data
     await userEvent.type(screen.getByLabelText('Nama Lengkap'), 'John Doe');
@@ -210,7 +221,7 @@ describe('AddAccountModal', () => {
       }
     });
 
-    render(<AddAccountModal isVisible={true} onClose={mockOnClose} />);
+    renderWithWrapper(<AddAccountModal isVisible={true} onClose={mockOnClose} />);
 
     // Fill form with valid data
     await userEvent.type(screen.getByLabelText('Nama Lengkap'), 'John Doe');
@@ -240,7 +251,7 @@ describe('AddAccountModal', () => {
         }
       }
     });
-    render(<AddAccountModal isVisible={true} onClose={mockOnClose} />);
+    renderWithWrapper(<AddAccountModal isVisible={true} onClose={mockOnClose} />);
 
     // Fill form with valid data
     await userEvent.type(screen.getByLabelText('Nama Lengkap'), 'John Doe');
@@ -270,7 +281,7 @@ describe('AddAccountModal', () => {
         }
       }
     });
-    render(<AddAccountModal isVisible={true} onClose={mockOnClose} />);
+    renderWithWrapper(<AddAccountModal isVisible={true} onClose={mockOnClose} />);
 
     // Fill form with valid data
     await userEvent.type(screen.getByLabelText('Nama Lengkap'), 'John Doe');
@@ -290,4 +301,75 @@ describe('AddAccountModal', () => {
       );
     });
   })
+
+  it('should toggle password visibility when the show password button is clicked', async () => {
+    renderWithWrapper(<AddAccountModal isVisible={true} onClose={mockOnClose} />);
+  
+    // Find password fields and toggle buttons
+    const passwordInput = screen.getByLabelText('Password');
+    const confirmPasswordInput = screen.getByLabelText('Confirm Password');
+    
+    const showPasswordButton = screen.getByLabelText('Show password');
+    
+    // Verify initially passwords are hidden (type is password)
+    expect(passwordInput).toHaveAttribute('type', 'password');
+    expect(confirmPasswordInput).toHaveAttribute('type', 'password');
+    
+    await userEvent.click(showPasswordButton);
+    
+    // Verify password is now visible (type is text)
+    expect(passwordInput).toHaveAttribute('type', 'text');
+    expect(confirmPasswordInput).toHaveAttribute('type', 'password'); // Confirm password field should still be hidden
+    
+    // Toggle password back to hidden
+    await userEvent.click(showPasswordButton);
+    
+    // Verify password and confirm password fields are hidden again
+    expect(passwordInput).toHaveAttribute('type', 'password');
+    expect(confirmPasswordInput).toHaveAttribute('type', 'password');
+  });
+
+  it('should toggle confirm password visibility when the show confirm password button is clicked', async () => {
+    renderWithWrapper(<AddAccountModal isVisible={true} onClose={mockOnClose} />);
+  
+    // Find password fields and toggle buttons
+    const passwordInput = screen.getByLabelText('Password');
+    const confirmPasswordInput = screen.getByLabelText('Confirm Password');
+    
+    const showConfirmPasswordButton = screen.getByLabelText('Show confirm password');
+    
+    // Verify initially passwords are hidden (type is password)
+    expect(passwordInput).toHaveAttribute('type', 'password');
+    expect(confirmPasswordInput).toHaveAttribute('type', 'password');
+    
+    await userEvent.click(showConfirmPasswordButton);
+    
+    // Verify confirm password is now visible
+    expect(passwordInput).toHaveAttribute('type', 'password'); // Password field should still be hidden
+    expect(confirmPasswordInput).toHaveAttribute('type', 'text');
+    
+    // Toggle confirm password back to hidden
+    await userEvent.click(showConfirmPasswordButton);
+    
+     // Verify password and confirm password fields are hidden again
+     expect(passwordInput).toHaveAttribute('type', 'password');
+     expect(confirmPasswordInput).toHaveAttribute('type', 'password');
+  });
+
+  it('should update aria-label when toggling password visibility', async () => {
+    renderWithWrapper(<AddAccountModal isVisible={true} onClose={mockOnClose} />);
+    
+    const showPasswordButton = screen.getByLabelText('Show password');
+    
+    // Initially the aria-label should be "Show password"
+    expect(showPasswordButton).toHaveAttribute('aria-label', 'Show password');
+    
+    // After clicking, the aria-label should change
+    await userEvent.click(showPasswordButton);
+    expect(showPasswordButton).toHaveAttribute('aria-label', 'Hide password');
+    
+    // After clicking again, the aria-label should revert
+    await userEvent.click(showPasswordButton);
+    expect(showPasswordButton).toHaveAttribute('aria-label', 'Show password');
+  });
 });

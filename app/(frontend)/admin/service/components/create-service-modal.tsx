@@ -7,6 +7,7 @@ import { ConfirmationDialog } from "@frontend/admin/schema/components/confirmati
 import FormInput from "@frontend/components/form-input";
 import SelectInput from "@frontend/components/select-input";
 import ButtonSubmit from "@frontend/components/button-submit";
+import { eventBus, EVENTS } from "@frontend/common/utils/event-bus";
 
 interface Props {
   isVisible: boolean;
@@ -67,9 +68,8 @@ const CreateServiceModal = ({ isVisible, onClose }: Props) => {
         setServices(
           services.filter((service) => service.id !== serviceToDelete)
         );
+        eventBus.publish(EVENTS.SERVICE_UPDATED); // Notify other components
         toast.success("Service successfully deleted");
-      } else {
-        toast.error(`Failed to delete service: ${response.statusText}`);
       }
     } catch (error) {
       toast.error(`Error deleting service: ${error}`);
@@ -125,6 +125,7 @@ const CreateServiceModal = ({ isVisible, onClose }: Props) => {
         toast.success("Service successfully added");
         setFormData({ name: "", platform: "" });
         onClose();
+        eventBus.publish(EVENTS.SERVICE_UPDATED); // Notify other components
       } else {
         toast.error(`Failed to submit service: ${response.statusText}`);
       }

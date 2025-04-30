@@ -1,6 +1,6 @@
 "use client";
 import { GenericTable, GenericTableColumn, TablePagination } from "@frontend/components/table";
-import React from "react";
+import React, { useEffect } from "react";
 import { User, UserRole } from "../types/user";
 import { Chip } from "@/components/ui/chip";
 import { cn } from "@/lib/utils";
@@ -11,11 +11,23 @@ import { toast } from "react-toastify";
 import { useFetchUser } from "../hooks/useFetchUser";
 import { useUserTablePagination } from "../hooks/useUserTablePagination";
 
-export const UserTable = () => {
+type UserTableProps = {
+  onEditUser: (user: User) => void;
+  onDeleteUser: (user: User) => void;
+};
+
+export const UserTable: React.FC<UserTableProps> = ({
+  onEditUser,
+  onDeleteUser
+}) => {
   const { state } = useUserTableContext();
 
-  const { handleFetchUsers } = useFetchUser();
-  const { handlePageChange } = useUserTablePagination(handleFetchUsers);
+  const { refreshUsers } = useFetchUser();
+  const { handlePageChange } = useUserTablePagination();
+
+  useEffect(() => {
+    refreshUsers();
+  }, [state.pagination.currentPage, state.filters.role.selected]);
 
   React.useEffect(() => {
     if (state.error) {
@@ -80,13 +92,13 @@ export const UserTable = () => {
       key: "actions",
       header: "Aksi",
       width: "20%",
-      renderCell: () => (
+      renderCell: (user) => (
         <div className="flex gap-2">
           <Button
             size="sm"
             role="button"
             name="Edit"
-            onClick={() => {}}
+            onClick={() => {onEditUser(user)}}
             className="bg-blue-6 hover:bg-blue-6/90"
           >
             Edit
@@ -96,7 +108,7 @@ export const UserTable = () => {
             size="sm"
             role="button"
             name="Delete"
-            onClick={() => {}}
+            onClick={() => {onDeleteUser(user)}}
             className="text-red-500 hover:text-red-700 border-red-500 border-2"
           >
             Hapus

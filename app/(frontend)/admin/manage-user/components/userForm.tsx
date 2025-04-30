@@ -1,6 +1,7 @@
 import React from "react";
 import FormInput from "@frontend/components/form-input";
 import ButtonSubmit from "@frontend/components/button-submit";
+import PasswordInput from "@frontend/components/password-input";
 
 interface UserFormProps {
     formData: {
@@ -32,7 +33,7 @@ const UserForm: React.FC<UserFormProps> = ({
     return (
         <div className="max-h-[60vh] overflow-y-auto">
             <form className="md:pr-10 pl-10 pb-10 pt-5" onSubmit={handleSubmit}>
-                <div className="grid gap-4 mb-4">
+                <div className="flex flex-col gap-6">
                     <FormInput
                         label="Nama Lengkap"
                         name="fullName"
@@ -42,6 +43,7 @@ const UserForm: React.FC<UserFormProps> = ({
                         onChange={handleChange}
                         error={errors.fullName}
                     />
+
                     <FormInput
                         label="Email"
                         name="email"
@@ -52,26 +54,28 @@ const UserForm: React.FC<UserFormProps> = ({
                         onChange={handleChange}
                         error={errors.email}
                     />
-                    <FormInput
+
+                    <PasswordInput
                         label="Password"
                         name="password"
-                        type="password"
                         value={formData.password}
                         placeholder="Masukkan password"
                         required
                         onChange={handleChange}
                         error={errors.password}
                     />
-                    <FormInput
+
+                    <PasswordInput
                         label="Confirm Password"
                         name="confirmPassword"
-                        type="password"
                         value={formData.confirmPassword}
                         placeholder="Konfirmasi password"
                         required
                         onChange={handleChange}
                         error={errors.confirmPassword}
+                        confirmPassword={true}
                     />
+
                     <div className="space-y-2">
                         <fieldset>
                             <legend className="text-[14.74px] font-semibold text-gray-900 float-left pr-16">
@@ -87,7 +91,7 @@ const UserForm: React.FC<UserFormProps> = ({
                                         onChange={handleChange}
                                         className="mr-2"
                                         aria-label="Admin"
-                                    />  Admin
+                                    /> Admin
                                 </label>
                                 <label className="flex items-center">
                                     <input
@@ -98,7 +102,7 @@ const UserForm: React.FC<UserFormProps> = ({
                                         onChange={handleChange}
                                         className="mr-2"
                                         aria-label="Business Analyst"
-                                    />  Business Analyst
+                                    /> Business Analyst
                                 </label>
                             </div>
                         </fieldset>
@@ -107,7 +111,8 @@ const UserForm: React.FC<UserFormProps> = ({
                         )}
                     </div>
                 </div>
-                <div className="flex justify-end gap-3 pt-6">
+
+                <div className="flex justify-end gap-3 mt-8">
                     <ButtonSubmit
                         variant="secondary"
                         type="button"

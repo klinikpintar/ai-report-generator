@@ -3,6 +3,15 @@ import Navbar from "@frontend/components/navbar";
 import FeAuthService from "@frontend/login/services/feAuthService";
 import { useRouter, usePathname } from "next/navigation";
 import { UserProvider } from "@/app/(frontend)/login/context/userContext";
+import { toast as mockedToast } from "react-toastify";
+
+jest.mock("react-toastify", () => ({
+  toast: {
+    error: jest.fn(),
+    success: jest.fn()
+  },
+  ToastContainer: jest.fn().mockImplementation(() => <div data-testid="toast-container" />),
+}));
 
 jest.mock("next/navigation", () => ({
   useRouter: jest.fn(),
@@ -30,7 +39,7 @@ describe("Navbar Component", () => {
 
     (usePathname as jest.Mock).mockReturnValue("/"); // Default return / (bukan halaman login)
 
-    window.alert = jest.fn();
+    jest.clearAllMocks();
     localStorage.clear();
   });
 
@@ -45,7 +54,7 @@ describe("Navbar Component", () => {
     expect(logoutButton).toBeInTheDocument();
   });
 
-  it("should call logout and redirect on success", async () => {
+  it("should call logout, show success toast, and redirect on success", async () => {
     (FeAuthService.logout as jest.Mock).mockResolvedValue({ success: true });
 
     renderWithUserProvider(<Navbar />);
@@ -53,11 +62,12 @@ describe("Navbar Component", () => {
     fireEvent.click(logoutButton);
 
     await waitFor(() => {
-      expect(pushMock).toHaveBeenCalledWith("/login");
+    expect(mockedToast.success).toHaveBeenCalledWith("Successfully logged out.");
+    expect(pushMock).toHaveBeenCalledWith("/login");
     });
   });
 
-  it("should show alert if logout fails", async () => {
+  it("should show toast if logout fails", async () => {
     (FeAuthService.logout as jest.Mock).mockResolvedValue({ success: false });
   
     renderWithUserProvider(<Navbar />);
@@ -65,9 +75,11 @@ describe("Navbar Component", () => {
     fireEvent.click(logoutButton);
   
     await waitFor(() => {
-      expect(window.alert).toHaveBeenCalledWith("Logout failed. Please try again."); // ✅ Cek alert dipanggil
+      expect(mockedToast.error).toHaveBeenCalledWith(
+        "Logout failed. Please try again."
+      );
     });
-  });  
+  }); 
 
   it("should not display email and logout button on login page", async () => {
     (usePathname as jest.Mock).mockReturnValue("/login");

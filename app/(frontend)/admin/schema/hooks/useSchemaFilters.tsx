@@ -5,6 +5,7 @@ import { useSchemaContext } from "../context/SchemaContext";
 import { fetchPlatforms, fetchServices } from "@frontend/admin/schema/utils/api";
 import type { Platform, Service } from "@frontend/common/types";
 import { toast } from "react-toastify";
+import { eventBus, EVENTS } from "@frontend/common/utils/event-bus";
 
 export const useSchemaFilters = () => {
   const { state, dispatch } = useSchemaContext();
@@ -18,8 +19,8 @@ export const useSchemaFilters = () => {
         dispatch({
           type: "SET_FILTERS",
           payload: {
-            platform: { all: allPlatforms, selected: [] },
-            service: { all: allServices, selected: [] },
+            platform: { all: allPlatforms, selected: allPlatforms },
+            service: { all: allServices, selected: allServices },
           },
         });
       } catch {
@@ -55,6 +56,31 @@ export const useSchemaFilters = () => {
     },
     [dispatch, state.filters.service.all]
   );
+
+  const reloadService = useCallback(async () => {
+    try {
+      const allServices: Service[] = await fetchServices();
+
+      // Check if the selected services are still valid (not deleted)
+      const selectedServices = state.filters.service.selected.filter((service) =>
+        allServices.some((s) => s.id === service.id)
+      );
+
+      dispatch({
+        type: "SET_FILTERS",
+        payload: {
+          service: { all: allServices, selected: selectedServices },
+        },
+      });
+    } catch {
+      toast.error("Failed to load services for filter dropdown");
+    }
+  }, []);
+
+  useEffect(() => {
+    const unsubscribe = eventBus.subscribe(EVENTS.SERVICE_UPDATED, reloadService);
+    return () => unsubscribe();
+  }, [reloadService]);
 
   return {
     platforms: state.filters.platform.all,

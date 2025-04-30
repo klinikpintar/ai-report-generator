@@ -8,7 +8,11 @@ import {
   PaginationUser,
   User,
 } from "@backend/interfaces/IUsersService";
-import { ConflictResponse } from "@backend/utils/exceptions";
+import {
+  BadRequestResponse,
+  ConflictResponse,
+  NotFoundResponse,
+} from "@backend/utils/exceptions";
 import bcrypt from "bcryptjs";
 
 class UsersService implements IUserCreator, IUserFinder {
@@ -67,6 +71,52 @@ class UsersService implements IUserCreator, IUserFinder {
         totalItems: totalItems,
       },
     };
+  }
+
+  async deleteUser(id: string): Promise<User> {
+    const existingUser = await prisma.user.findUnique({
+      where: { id },
+      select: { id: true, name: true, email: true, role: true, isActive: true },
+    });
+
+    if (!existingUser) throw new NotFoundResponse("User not found");
+
+    await prisma.user.delete({ where: { id } });
+    return existingUser;
+  }
+
+  async updateUser(id: string, data: Partial<User>): Promise<User> {
+    if (!data || Object.keys(data).length === 0) {
+      throw new BadRequestResponse("No data provided for update");
+    }
+
+    if (data.email) {
+      const emailExists = await prisma.user.count({
+        where: {
+          email: data.email,
+          id: { not: id },
+        },
+      });
+
+      if (emailExists > 0) {
+        throw new ConflictResponse("Email already exists");
+      }
+    }
+
+    const existingUser = await prisma.user.findUnique({
+      where: { id },
+      select: { id: true, name: true, email: true, role: true, isActive: true },
+    });
+
+    if (!existingUser) throw new NotFoundResponse("User not found");
+
+    const updatedUser = await prisma.user.update({
+      where: { id },
+      data,
+      select: { id: true, name: true, email: true, role: true, isActive: true },
+    });
+
+    return updatedUser;
   }
 }
 
