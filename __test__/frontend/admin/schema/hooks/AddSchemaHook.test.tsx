@@ -14,8 +14,23 @@ jest.mock("react-toastify", () => ({
 describe("AddSchemaHook Test", () => {
   const onCloseMock = jest.fn();
 
-  beforeEach(() => {
-    jest.clearAllMocks();
+  beforeAll(() => {
+    let onloadCallback: ((event: any) => void) | null = null;
+  
+    class MockFileReader {
+      onload: ((event: any) => void) | null = null;
+  
+      readAsText(_file: File) {
+        onloadCallback = this.onload;
+        if (onloadCallback) {
+          setTimeout(() => {
+            onloadCallback?.({ target: { result: "CREATE TABLE users;" } });
+          }, 0);
+        }
+      }
+    }
+  
+    (global as any).FileReader = MockFileReader;
   });
 
   it("Should initialize empty formData", () => {
