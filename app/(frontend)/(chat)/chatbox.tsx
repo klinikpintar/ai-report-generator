@@ -236,19 +236,6 @@ export default function ChatBox() {
     }
   };
 
-  // Your useEffect hooks
-  useEffect(() => {
-    const sessionId = searchParams.get("sessionId");
-    setIsInitializing(true);
-
-    if (sessionId) {
-      setActiveSessionId(sessionId);
-      loadSessionMessages(sessionId).finally(() => setIsInitializing(false));
-    } else {
-      setIsInitializing(false);
-    }
-  }, [searchParams, setActiveSessionId]);
-
   useEffect(() => {
     if (chatContainerRef.current) {
       chatContainerRef.current.scrollTop =

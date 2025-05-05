@@ -86,10 +86,10 @@ const API_ACCESS_RULES: {
   {
     path: "/ai",
     permissions: {
-      ADMIN: ["PATCH"],
+      ADMIN: ["PATCH", "GET"],
       BUSINESS_ANALYST: ["GET"],
     },
-  }
+  },
 ];
 
 // Token management functions
@@ -113,10 +113,13 @@ export async function verifyAccessToken(
 }
 
 export async function refreshAccessToken(
+  req: NextRequest,
   refreshToken: string
 ): Promise<string | null> {
   try {
-    const apiUrl = `${process.env.NEXT_PUBLIC_API_URL}${AUTH_ROUTES.API_REFRESH}`;
+    const apiUrl = `${process.env.NEXT_PUBLIC_API_URL ?? req.nextUrl.origin}${
+      AUTH_ROUTES.API_REFRESH
+    }`;
     const apiResponse = await fetch(apiUrl, {
       method: "POST",
       headers: {
@@ -167,9 +170,9 @@ function checkApiAccess(
   role: ROLE,
   method: string
 ): NextResponse | null {
-  const matchingRule = API_ACCESS_RULES.find((rule) =>
-    pathname.includes(rule.path)
-  );
+  const matchingRule = API_ACCESS_RULES.filter((rule) =>
+    pathname.startsWith(`/api${rule.path}`)
+  ).sort((a, b) => b.path.length - a.path.length)[0];
 
   if (matchingRule) {
     const allowedMethods = matchingRule.permissions[role] || [];
@@ -205,10 +208,11 @@ function getRedirectURL(role: ROLE, pathname: string): string | null {
 }
 
 async function handleBackgroundTokenRefresh(
+  req: NextRequest,
   refreshToken: string
 ): Promise<void> {
   if (refreshToken) {
-    await refreshAccessToken(refreshToken);
+    await refreshAccessToken(req, refreshToken);
   }
 }
 
@@ -225,7 +229,7 @@ export async function middleware(req: NextRequest, event: NextFetchEvent) {
   let user = accessToken ? await verifyAccessToken(accessToken) : null;
 
   if (!user && refreshToken) {
-    accessToken = await refreshAccessToken(refreshToken);
+    accessToken = await refreshAccessToken(req, refreshToken);
     user = accessToken ? await verifyAccessToken(accessToken) : null;
   }
 
@@ -236,7 +240,7 @@ export async function middleware(req: NextRequest, event: NextFetchEvent) {
   }
 
   if (user.exp && isTokenAboutToExpire(user.exp)) {
-    event.waitUntil(handleBackgroundTokenRefresh(refreshToken ?? ""));
+    event.waitUntil(handleBackgroundTokenRefresh(req, refreshToken ?? ""));
   }
 
   if (isApiRoute(pathname)) {

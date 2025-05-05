@@ -13,6 +13,7 @@ export class MarkdownExporter implements IExporter {
   }
 
   getFileName(title: string): string {
-    return `Klinik Pintar Laporan - ${title}.md`;
+    const sanitized = title.replace(/[/\\?%*:|"<>]/g, '-');
+    return `Klinik Pintar Laporan - ${sanitized}.md`;
   }
 }

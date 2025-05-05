@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ message: "Gagal generate PDF" }, { status: 500 });
     }
 
-    const filename = exporter.getFileName("Klinik Pintar - " + parsed.title); // ⬅️ Pakai createdAt untuk nama file
+    const filename = exporter.getFileName(parsed.title);
 
     return new NextResponse(fileBuffer, {
       status: 200,
