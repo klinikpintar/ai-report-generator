@@ -3,7 +3,7 @@ import Modal from "./plainModal";
 import UserForm from "./userForm"; 
 import { useAddAccount } from "../hooks/useAddAccount";
 
-interface AddAccountModalProps {
+export interface AddAccountModalProps {
   isVisible: boolean;
   onClose: () => void;
 }
