@@ -236,13 +236,6 @@ export default function ChatBox() {
     }
   };
 
-  useEffect(() => {
-    if (chatContainerRef.current) {
-      chatContainerRef.current.scrollTop =
-        chatContainerRef.current.scrollHeight;
-    }
-  }, [messages]);
-
   return (
     <div className="flex flex-col h-screen pb-20">
       <div className="flex justify-between items-center py-3">
