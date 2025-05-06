@@ -37,6 +37,13 @@ export const mockAiProviders: AIProvider[] = [
         "modelIdentifier": "gemini-2.0-flash",
         "isDefault": true,
         "isAvailable": true
+      },
+      {
+        "id": "57040f35-0827-484a-bf0f-8865f9f5ccab",
+        "name": "gemini-2.0-lite",
+        "modelIdentifier": "gemini-2.0-lite",
+        "isDefault": true,
+        "isAvailable": true
       }
     ],
     "activeModel": {
