@@ -37,13 +37,13 @@ const LoginPage = () => {
         localStorage.setItem("userName", user.name);
         toast.success("Login successful! Redirecting...");
 
-        // Delay sebentar untuk pengguna melihat toast
-        setTimeout(() => {
+        setTimeout(async () => {
           if (user.role === "ADMIN") {
-            router.push("/admin");
+            await router.push("/admin");
+          } else {
+            await router.push("/");
           }
-          router.push("/");
-        }, 200);
+        }, 300);
       } else {
         toast.error("Login failed. Please check your credentials.");
       }

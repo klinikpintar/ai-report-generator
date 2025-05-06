@@ -4,12 +4,6 @@ import { ReportSchema } from "@/app/(backend)/dtos/report.dto";
 import { ZodError } from "zod";
 
 export async function POST(req: NextRequest) {
-  const authHeader = req.headers.get("Authorization");
-  const token = authHeader?.replace("Bearer ", "");
-  if (!token) {
-    return NextResponse.json({ message: "Missing token" }, { status: 401 });
-  }
-
   try {
     const body = await req.json();
 
@@ -27,7 +21,7 @@ export async function POST(req: NextRequest) {
       status: 200,
       headers: {
         "Content-Type": exporter.getMimeType(),
-        "Content-Disposition": `attachment; filename="${exporter.getFileName()}"`
+        "Content-Disposition": `attachment; filename="${exporter.getFileName(parsed.title)}"`,
       },
     });
   } catch (err) {

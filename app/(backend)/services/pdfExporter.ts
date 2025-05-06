@@ -156,7 +156,8 @@ export class PdfExporter implements IExporter {
     return "application/pdf";
   }
 
-  getFileName(createdAt: string): string {
-    return `report-${createdAt}.pdf`;
+  getFileName(title: string): string {
+    const sanitized = title.replace(/[/\\?%*:|"<>]/g, '-');
+    return `Klinik Pintar Laporan - ${sanitized}.pdf`;
   }
 }
