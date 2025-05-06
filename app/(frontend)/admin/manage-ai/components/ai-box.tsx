@@ -8,6 +8,8 @@ import { EditAPIKeyModal } from "./EditAPIKeyModal";
 import { AIProvider } from "../types/ai-provider";
 import { patchActivateProvider } from "../utils/api/patch-activate-provider";
 import { toast } from "react-toastify";
+import { AIModel } from "../types/ai-model";
+import { patchSetActiveModel } from "../utils/api/patch-set-active-model";
 
 export interface AIBoxProps {
   provider: AIProvider;
@@ -16,10 +18,10 @@ export interface AIBoxProps {
 }
 
 const AIBox: React.FC<AIBoxProps> = ({ provider, refreshProviders, testOpenDropdown = false }) => {
-  const [selectedModel, setSelectedModel] = useState<string>("Pilih Model");
+  const [selectedModel, setSelectedModel] = useState<AIModel | null>(provider.activeModel);
   const [isEditModalOpen, setIsEditModalOpen] = useState<boolean>(false);
 
-  const onSelect = async () => {
+  const onSelectProvider = async () => {
     const result = await patchActivateProvider({
       providerId: provider.id,
     });
@@ -31,10 +33,31 @@ const AIBox: React.FC<AIBoxProps> = ({ provider, refreshProviders, testOpenDropd
     }
   };
 
+  const onSelectModel = async (model: AIModel) => {
+    const result = await patchSetActiveModel({
+      providerId: provider.id,
+      modelId: model.id,
+    });
+    if (result.success) {
+      setSelectedModel(model);
+      toast.success(`Model ${model.name} untuk provider ${provider.displayName} diaktifkan!`);
+    } else {
+      toast.error(result.message);
+    }
+  };
+
   return (
     <div className="flex items-start gap-4">
       {/* Radio button */}
-      <button type="button" onClick={onSelect} className="mt-6 shrink-0">
+      <button
+        type="button"
+        onClick={onSelectProvider}
+        className="mt-6 shrink-0"
+        data-testid={`${provider.name}-radio-button`}
+        role="radio"
+        aria-checked={provider.isActive}
+        aria-labelledby={`${provider.name}-heading`}  
+      >
         <RadioButton selected={provider.isActive} />
       </button>
 
@@ -49,6 +72,8 @@ const AIBox: React.FC<AIBoxProps> = ({ provider, refreshProviders, testOpenDropd
           />
           <Button
             onClick={() => setIsEditModalOpen(true)}
+            aria-label="Edit API Key"
+            role="button"
             className="w-10 h-10 bg-sky-500 hover:bg-sky-500/80 rounded-full flex items-center justify-center overflow-hidden shrink-0 p-0"
           >
             <Image
@@ -62,7 +87,7 @@ const AIBox: React.FC<AIBoxProps> = ({ provider, refreshProviders, testOpenDropd
         </div>
 
         <div className="flex flex-col items-start gap-2 -ml-1 flex-grow">
-          <h2 className="text-2xl font-semibold text-teal-700">{provider.displayName}</h2>
+          <h2 id={`${provider.name}-heading`} className="text-2xl font-semibold text-teal-700">{provider.displayName}</h2>
           <h3 className="text-sm text-slate-600">
             Pilih model AI untuk provider {provider.displayName}:
           </h3>
@@ -75,7 +100,7 @@ const AIBox: React.FC<AIBoxProps> = ({ provider, refreshProviders, testOpenDropd
                 className="w-full bg-sky-500 text-white py-2 px-4 rounded-md flex items-center justify-between hover:bg-blue-600 transition-colors"
                 aria-haspopup="menu"
               >
-                {selectedModel}
+                {selectedModel ? selectedModel.name : "Pilih model"}
                 <ChevronDown className="w-4 h-4 ml-2" />
               </button>
             </DropdownMenu.Trigger>
@@ -88,7 +113,7 @@ const AIBox: React.FC<AIBoxProps> = ({ provider, refreshProviders, testOpenDropd
                 {provider.models.map((model) => (
                   <DropdownMenu.Item
                     key={model.id}
-                    onSelect={() => setSelectedModel(model.modelIdentifier)}
+                    onSelect={() => onSelectModel(model)}
                     className="px-3 py-1.5 rounded hover:bg-gray-100 cursor-pointer text-sm text-slate-700"
                   >
                     {model.name}
