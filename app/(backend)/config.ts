@@ -1,4 +1,5 @@
 import { timeConvertMs } from '@/app/(backend)/utils/timeUtils';
+import crypto from 'crypto';
 
 const config = {
   JWT_ACCESS_SECRET: process.env.JWT_ACCESS_SECRET ?? "access_secret",
@@ -10,7 +11,7 @@ const config = {
   ENCRYPTION_KEY: process.env.ENCRYPTION_KEY ??
     (process.env.NODE_ENV === "production" ?
       (() => { throw new Error("ENCRYPTION_KEY must be set in production") })() :
-      require('crypto').randomBytes(32).toString('hex')),
+      crypto.randomBytes(32).toString('hex')),
 };
 
 export default config;

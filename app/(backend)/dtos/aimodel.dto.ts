@@ -9,16 +9,6 @@ export class AIModelTransform {
     return value === undefined ? undefined : value === 'true';
   }
   
-  /**
-   * Memformat respons model dengan informasi tambahan
-   * (misalnya untuk penampilan UI)
-   */
-  static formatModelForDisplay(model: any): any {
-    return {
-      ...model,
-      formattedName: `${model.name} (${model.modelIdentifier})`
-    };
-  }
 }
 
 export class AIModelSchema {

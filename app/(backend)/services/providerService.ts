@@ -3,7 +3,7 @@ import { NotFoundResponse } from '../utils/exceptions';
 import { ProviderValidation } from '@/app/(backend)/dtos/provider.dto';
 import { AIModelValidation } from '@/app/(backend)/dtos/aimodel.dto';
 import { z } from 'zod';
-import { IProviderRepository, ProviderWithModels } from '../interfaces/IProviderRepository';
+import { IProviderRepository, ProviderInclude, ProviderWithModels } from '../interfaces/IProviderRepository';
 import { IAIModelRepository } from '../interfaces/IAIModelRepository';
 import { PrismaProviderRepository } from '../repositories/PrismaProviderRepository';
 import { PrismaAIModelRepository } from '../repositories/PrismaAIModelRepository';
@@ -38,7 +38,7 @@ class ProviderService {
   ): Promise<z.infer<typeof ProviderValidation.RESPONSE>[] | z.infer<typeof ProviderValidation.RESPONSE_WITH_MODELS>[]> {
     const options = ProviderValidation.GET.parse(optionsInput || {});
 
-    const include: any = { activeModel: true };
+    const include: ProviderInclude = { activeModel: true };
     const where = options.onlyActive ? { isActive: true } : undefined;
 
     if (options.includeModels) {

@@ -11,18 +11,9 @@ export class ProviderTransform {
     /**
      * Menyamarkan API key agar tidak terekspos
      */
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     static maskApiKey(apiKey: string): string {
       return '********';
-    }
-  
-    /**
-     * Mempersiapkan provider untuk respons API dengan data sensitif disamarkan
-     */
-    static toPublicResponse(provider: any): any {
-      return {
-        ...provider,
-        apiKey: this.maskApiKey(provider.apiKey)
-      };
     }
   }
 
