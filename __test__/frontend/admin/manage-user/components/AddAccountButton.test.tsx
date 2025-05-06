@@ -32,11 +32,21 @@ describe("AddAccountButton", () => {
   it("should close the modal when onClose is triggered", async () => {
     render(<AddAccountButton />);
     const button = screen.getByRole("button", { name: /Tambah Akun/i });
-
     await userEvent.click(button);
+    expect(screen.getByTestId('mock-modal')).toBeInTheDocument();
+
     const closeButton = await screen.findByText("Close Modal");
     await userEvent.click(closeButton);
-
     expect(screen.queryByTestId("mock-modal")).not.toBeInTheDocument();
+  });
+
+  it('applies the correct styling to the button', () => {
+    render(<AddAccountButton />);
+    
+    const button = screen.getByRole('button', { name: /tambah akun/i });
+    expect(button).toHaveClass('bg-blue-6');
+    expect(button).toHaveClass('text-white');
+    expect(button).toHaveClass('font-semibold');
+    expect(button).toHaveClass('rounded-md');
   });
 });
