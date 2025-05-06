@@ -12,7 +12,8 @@ export class MarkdownExporter implements IExporter {
     return "text/markdown";
   }
 
-  getFileName(): string {
-    return `report-${Date.now()}.md`;
+  getFileName(title: string): string {
+    const sanitized = title.replace(/[/\\?%*:|"<>]/g, '-');
+    return `Klinik Pintar Laporan - ${sanitized}.md`;
   }
 }

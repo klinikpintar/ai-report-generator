@@ -4,14 +4,6 @@ import { ReportSchema } from "@/app/(backend)/dtos/report.dto";
 import { ZodError } from "zod";
 
 export async function POST(req: NextRequest) {
-  const authHeader = req.headers.get("Authorization");
-  const token = authHeader?.replace("Bearer ", "");
-
-  // OWASP A2 – Cek token autentikasi
-  if (!token) {
-    return NextResponse.json({ message: "Missing token" }, { status: 401 });
-  }
-
   try {
     const { searchParams } = req.nextUrl; 
     const isPreview = searchParams.get("preview") === "true";
@@ -30,7 +22,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ message: "Gagal generate PDF" }, { status: 500 });
     }
 
-    const filename = exporter.getFileName(parsed.createdAt); // ⬅️ Pakai createdAt untuk nama file
+    const filename = exporter.getFileName(parsed.title);
 
     return new NextResponse(fileBuffer, {
       status: 200,
