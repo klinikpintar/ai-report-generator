@@ -1,63 +1,59 @@
-import prisma from '@/lib/prisma';
-import { Provider, AIModel } from '@prisma/client';
 import { encryptApiKey } from '../utils/apiKeyUtils';
 import { NotFoundResponse } from '../utils/exceptions';
 import { ProviderValidation } from '@/app/(backend)/dtos/provider.dto';
 import { AIModelValidation } from '@/app/(backend)/dtos/aimodel.dto';
 import { z } from 'zod';
-
-// Type untuk internal processing, sebelum transformasi
-type PrismaProviderWithModels = Provider & {
-  models?: AIModel[]; 
-  activeModel?: AIModel | null; 
-};
+import { IProviderRepository, ProviderInclude, ProviderWithModels } from '../interfaces/IProviderRepository';
+import { IAIModelRepository } from '../interfaces/IAIModelRepository';
+import { PrismaProviderRepository } from '../repositories/PrismaProviderRepository';
+import { PrismaAIModelRepository } from '../repositories/PrismaAIModelRepository';
 
 class ProviderService {
+  private static instance: ProviderService | null;
+
+  private constructor(
+    private providerRepository: IProviderRepository,
+    private modelRepository: IAIModelRepository
+  ) { }
+
+  public static getInstance(): ProviderService {
+    if (!ProviderService.instance) {
+      const providerRepository = new PrismaProviderRepository();
+      const aiModelRepository = new PrismaAIModelRepository();
+      ProviderService.instance = new ProviderService(providerRepository, aiModelRepository);
+    }
+
+    return ProviderService.instance;
+  }
+
+  public static resetInstance(): void {
+    ProviderService.instance = null;
+  }
+
   /**
    * Mendapatkan semua provider dengan model-modelnya
    */
   async getAllProviders(
-    options?: z.infer<typeof ProviderValidation.GET>
+    optionsInput?: z.infer<typeof ProviderValidation.GET>
   ): Promise<z.infer<typeof ProviderValidation.RESPONSE>[] | z.infer<typeof ProviderValidation.RESPONSE_WITH_MODELS>[]> {
+    const options = ProviderValidation.GET.parse(optionsInput || {});
 
-    const query: {
-      where?: { isActive?: boolean };
-      include: {
-        activeModel: boolean;
-        models?: {
-          orderBy: { name: 'asc' };
-        };
-      };
-      orderBy?: { name: 'asc' };
-    } = {
-      include: {
-        activeModel: true,
-      },
-      orderBy: { name: 'asc' },
-    };
+    const include: ProviderInclude = { activeModel: true };
+    const where = options.onlyActive ? { isActive: true } : undefined;
 
-    // Buat query filter berdasarkan options
-    if (options?.onlyActive) {
-      query.where = { isActive: true };
-    }
-
-    // Selalu include activeModel
-    query.include = {
-      activeModel: true,
-    };
-
-    // Include models jika diminta
-    if (options?.includeModels) {
-      query.include.models = {
+    if (options.includeModels) {
+      include.models = {
         orderBy: { name: 'asc' },
       };
     }
 
-    const providers = await prisma.provider.findMany(query);
+    const providers = await this.providerRepository.findMany({
+      where,
+      include,
+    });
 
-    // Transform output menggunakan skema Zod yang sesuai
     return providers.map(provider =>
-      options?.includeModels
+      options.includeModels
         ? ProviderValidation.RESPONSE_WITH_MODELS.parse(provider)
         : ProviderValidation.RESPONSE.parse(provider)
     );
@@ -68,38 +64,27 @@ class ProviderService {
    */
   async getActiveOrDefaultProvider(): Promise<z.infer<typeof ProviderValidation.RESPONSE_WITH_MODELS>> {
     // Coba dapatkan provider aktif
-    let provider = await prisma.provider.findFirst({
-      where: { isActive: true },
-      include: {
+    let provider = await this.providerRepository.findActive({
+      activeModel: true,
+      models: {
+        where: { isAvailable: true },
+        orderBy: { name: 'asc' }
+      }
+    });
+
+    // Jika tidak ada provider aktif, gunakan provider default
+    if (!provider) {
+      provider = await this.providerRepository.findByDefault({
         activeModel: true,
         models: {
           where: { isAvailable: true },
           orderBy: { name: 'asc' }
         }
-      }
-    }) as PrismaProviderWithModels | null;
-
-    // Jika tidak ada provider aktif, gunakan provider default
-    if (!provider) {
-      provider = await prisma.provider.findFirst({
-        where: { isDefault: true },
-        include: {
-          activeModel: true,
-          models: {
-            where: { isAvailable: true },
-            orderBy: { name: 'asc' }
-          }
-        }
-      }) as PrismaProviderWithModels | null;
+      });
 
       // Aktifkan provider default jika ditemukan
       if (provider) {
-        await prisma.provider.update({
-          where: { id: provider.id },
-          data: { isActive: true }
-        });
-
-        // Update provider dalam memory
+        await this.providerRepository.updateById(provider.id, { isActive: true });
         provider.isActive = true;
       }
     }
@@ -112,10 +97,7 @@ class ProviderService {
       const modelToActivate = defaultModel || provider.models[0];
 
       // Set model sebagai aktif
-      await prisma.provider.update({
-        where: { id: provider.id },
-        data: { activeModelId: modelToActivate.id }
-      });
+      await this.providerRepository.updateById(provider.id, { activeModelId: modelToActivate.id });
 
       // Update provider object dalam memory
       provider.activeModelId = modelToActivate.id;
@@ -138,29 +120,23 @@ class ProviderService {
     providerId: string,
     modelId: string
   ): Promise<z.infer<typeof ProviderValidation.RESPONSE_WITH_MODELS>> {
-    // Validasi input dengan schema SET_ACTIVE_MODEL
     const validatedData = ProviderValidation.SET_ACTIVE_MODEL.parse({
       providerId,
       modelId
     });
 
     // Verifikasi provider exists
-    const provider = await prisma.provider.findUnique({
-      where: { id: validatedData.providerId }
-    });
+    const provider = await this.providerRepository.findById(validatedData.providerId);
 
     if (!provider) {
       throw new NotFoundResponse(`Provider with ID ${validatedData.providerId} not found`);
     }
 
     // Verifikasi model exists dan milik provider ini
-    const model = await prisma.aIModel.findFirst({
-      where: {
-        id: validatedData.modelId,
-        providerId: validatedData.providerId,
-        isAvailable: true
-      }
-    });
+    const model = await this.modelRepository.findById(
+      validatedData.modelId,
+      validatedData.providerId
+    );
 
     if (!model) {
       throw new NotFoundResponse(
@@ -169,16 +145,10 @@ class ProviderService {
     }
 
     // Update activeModelId
-    const updatedProvider = await prisma.provider.update({
-      where: { id: validatedData.providerId },
-      data: { activeModelId: validatedData.modelId },
-      include: {
-        models: {
-          orderBy: { name: 'asc' },
-        },
-        activeModel: true,
-      }
-    });
+    const updatedProvider = await this.providerRepository.updateActiveModel(
+      validatedData.providerId,
+      validatedData.modelId
+    );
 
     // Transform output dengan skema Zod
     return ProviderValidation.RESPONSE_WITH_MODELS.parse(updatedProvider);
@@ -191,15 +161,12 @@ class ProviderService {
     providerId: string,
     apiKey: string
   ): Promise<z.infer<typeof ProviderValidation.RESPONSE_WITH_MODELS>> {
-    // Validasi input dengan schema UPDATE_API_KEY
     const validatedData = ProviderValidation.UPDATE_API_KEY.parse({
       providerId,
       apiKey
     });
 
-    const provider = await prisma.provider.findUnique({
-      where: { id: validatedData.providerId }
-    });
+    const provider = await this.providerRepository.findById(validatedData.providerId);
 
     if (!provider) {
       throw new NotFoundResponse(`Provider with ID ${validatedData.providerId} not found`);
@@ -208,16 +175,10 @@ class ProviderService {
     const encryptedApiKey = encryptApiKey(validatedData.apiKey);
 
     // Update API key
-    const updatedProvider = await prisma.provider.update({
-      where: { id: validatedData.providerId },
-      data: { apiKey: encryptedApiKey },
-      include: {
-        models: {
-          orderBy: { name: 'asc' },
-        },
-        activeModel: true,
-      }
-    });
+    const updatedProvider = await this.providerRepository.updateApiKey(
+      validatedData.providerId,
+      encryptedApiKey
+    );
 
     // Transform output dengan skema Zod
     return ProviderValidation.RESPONSE_WITH_MODELS.parse(updatedProvider);
@@ -229,33 +190,19 @@ class ProviderService {
   async setActiveProvider(
     providerId: string
   ): Promise<z.infer<typeof ProviderValidation.RESPONSE_WITH_MODELS>> {
-    // Validasi input dengan schema ACTIVATE
     const validatedData = ProviderValidation.ACTIVATE.parse({ providerId });
 
-    const provider = await prisma.provider.findUnique({
-      where: { id: validatedData.providerId }
-    });
+    const provider = await this.providerRepository.findById(validatedData.providerId);
 
     if (!provider) {
       throw new NotFoundResponse(`Provider with ID ${validatedData.providerId} not found`);
     }
 
     // Nonaktifkan semua provider
-    await prisma.provider.updateMany({
-      data: { isActive: false }
-    });
+    await this.providerRepository.deactivateAll();
 
     // Aktifkan provider yang dipilih
-    const updatedProvider = await prisma.provider.update({
-      where: { id: validatedData.providerId },
-      data: { isActive: true },
-      include: {
-        models: {
-          orderBy: { name: 'asc' },
-        },
-        activeModel: true
-      }
-    });
+    const updatedProvider = await this.providerRepository.setActive(validatedData.providerId);
 
     // Transform output dengan skema Zod
     return ProviderValidation.RESPONSE_WITH_MODELS.parse(updatedProvider);
@@ -268,26 +215,20 @@ class ProviderService {
     data: z.infer<typeof ProviderValidation.POST>
   ): Promise<z.infer<typeof ProviderValidation.RESPONSE>> {
     const validatedData = ProviderValidation.POST.parse(data);
-
     const encryptedApiKey = encryptApiKey(validatedData.apiKey);
 
     // Jika ini provider default, reset semua default lain
     if (validatedData.isDefault) {
-      await prisma.provider.updateMany({
-        where: { isDefault: true },
-        data: { isDefault: false }
-      });
+      await this.providerRepository.resetDefaults();
     }
 
     // Buat provider
-    const provider = await prisma.provider.create({
-      data: {
-        name: validatedData.name,
-        displayName: validatedData.displayName,
-        apiKey: encryptedApiKey,
-        isActive: validatedData.isActive,
-        isDefault: validatedData.isDefault,
-      }
+    const provider = await this.providerRepository.create({
+      name: validatedData.name,
+      displayName: validatedData.displayName,
+      apiKey: encryptedApiKey,
+      isActive: validatedData.isActive,
+      isDefault: validatedData.isDefault,
     });
 
     // Transform output dengan skema Zod
@@ -298,12 +239,14 @@ class ProviderService {
    * Helper function untuk membuat provider default jika belum ada
    * @private
    */
-  private async createDefaultProvider(): Promise<PrismaProviderWithModels> {
+  private async createDefaultProvider(): Promise<ProviderWithModels> {
     // Default values dengan validasi Zod
     const defaultProviderData = ProviderValidation.POST.parse({
       name: 'gemini',
       displayName: 'Google Gemini',
-      apiKey: process.env.GEMINI_API_KEY || 'fallback-key',
+      apiKey: process.env.GEMINI_API_KEY ?? (() => {
+        throw new Error('GEMINI_API_KEY env var is required to bootstrap the default provider');
+      })(),
       isActive: true,
       isDefault: true,
     });
@@ -312,14 +255,12 @@ class ProviderService {
     const encryptedApiKey = encryptApiKey(defaultProviderData.apiKey);
 
     // Buat provider default
-    const provider = await prisma.provider.create({
-      data: {
-        name: defaultProviderData.name,
-        displayName: defaultProviderData.displayName,
-        apiKey: encryptedApiKey,
-        isActive: defaultProviderData.isActive,
-        isDefault: defaultProviderData.isDefault,
-      }
+    const provider = await this.providerRepository.create({
+      name: defaultProviderData.name,
+      displayName: defaultProviderData.displayName,
+      apiKey: encryptedApiKey,
+      isActive: defaultProviderData.isActive,
+      isDefault: defaultProviderData.isDefault,
     });
 
     // Validasi data model dengan Zod
@@ -332,24 +273,25 @@ class ProviderService {
     });
 
     // Buat model default
-    const model = await prisma.aIModel.create({
-      data: defaultModelData
-    });
+    const model = await this.modelRepository.create(defaultModelData);
 
     // Set sebagai active model
-    await prisma.provider.update({
-      where: { id: provider.id },
-      data: { activeModelId: model.id }
-    });
+    await this.providerRepository.updateById(
+      provider.id,
+      { activeModelId: model.id }
+    );
 
     // Dapatkan provider lengkap dengan model
-    const completeProvider = await prisma.provider.findUnique({
-      where: { id: provider.id },
-      include: {
-        models: true,
+    const completeProvider = await this.providerRepository.findById(
+      provider.id,
+      {
+        models: {
+          orderBy: { name: 'asc' },
+          where: { isAvailable: true }
+        },
         activeModel: true
       }
-    });
+    );
 
     if (!completeProvider) {
       throw new Error("Failed to create default provider");
@@ -359,5 +301,4 @@ class ProviderService {
   }
 }
 
-const providerService = new ProviderService();
-export default providerService;
+export default ProviderService.getInstance();
