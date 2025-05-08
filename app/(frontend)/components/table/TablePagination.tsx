@@ -30,8 +30,8 @@ export function TablePagination({ currentPage, lastPage, onPageChange }: TablePa
         </PaginationItem>
       </PaginationContent>
       <PaginationContent>
-        {pages.map((page, index) => (
-          <PaginationItem key={index}>
+        {pages.map((page) => (
+          <PaginationItem key={page}>
             {typeof page === "number" ? (
               <PaginationLink
                 onClick={() => onPageChange(page)}
