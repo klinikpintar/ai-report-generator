@@ -20,7 +20,7 @@ const MarkdownCodeRenderer: React.FC<CustomCodeProps> = ({
   children,
   ...props 
 }) => {
-  const match = /language-(\w+)/.exec(className || "");
+  const match = /language-(\w+)/.exec(className ?? "");
   if (!inline && match && React.isValidElement(children)) {
     const childString = Array.isArray(children) ? children.join("") : String(children);
     return <CodeBlock language={match[1]} value={childString.replace(/\n$/, "")} />;
