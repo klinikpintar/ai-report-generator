@@ -11,6 +11,7 @@ let getMock: jest.Mock<string | null, [string]> = jest.fn();
 const setActiveSessionIdMock = jest.fn();
 const createNewSessionMock = jest.fn().mockResolvedValue("mock-session-id");
 const setHasChatted = jest.fn();
+const refreshSessionsMock = jest.fn();
 
 jest.mock("@frontend/(chat)/context/sessionContext", () => ({
   useSession: () => ({
@@ -18,6 +19,8 @@ jest.mock("@frontend/(chat)/context/sessionContext", () => ({
     setActiveSessionId: setActiveSessionIdMock,
     createNewSession: createNewSessionMock,
     setHasChatted: setHasChatted,
+    refreshSessions: refreshSessionsMock,
+    isNewSession: false,
   }),
   SessionProvider: ({ children }: { children: React.ReactNode }) => (
     <>{children}</>
@@ -29,6 +32,20 @@ jest.mock("next/navigation", () => ({
   useSearchParams: () => ({
     get: (key: string) => getMock(key), // 🔥 Sekarang getMock udah ada!
   }),
+}));
+
+// Mock the Image component
+jest.mock("next/image", () => ({
+  __esModule: true,
+  default: (props: any) => <img {...props} alt={props.alt} />,
+}));
+
+// Mock ReactMarkdown component
+jest.mock("react-markdown", () => ({
+  __esModule: true,
+  default: ({ children, components }: any) => (
+    <div data-testid="markdown">{children}</div>
+  ),
 }));
 
 Object.defineProperty(window, "open", { value: jest.fn() });
@@ -330,4 +347,71 @@ describe("ChatBox", () => {
 
     consoleErrorSpy.mockRestore();
   });
+
+  // ADDITIONAL TESTS FOR IMPROVED COVERAGE
+  
+  it("should show loading spinner during initialization", () => {
+    getMock.mockImplementation((key: string) => 
+      key === "sessionId" ? "test-session-id" : null
+    );
+    
+    // Create a delayed response to keep initializing state true
+    global.fetch = jest.fn().mockImplementationOnce(() => 
+      new Promise(resolve => setTimeout(() => 
+        resolve({
+          ok: true,
+          json: () => Promise.resolve({ 
+            session: { 
+              title: "Test Session", 
+              messages: [] 
+            } 
+          })
+        }), 100)
+      )
+    );
+    
+    renderChatBox();
+    
+    // Should find the loading spinner
+    expect(document.querySelector('.animate-spin')).toBeInTheDocument();
+  });
+  
+  it("should refresh sessions when sending first message with new session", async () => {
+    // Mock session as a new one
+    jest.mock("@frontend/(chat)/context/sessionContext", () => ({
+      useSession: () => ({
+        activeSessionId: "new-session-id",
+        setActiveSessionId: setActiveSessionIdMock,
+        createNewSession: createNewSessionMock,
+        refreshSessions: refreshSessionsMock,
+        isNewSession: true,
+      }),
+    }), { virtual: true });
+    
+    global.fetch = jest.fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve([{ id: 1 }]),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({
+          messageId: "123",
+          aiResponse: "First response to new session",
+          metadata: { modelUsed: "GPT-4" },
+        }),
+      });
+    
+    renderChatBox();
+    
+    const input = screen.getByPlaceholderText("Type a message...");
+    fireEvent.change(input, { target: { value: "First message to new chat" } });
+    fireEvent.keyDown(input, { key: "Enter", code: "Enter" });
+    
+    await waitFor(() => {
+      expect(refreshSessionsMock).toHaveBeenCalled();
+    });
+  });
+  
+  
 });

@@ -1,6 +1,9 @@
 import { POST } from "@/app/(backend)/api/ekspor/pdf/route";
 import { NextRequest } from "next/server";
 import { ReportDTO } from "@/app/(backend)/dtos/report.dto";
+import { PdfExporter } from "@/app/(backend)/services/pdfExporter";
+import * as fs from "fs";
+import { PDFDocument } from "pdf-lib";
 
 // Mock token & verifyAccessToken
 jest.mock("@/middleware", () => ({
@@ -248,4 +251,227 @@ describe("POST /api/ekspor/pdf (handler)", () => {
     const res = await POST(req);
     expect(res.status).toBe(200);
   });  
+});
+// Add to existing file: __test__/backend/ekspor/pdfExporter.test.ts
+
+// Unit tests for PdfExporter class
+
+// Mock fs and pdf-lib
+jest.mock("fs", () => ({
+  promises: {
+    readFile: jest.fn().mockResolvedValue(Buffer.from("mock-logo-data"))
+  }
+}));
+
+jest.mock("pdf-lib", () => {
+  const mockPage = {
+    getSize: jest.fn().mockReturnValue({ width: 595, height: 842 }),
+    drawText: jest.fn(),
+    drawRectangle: jest.fn(),
+    drawImage: jest.fn(),
+    drawLine: jest.fn()
+  };
+  
+  const mockFont = {
+    widthOfTextAtSize: jest.fn().mockImplementation((text, size) => text.length * size * 0.5)
+  };
+  
+  const mockPdfDoc = {
+    addPage: jest.fn().mockReturnValue(mockPage),
+    embedFont: jest.fn().mockResolvedValue(mockFont),
+    embedPng: jest.fn().mockImplementation(() => ({ 
+      scale: jest.fn().mockReturnValue({ width: 100, height: 50 }) 
+    })),
+    save: jest.fn().mockResolvedValue(new Uint8Array([1, 2, 3, 4]))
+  };
+  
+  return {
+    PDFDocument: {
+      create: jest.fn().mockResolvedValue(mockPdfDoc)
+    },
+    rgb: jest.fn().mockReturnValue("mock-color"),
+    StandardFonts: {
+      Helvetica: "Helvetica",
+      HelveticaBold: "HelveticaBold",
+      HelveticaOblique: "HelveticaOblique",
+      Courier: "Courier"
+    }
+  };
+});
+
+// Mock generateReportContent utility
+jest.mock("@/app/(backend)/utils/generateReportContent", () => ({
+  generateReportContent: jest.fn().mockImplementation((report) => {
+    return `# ${report.title}\n\n${report.content}`;
+  })
+}));
+
+describe("PdfExporter class", () => {
+  let exporter: PdfExporter;
+  
+  beforeEach(() => {
+    exporter = new PdfExporter();
+    jest.clearAllMocks();
+  });
+  
+  describe("export method", () => {
+    const validReport: ReportDTO = {
+      title: "Test Report",
+      content: "This is a test content",
+      createdAt: "2025-05-01"
+    };
+    
+    it("should create a PDF document and return buffer", async () => {
+      const result = await exporter.export(validReport);
+      
+      expect(PDFDocument.create).toHaveBeenCalled();
+      expect(result).toBeInstanceOf(Buffer);
+    });
+    
+    it("should include logo in the PDF", async () => {
+      await exporter.export(validReport);
+      
+      expect(fs.promises.readFile).toHaveBeenCalledWith("public/logo-kp.png");
+    });
+    
+    it("should handle markdown headers correctly", async () => {
+      const contentWithHeaders = {
+        title: "Headers Test",
+        content: "# Header 1\n## Header 2\n### Header 3\nRegular text",
+        createdAt: "2025-05-01"
+      };
+      
+      await exporter.export(contentWithHeaders);
+      
+      // PDFDocument was created and save was called
+      expect(PDFDocument.create).toHaveBeenCalled();
+    });
+    
+    it("should handle bullet lists correctly", async () => {
+      const contentWithBullets = {
+        title: "Bullet List",
+        content: "* Item 1\n- Item 2\n+ Item 3",
+        createdAt: "2025-05-01"
+      };
+      
+      await exporter.export(contentWithBullets);
+      
+      // PDFDocument was created and save was called
+      expect(PDFDocument.create).toHaveBeenCalled();
+    });
+    
+    it("should handle ordered lists correctly", async () => {
+      const contentWithOrderedList = {
+        title: "Ordered List",
+        content: "1. First item\n2. Second item\n3. Third item",
+        createdAt: "2025-05-01"
+      };
+      
+      await exporter.export(contentWithOrderedList);
+      
+      // PDFDocument was created and save was called
+      expect(PDFDocument.create).toHaveBeenCalled();
+    });
+    
+    it("should handle blockquotes correctly", async () => {
+      const contentWithBlockquote = {
+        title: "Blockquote Test",
+        content: "> This is a blockquote\n> Second line",
+        createdAt: "2025-05-01"
+      };
+      
+      await exporter.export(contentWithBlockquote);
+      
+      // PDFDocument was created and save was called
+      expect(PDFDocument.create).toHaveBeenCalled();
+    });
+    
+    it("should handle code blocks correctly", async () => {
+      const contentWithCodeBlock = {
+        title: "Code Block Test",
+        content: "```\nfunction test() {\n  return 'hello';\n}\n```",
+        createdAt: "2025-05-01"
+      };
+      
+      await exporter.export(contentWithCodeBlock);
+      
+      // PDFDocument was created and save was called
+      expect(PDFDocument.create).toHaveBeenCalled();
+    });
+    
+    it("should handle horizontal rules correctly", async () => {
+      const contentWithHr = {
+        title: "Horizontal Rule Test",
+        content: "Text above\n---\nText below",
+        createdAt: "2025-05-01"
+      };
+      
+      await exporter.export(contentWithHr);
+      
+      // PDFDocument was created and save was called
+      expect(PDFDocument.create).toHaveBeenCalled();
+    });
+    
+    it("should handle links correctly", async () => {
+      const contentWithLink = {
+        title: "Link Test",
+        content: "[GitHub](https://github.com)",
+        createdAt: "2025-05-01"
+      };
+      
+      await exporter.export(contentWithLink);
+      
+      // PDFDocument was created and save was called
+      expect(PDFDocument.create).toHaveBeenCalled();
+    });
+    
+    it("should handle both bold and italic formatting in one line", async () => {
+      const contentWithFormatting = {
+        title: "Mixed Formatting",
+        content: "This **bold text** and *italic text* in one line",
+        createdAt: "2025-05-01"
+      };
+      
+      await exporter.export(contentWithFormatting);
+      
+      // PDFDocument was created and save was called
+      expect(PDFDocument.create).toHaveBeenCalled();
+    });
+    
+    it("should handle inline code formatting correctly", async () => {
+      const contentWithInlineCode = {
+        title: "Inline Code",
+        content: "Use `const x = 10;` to declare a constant",
+        createdAt: "2025-05-01"
+      };
+      
+      await exporter.export(contentWithInlineCode);
+      
+      // PDFDocument was created and save was called
+      expect(PDFDocument.create).toHaveBeenCalled();
+    });
+    
+    it("should create a new page when content exceeds page height", async () => {
+      const longContent = {
+        title: "Long Content Test",
+        content: Array(50).fill("This is a line that will be wrapped and take space.").join("\n"),
+        createdAt: "2025-05-01"
+      };
+      
+      await exporter.export(longContent);
+      
+      // PDFDocument was created and save was called
+      expect(PDFDocument.create).toHaveBeenCalled();
+    });
+  });
+  
+  describe("utility methods", () => {
+    it("should return correct mime type", () => {
+      expect(exporter.getMimeType()).toBe("application/pdf");
+    });
+    
+    it("should return filename with createdAt date", () => {
+      expect(exporter.getFileName("2025-05-01")).toBe("report-2025-05-01.pdf");
+    });
+  });
 });
