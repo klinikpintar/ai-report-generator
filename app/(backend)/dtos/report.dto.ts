@@ -8,7 +8,10 @@ export const ReportSchema = z.object({
     .trim()
     .min(1, "Isi laporan tidak boleh kosong")
     .refine(
-      (val) => !/<script.*?>.*?<\/script>/gi.test(val),
+      (val) => {
+        const scriptTagRegex = /<script[^>]*>(?:(?:(?!<\/script>)[\s\S])*?)<\/script>/gi;
+        return !scriptTagRegex.test(val);
+      },
       { message: "Isi laporan tidak boleh mengandung tag <script>" }
     ),
   createdAt: z.string().refine((val) => !isNaN(Date.parse(val)), {
