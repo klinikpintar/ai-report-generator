@@ -36,7 +36,7 @@ class ProviderService {
   async getAllProviders(
     optionsInput?: z.infer<typeof ProviderValidation.GET>
   ): Promise<z.infer<typeof ProviderValidation.RESPONSE>[] | z.infer<typeof ProviderValidation.RESPONSE_WITH_MODELS>[]> {
-    const options = ProviderValidation.GET.parse(optionsInput || {});
+    const options = optionsInput ?? {};
 
     const include: ProviderInclude = { activeModel: true };
     const where = options.onlyActive ? { isActive: true } : undefined;
