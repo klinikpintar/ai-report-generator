@@ -46,6 +46,11 @@ const Modal: React.FC<ModalProps> = (props) => {
       id="wrapper"
       data-testid="wrapper"
       onClick={handleClose}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          handleClose;
+        }
+      }}
     >
       <div
         className={`bg-white w-full max-w-[600px] max-h-full rounded-lg shadow transition-all z-50 ${
