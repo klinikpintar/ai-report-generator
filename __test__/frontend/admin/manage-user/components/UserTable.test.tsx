@@ -40,7 +40,7 @@ jest.mock("@frontend/admin/manage-user/context/UserTableContext", () => ({
     },
     dispatch: jest.fn(),
   }),
-  UserTableProvider: ({ children }) => <>{children}</>,
+  UserTableProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 
 // Mock API
@@ -60,7 +60,7 @@ jest.mock("next/navigation", () => ({
 
 // Mock the generic table components to reduce rendering complexity
 jest.mock("@frontend/components/table", () => ({
-  GenericTable: ({ columns, data }) => (
+  GenericTable: ({ columns, data }: { columns: Array<{ key: string; header: string; renderCell?: (item: any) => React.ReactNode }>; data: Array<any> }) => (
     <table>
       <thead>
         <tr>

@@ -124,12 +124,24 @@ export default function ChatBox() {
     const response = await fetch(`/api/schema?${queryParams.toString()}`);
     if (!response.ok) throw new Error("Failed to fetch schemas");
     const responseData = await response.json();
-    const schemas = Array.isArray(responseData) ? responseData : responseData.data;
-    if (!Array.isArray(schemas)) {
+    // Handle different response formats more explicitly
+    let schemas = [];
+    if (Array.isArray(responseData)) {
+      schemas = responseData;
+    } else if (responseData && responseData.data && Array.isArray(responseData.data)) {
+      schemas = responseData.data;
+    } else {
       console.error("Unexpected API response format:", responseData);
       return [];
     }
-    return schemas.map((schema) => schema.id);
+    // Define the schema structure
+    interface Schema {
+      id: number;
+      [key: string]: any; // Additional schema properties
+    }
+
+    // Cast the schemas array with the correct type
+    return schemas.map((schema: Schema) => schema.id);
   };
 
   const sendMessage = async () => {
@@ -220,6 +232,7 @@ export default function ChatBox() {
               <div className={`p-3 rounded-lg ${msg.sender === "user" ? "bg-[#E4F6FC] text-[#00B0EB]" : "bg-gray-200 text-black"}`}>
                 {msg.sender === "assistant" ? (
                   <ReactMarkdown
+                    data-testid="markdown"
                     remarkPlugins={[remarkGfm]}
                     rehypePlugins={[rehypeRaw]}
                     components={{
@@ -320,9 +333,16 @@ export default function ChatBox() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) {
-                  e.preventDefault();
-                  if (input.trim()) sendMessage();
+                if (e.key === "Enter") {
+                  if (!e.shiftKey) {
+                    e.preventDefault();
+                    if (input.trim()) sendMessage();
+                  } else {
+                    // Make sure we don't clear the input on shift+enter
+                    e.preventDefault();
+                    // Add a newline character if needed
+                    setInput(prev => prev + "\n");
+                  }
                 }
               }}
               rows={1}
