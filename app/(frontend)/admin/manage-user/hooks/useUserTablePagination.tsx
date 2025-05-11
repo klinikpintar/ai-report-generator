@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useUserTableContext } from "../context/UserTableContext";
 import { useRouter } from "next/navigation";
 
-export const useUserTablePagination = (handleFetchUsers: () => Promise<void>) => {
+export const useUserTablePagination = () => {
   const { dispatch } = useUserTableContext();
   const router = useRouter();
 
@@ -22,9 +22,6 @@ export const useUserTablePagination = (handleFetchUsers: () => Promise<void>) =>
 
     // Update page in URL (used for browser navigation)
     writePageToUrl(page);
-
-    // Refresh data
-    await handleFetchUsers();
   };
 
   const parsePageFromUrl = () => {

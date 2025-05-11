@@ -14,7 +14,6 @@ jest.mock("next/navigation", () => ({
 describe("useUserTablePagination", () => {
   const dispatchMock = jest.fn();
   const pushMock = jest.fn();
-  const fetchUsersMock = jest.fn();
 
   beforeEach(() => {
     (useUserTableContext as jest.Mock).mockReturnValue({ dispatch: dispatchMock });
@@ -22,19 +21,18 @@ describe("useUserTablePagination", () => {
 
     dispatchMock.mockClear();
     pushMock.mockClear();
-    fetchUsersMock.mockClear();
   });
 
   const setup = (url = "http://localhost/admin/manage-user") => {
     delete (window as any).location;
     (window as any).location = new URL(url);
-    return renderHook(() => useUserTablePagination(fetchUsersMock));
+    return renderHook(() => useUserTablePagination());
   };
 
   it("✅ should update URL and fetch users when page changes", async () => {
     setup();
 
-    const { result } = renderHook(() => useUserTablePagination(fetchUsersMock));
+    const { result } = renderHook(() => useUserTablePagination());
 
     await act(async () => {
       await result.current.handlePageChange(2);
@@ -42,13 +40,12 @@ describe("useUserTablePagination", () => {
 
     expect(dispatchMock).toHaveBeenCalledWith({ type: "SET_PAGE", payload: 2 });
     expect(pushMock).toHaveBeenCalledWith("/admin/manage-user?page=2");
-    expect(fetchUsersMock).toHaveBeenCalled();
   });
 
   it("✅ should remove page param from URL if page is falsy", async () => {
     setup("http://localhost/admin/manage-user?page=3");
 
-    const { result } = renderHook(() => useUserTablePagination(fetchUsersMock));
+    const { result } = renderHook(() => useUserTablePagination());
 
     await act(async () => {
       await result.current.handlePageChange(0); // 0 dianggap falsy
@@ -56,13 +53,12 @@ describe("useUserTablePagination", () => {
 
     expect(dispatchMock).toHaveBeenCalledWith({ type: "SET_PAGE", payload: 0 });
     expect(pushMock).toHaveBeenCalledWith("/admin/manage-user?");
-    expect(fetchUsersMock).toHaveBeenCalled();
   });
 
   it("✅ should parse page from URL on mount", () => {
     setup("http://localhost/admin/manage-user?page=5");
 
-    renderHook(() => useUserTablePagination(fetchUsersMock));
+    renderHook(() => useUserTablePagination());
 
     expect(dispatchMock).toHaveBeenCalledWith({ type: "SET_PAGE", payload: 5 });
   });
@@ -70,7 +66,7 @@ describe("useUserTablePagination", () => {
   it("✅ should fallback to page 1 if no page param in URL", () => {
     setup("http://localhost/admin/manage-user");
 
-    renderHook(() => useUserTablePagination(fetchUsersMock));
+    renderHook(() => useUserTablePagination());
 
     expect(dispatchMock).toHaveBeenCalledWith({ type: "SET_PAGE", payload: 1 });
   });

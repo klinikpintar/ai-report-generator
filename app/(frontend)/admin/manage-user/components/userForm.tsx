@@ -1,7 +1,7 @@
-import React, { useState } from "react";
+import React from "react";
 import FormInput from "@frontend/components/form-input";
 import ButtonSubmit from "@frontend/components/button-submit";
-import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
+import PasswordInput from "@frontend/components/password-input";
 
 interface UserFormProps {
     formData: {
@@ -30,12 +30,6 @@ const UserForm: React.FC<UserFormProps> = ({
     handleSubmit,
     handleCancel,
 }) => {
-    const [showPassword, setShowPassword] = useState(false);
-    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-
-    const toggleShowPassword = () => setShowPassword(!showPassword);
-    const toggleShowConfirmPassword = () => setShowConfirmPassword(!showConfirmPassword);
-
     return (
         <div className="max-h-[60vh] overflow-y-auto">
             <form className="md:pr-10 pl-10 pb-10 pt-5" onSubmit={handleSubmit}>
@@ -49,7 +43,7 @@ const UserForm: React.FC<UserFormProps> = ({
                         onChange={handleChange}
                         error={errors.fullName}
                     />
-                    
+
                     <FormInput
                         label="Email"
                         name="email"
@@ -60,56 +54,27 @@ const UserForm: React.FC<UserFormProps> = ({
                         onChange={handleChange}
                         error={errors.email}
                     />
-                    
-                    <div className="relative">
-                        <FormInput
-                            label="Password"
-                            name="password"
-                            type={showPassword ? "text" : "password"}
-                            value={formData.password}
-                            placeholder="Masukkan password"
-                            required
-                            onChange={handleChange}
-                            error={errors.password}
-                        />
-                        <button
-                            type="button"
-                            className="absolute right-3 top-10 text-gray-500 hover:text-gray-700 focus:outline-none"
-                            onClick={toggleShowPassword}
-                            aria-label={showPassword ? "Hide password" : "Show password"}
-                        >
-                            {showPassword ? (
-                                <EyeSlashIcon className="w-8 h-6" />
-                            ) : (
-                                <EyeIcon className="w-8 h-6" />
-                            )}
-                        </button>
-                    </div>
-                    
-                    <div className="relative">
-                        <FormInput
-                            label="Confirm Password"
-                            name="confirmPassword"
-                            type={showConfirmPassword ? "text" : "password"}
-                            value={formData.confirmPassword}
-                            placeholder="Konfirmasi password"
-                            required
-                            onChange={handleChange}
-                            error={errors.confirmPassword}
-                        />
-                        <button
-                            type="button"
-                            className="absolute right-3 top-10 text-gray-500 hover:text-gray-700 focus:outline-none"
-                            onClick={toggleShowConfirmPassword}
-                            aria-label={showConfirmPassword ? "Hide confirm password" : "Show confirm password"}
-                        >
-                            {showConfirmPassword ? (
-                                <EyeSlashIcon className="w-8 h-6" />
-                            ) : (
-                                <EyeIcon className="w-8 h-6" />
-                            )}
-                        </button>
-                    </div>
+
+                    <PasswordInput
+                        label="Password"
+                        name="password"
+                        value={formData.password}
+                        placeholder="Masukkan password"
+                        required
+                        onChange={handleChange}
+                        error={errors.password}
+                    />
+
+                    <PasswordInput
+                        label="Confirm Password"
+                        name="confirmPassword"
+                        value={formData.confirmPassword}
+                        placeholder="Konfirmasi password"
+                        required
+                        onChange={handleChange}
+                        error={errors.confirmPassword}
+                        confirmPassword={true}
+                    />
 
                     <div className="space-y-2">
                         <fieldset>

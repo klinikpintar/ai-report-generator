@@ -45,6 +45,7 @@ export default function ChatBox() {
   const [isLoading, setIsLoading] = useState(false);
   const [isInitializing, setIsInitializing] = useState(true);
   const chatContainerRef = useRef<HTMLDivElement>(null);
+  const [titleSession, setTitleSession] = useState<string>("AI Report Generator");
   const { selectedService, services, getServiceRepresentation } = useService(); // Ambil service dari context
   const [isExportModalVisible, setIsExportModalVisible] = useState(false);
   const {
@@ -83,6 +84,8 @@ export default function ChatBox() {
 
       const data = await response.json();
 
+      setTitleSession(data.session.title ?? "AI Report Generator");
+
       interface SessionMessage {
         id: string;
         content: string;
@@ -96,7 +99,7 @@ export default function ChatBox() {
           id: msg.id,
           sender: msg.role === "user" ? "user" : "assistant",
           content: msg.content,
-          modelUsed: msg.modelUsed || undefined,
+          modelUsed: msg.modelUsed ?? undefined,
         })
       );
 
@@ -233,26 +236,6 @@ export default function ChatBox() {
     }
   };
 
-  // Your useEffect hooks
-  useEffect(() => {
-    const sessionId = searchParams.get("sessionId");
-    setIsInitializing(true);
-
-    if (sessionId) {
-      setActiveSessionId(sessionId);
-      loadSessionMessages(sessionId).finally(() => setIsInitializing(false));
-    } else {
-      setIsInitializing(false);
-    }
-  }, [searchParams, setActiveSessionId]);
-
-  useEffect(() => {
-    if (chatContainerRef.current) {
-      chatContainerRef.current.scrollTop =
-        chatContainerRef.current.scrollHeight;
-    }
-  }, [messages]);
-
   return (
     <div className="flex flex-col h-screen pb-20">
       <div className="flex justify-between items-center py-3">
@@ -380,7 +363,7 @@ export default function ChatBox() {
                   setIsExportModalVisible(false);
                 }}
                 content={exportModalData.content}
-                title={`Laporan-${exportModalData.id}`}
+                title={titleSession}
               />
             )}
 

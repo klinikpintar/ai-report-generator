@@ -7,13 +7,13 @@ import { useUser } from "@/app/(frontend)/login/context/userContext";
 import FormInput from "@frontend/components/form-input";
 import { toast } from "react-toastify";
 import Navbar from "@frontend/components/navbar";
+import PasswordInput from "@frontend/components/password-input";
 
 const LoginPage = () => {
   const [email, setEmail] = useState("");
   const { setEmailContext, setNameContext } = useUser();
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
   const router = useRouter();
   const isSubmitting = useRef(false);
 
@@ -23,41 +23,32 @@ const LoginPage = () => {
     // Blokir multiple submissions instan
     if (isSubmitting.current) return;
     isSubmitting.current = true;
-
     setLoading(true);
-    setError("");
 
     try {
       const { success } = await FeAuthService.login(email, password);
 
       if (success) {
-        toast.success("Login successful! Redirecting...", {
-          position: "top-right",
-          autoClose: 3000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-        });
         const data = await FeAuthService.getUser();
         const user = data.data.user;
         setEmailContext(user.email);
         setNameContext(user.name);
         localStorage.setItem("userEmail", email);
-        localStorage.setItem("userName", user.email);
+        localStorage.setItem("userName", user.name);
+        toast.success("Login successful! Redirecting...");
 
-        // Delay sebentar untuk pengguna melihat toast
-        setTimeout(() => {
+        setTimeout(async () => {
           if (user.role === "ADMIN") {
-            router.push("/admin");
+            await router.push("/admin");
+          } else {
+            await router.push("/");
           }
-          router.push("/");
-        }, 200);
+        }, 300);
       } else {
-        setError("Login failed. Please check your credentials.");
+        toast.error("Login failed. Please check your credentials.");
       }
     } catch {
-      setError("Something went wrong. Please try again.");
+      toast.error("Something went wrong. Please try again.");
     } finally {
       setLoading(false);
       isSubmitting.current = false;
@@ -88,26 +79,21 @@ const LoginPage = () => {
             required
             onChange={(e) => setEmail(e.target.value)}
           />
-          <FormInput
+
+          <PasswordInput
             label="Password"
             name="password"
-            type="password"
             value={password}
             placeholder="Masukkan password"
             required
             onChange={(e) => setPassword(e.target.value)}
           />
 
-          {error && (
-            <p className="text-red-600 text-sm font-semibold text-center">
-              {error}
-            </p>
-          )}
-
           <button
             type="submit"
-            className={`w-full mt-4 font-semibold text-18 py-3 px-6 rounded-[50px] ${loading ? "bg-blue-6/80 cursor-not-allowed" : "bg-blue-6"
-              } text-white`}
+            className={`w-full mt-4 font-semibold text-18 py-3 px-6 rounded-[50px] ${
+              loading ? "bg-blue-6/80 cursor-not-allowed" : "bg-blue-6"
+            } text-white`}
             disabled={loading}
           >
             {loading ? "Logging in..." : "Login"}

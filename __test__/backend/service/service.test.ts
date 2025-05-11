@@ -100,6 +100,7 @@ describe("CRUD of Service API (Using NextRequest)", () => {
       })
     );
 
+    const _ = await POST(sendRequest("POST", validServiceData));
     const response = await POST(sendRequest("POST", validServiceData));
 
     expect(response.status).toBe(StatusCodes.CONFLICT);
