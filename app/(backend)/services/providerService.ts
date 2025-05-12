@@ -12,8 +12,8 @@ class ProviderService {
   private static instance: ProviderService | null;
 
   private constructor(
-    private providerRepository: IProviderRepository,
-    private modelRepository: IAIModelRepository
+    private readonly providerRepository: IProviderRepository,
+    private readonly modelRepository: IAIModelRepository
   ) { }
 
   public static getInstance(): ProviderService {
