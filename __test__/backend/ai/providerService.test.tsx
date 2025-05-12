@@ -1,5 +1,4 @@
 import { ProviderValidation } from '@/app/(backend)/dtos/provider.dto';
-import { AIModelValidation } from '@/app/(backend)/dtos/aimodel.dto';
 import { NotFoundResponse } from '@/app/(backend)/utils/exceptions';
 import * as apiKeyUtils from '@/app/(backend)/utils/apiKeyUtils';
 import { PrismaProviderRepository } from '@/app/(backend)/repositories/PrismaProviderRepository';
@@ -121,9 +120,9 @@ describe('ProviderService', () => {
     test('should include models when includeModels is true', async () => {
       // Mock repository response
       const mockProviders = [
-        { 
-          id: 'id1', 
-          name: 'provider1', 
+        {
+          id: 'id1',
+          name: 'provider1',
           activeModel: { id: 'model1' },
           models: [{ id: 'model1' }, { id: 'model2' }]
         },
@@ -140,7 +139,7 @@ describe('ProviderService', () => {
       // Expectations
       expect(mockRepo.findMany).toHaveBeenCalledWith({
         where: undefined,
-        include: { 
+        include: {
           activeModel: true,
           models: { orderBy: { name: 'asc' } }
         },
@@ -252,8 +251,15 @@ describe('ProviderService', () => {
       expect(mockRepo.findActive).toHaveBeenCalled();
       expect(mockRepo.findByDefault).toHaveBeenCalled();
       expect(mockRepo.updateById).toHaveBeenCalledWith(
-        mockDefaultProvider.id, 
-        { isActive: true }
+        mockDefaultProvider.id,
+        { isActive: true },
+        expect.objectContaining({
+          activeModel: true,
+          models: {
+            orderBy: { name: 'asc' },
+            where: { isAvailable: true }
+          }
+        })
       );
       expect(ProviderValidation.RESPONSE_WITH_MODELS.parse).toHaveBeenCalledWith(updatedProvider);
     });
@@ -290,8 +296,15 @@ describe('ProviderService', () => {
 
       // Expectations
       expect(mockRepo.updateById).toHaveBeenCalledWith(
-        mockProvider.id, 
-        { activeModelId: 'model1' }
+        mockProvider.id,
+        { activeModelId: 'model1' },
+        expect.objectContaining({
+          activeModel: true,
+          models: {
+            orderBy: { name: 'asc' },
+            where: { isAvailable: true }
+          }
+        })
       );
       expect(ProviderValidation.RESPONSE_WITH_MODELS.parse).toHaveBeenCalledWith(updatedProvider);
     });
@@ -311,28 +324,12 @@ describe('ProviderService', () => {
       const mockProviderRepo = {
         findActive: jest.fn().mockResolvedValue(null),
         findByDefault: jest.fn().mockResolvedValue(null),
-        create: jest.fn().mockResolvedValue({ 
-          id: 'generated-id',
-          name: 'gemini',
-          displayName: 'Google Gemini',
-          isActive: true,
-          isDefault: true,
-        }),
-        updateById: jest.fn().mockImplementation(() => Promise.resolve()),
+        createDefaultProviderWithModel: jest.fn().mockResolvedValue(mockDefaultProvider),
         findById: jest.fn().mockResolvedValue(mockDefaultProvider),
-      };
-      
-      const mockModelRepo = {
-        create: jest.fn().mockResolvedValue({ 
-          id: 'model1', 
-          name: 'Gemini 2.0 Flash',
-          modelIdentifier: 'gemini-2.0-flash' 
-        }),
       };
 
       (PrismaProviderRepository as jest.Mock).mockImplementation(() => mockProviderRepo);
-      (PrismaAIModelRepository as jest.Mock).mockImplementation(() => mockModelRepo);
-      
+
       // Simulate environment variable
       process.env.GEMINI_API_KEY = 'test-api-key';
 
@@ -343,31 +340,29 @@ describe('ProviderService', () => {
       // Expectations
       expect(mockProviderRepo.findActive).toHaveBeenCalled();
       expect(mockProviderRepo.findByDefault).toHaveBeenCalled();
-      expect(mockProviderRepo.create).toHaveBeenCalled();
-      expect(mockModelRepo.create).toHaveBeenCalled();
+      expect(mockProviderRepo.createDefaultProviderWithModel).toHaveBeenCalled();
       expect(apiKeyUtils.encryptApiKey).toHaveBeenCalledWith('test-api-key');
-      expect(mockProviderRepo.findById).toHaveBeenCalled();
       expect(ProviderValidation.RESPONSE_WITH_MODELS.parse).toHaveBeenCalledWith(mockDefaultProvider);
-      
+
       // Cleanup
       delete process.env.GEMINI_API_KEY;
     });
-    
+
     test('should throw error when creating default provider without API key', async () => {
       // Mock empty database
       const mockProviderRepo = {
         findActive: jest.fn().mockResolvedValue(null),
         findByDefault: jest.fn().mockResolvedValue(null),
       };
-      
+
       (PrismaProviderRepository as jest.Mock).mockImplementation(() => mockProviderRepo);
-      
+
       // Ensure no API key in environment
       delete process.env.GEMINI_API_KEY;
 
       // Get fresh instance with mocked repo
       const service = ProviderServiceClass.getInstance();
-      
+
       // Expectations
       await expect(service.getActiveOrDefaultProvider())
         .rejects
@@ -378,31 +373,37 @@ describe('ProviderService', () => {
       // Mock data
       const defaultModel = { id: 'default-model-id', name: 'Default Model', isDefault: true };
       const nonDefaultModel = { id: 'model-id', name: 'Regular Model' };
-      
+
       const mockProvider = {
         id: 'provider-id',
         name: 'Test Provider',
         models: [nonDefaultModel, defaultModel], // defaultModel ada tapi di posisi kedua
         activeModel: null, // belum ada model aktif
       };
-  
+
       // Mock repository
       const mockProviderRepo = {
         findActive: jest.fn().mockResolvedValue(mockProvider),
         findByDefault: jest.fn(),
-        updateById: jest.fn().mockResolvedValue({...mockProvider, activeModelId: defaultModel.id}),
+        updateById: jest.fn().mockResolvedValue({ ...mockProvider, activeModelId: defaultModel.id }),
       };
-      
+
       (PrismaProviderRepository as jest.Mock).mockImplementation(() => mockProviderRepo);
-  
+
       // Get fresh instance with mocked repo
       const service = ProviderServiceClass.getInstance();
       await service.getActiveOrDefaultProvider();
-  
-      // Verify defaultModel dipilih, bukan provider.models[0]
+
       expect(mockProviderRepo.updateById).toHaveBeenCalledWith(
-        'provider-id', 
-        { activeModelId: 'default-model-id' }
+        'provider-id',
+        { activeModelId: 'default-model-id' },
+        expect.objectContaining({
+          activeModel: true,
+          models: {
+            orderBy: { name: 'asc' },
+            where: { isAvailable: true }
+          }
+        })
       );
     });
 
@@ -410,34 +411,40 @@ describe('ProviderService', () => {
       // Mock data - tidak ada model default
       const firstModel = { id: 'first-model-id', name: 'First Model', isDefault: false };
       const secondModel = { id: 'second-model-id', name: 'Second Model', isDefault: false };
-      
+
       const mockProvider = {
         id: 'provider-id',
         name: 'Test Provider',
         models: [firstModel, secondModel], // tidak ada model dengan isDefault: true
         activeModel: null, // belum ada model aktif
       };
-  
+
       // Mock repository
       const mockProviderRepo = {
         findActive: jest.fn().mockResolvedValue(mockProvider),
         findByDefault: jest.fn(),
-        updateById: jest.fn().mockResolvedValue({...mockProvider, activeModelId: firstModel.id}),
+        updateById: jest.fn().mockResolvedValue({ ...mockProvider, activeModelId: firstModel.id }),
       };
-      
+
       (PrismaProviderRepository as jest.Mock).mockImplementation(() => mockProviderRepo);
-  
+
       // Get fresh instance with mocked repo
       const service = ProviderServiceClass.getInstance();
       await service.getActiveOrDefaultProvider();
-  
+
       // Verify model pertama dipilih karena tidak ada default
       expect(mockProviderRepo.updateById).toHaveBeenCalledWith(
-        'provider-id', 
-        { activeModelId: 'first-model-id' }
+        'provider-id',
+        { activeModelId: 'first-model-id' },
+        expect.objectContaining({
+          activeModel: true,
+          models: {
+            orderBy: { name: 'asc' },
+            where: { isAvailable: true }
+          }
+        })
       );
     });
-
   });
 
   describe('updateActiveModel', () => {
@@ -468,7 +475,7 @@ describe('ProviderService', () => {
       const mockModelRepo = {
         findById: jest.fn().mockResolvedValue(mockModel),
       };
-      
+
       (PrismaProviderRepository as jest.Mock).mockImplementation(() => mockProviderRepo);
       (PrismaAIModelRepository as jest.Mock).mockImplementation(() => mockModelRepo);
 
@@ -488,12 +495,12 @@ describe('ProviderService', () => {
       const mockProviderRepo = {
         findById: jest.fn().mockResolvedValue(null),
       };
-      
+
       (PrismaProviderRepository as jest.Mock).mockImplementation(() => mockProviderRepo);
 
       // Get fresh instance with mocked repos
       const service = ProviderServiceClass.getInstance();
-      
+
       // Expectations
       await expect(service.updateActiveModel('invalid-id', 'model-id'))
         .rejects
@@ -515,13 +522,13 @@ describe('ProviderService', () => {
       const mockModelRepo = {
         findById: jest.fn().mockResolvedValue(null),
       };
-      
+
       (PrismaProviderRepository as jest.Mock).mockImplementation(() => mockProviderRepo);
       (PrismaAIModelRepository as jest.Mock).mockImplementation(() => mockModelRepo);
 
       // Get fresh instance with mocked repos
       const service = ProviderServiceClass.getInstance();
-      
+
       // Expectations
       await expect(service.updateActiveModel(providerId, 'invalid-model-id'))
         .rejects
@@ -547,31 +554,31 @@ describe('ProviderService', () => {
         parsed: true,
         withModels: true
       };
-    
+
       // Mock repository
       const mockProviderRepo = {
         findById: jest.fn().mockResolvedValue(mockProvider),
         updateApiKey: jest.fn().mockResolvedValue(updatedProvider),
       };
-      
+
       // Mock validation to return specific value we can verify
       (ProviderValidation.RESPONSE_WITH_MODELS.parse as jest.Mock).mockReturnValue(parsedProvider);
-      
+
       (PrismaProviderRepository as jest.Mock).mockImplementation(() => mockProviderRepo);
-    
+
       // Get fresh instance with mocked repo
       const service = ProviderServiceClass.getInstance();
       const result = await service.updateApiKey(providerId, apiKey);
-    
+
       // Expectations
       expect(mockProviderRepo.findById).toHaveBeenCalledWith(providerId);
       expect(apiKeyUtils.encryptApiKey).toHaveBeenCalledWith(apiKey);
       expect(mockProviderRepo.updateApiKey).toHaveBeenCalledWith(
-        providerId, 
+        providerId,
         'encrypted-new-api-key'
       );
       expect(ProviderValidation.RESPONSE_WITH_MODELS.parse).toHaveBeenCalledWith(updatedProvider);
-      
+
       // Verifikasi hasil dari fungsi updateApiKey (line 97)
       expect(result).toBe(parsedProvider);
       expect(result).toEqual(expect.objectContaining({
@@ -579,19 +586,19 @@ describe('ProviderService', () => {
         parsed: true,
         withModels: true
       }));
-    }); 
+    });
 
     test('should throw NotFoundResponse when provider does not exist', async () => {
       // Mock repository
       const mockProviderRepo = {
         findById: jest.fn().mockResolvedValue(null),
       };
-      
+
       (PrismaProviderRepository as jest.Mock).mockImplementation(() => mockProviderRepo);
 
       // Get fresh instance with mocked repo
       const service = ProviderServiceClass.getInstance();
-      
+
       // Expectations
       await expect(service.updateApiKey('invalid-id', 'api-key'))
         .rejects
@@ -612,13 +619,11 @@ describe('ProviderService', () => {
         isActive: true,
       };
 
-      // Mock repository
       const mockProviderRepo = {
         findById: jest.fn().mockResolvedValue(mockProvider),
-        deactivateAll: jest.fn().mockResolvedValue(undefined),
         setActive: jest.fn().mockResolvedValue(updatedProvider),
       };
-      
+
       (PrismaProviderRepository as jest.Mock).mockImplementation(() => mockProviderRepo);
 
       // Get fresh instance with mocked repo
@@ -627,7 +632,6 @@ describe('ProviderService', () => {
 
       // Expectations
       expect(mockProviderRepo.findById).toHaveBeenCalledWith(providerId);
-      expect(mockProviderRepo.deactivateAll).toHaveBeenCalled();
       expect(mockProviderRepo.setActive).toHaveBeenCalledWith(providerId);
       expect(ProviderValidation.RESPONSE_WITH_MODELS.parse).toHaveBeenCalledWith(updatedProvider);
     });
@@ -637,12 +641,12 @@ describe('ProviderService', () => {
       const mockProviderRepo = {
         findById: jest.fn().mockResolvedValue(null),
       };
-      
+
       (PrismaProviderRepository as jest.Mock).mockImplementation(() => mockProviderRepo);
 
       // Get fresh instance with mocked repo
       const service = ProviderServiceClass.getInstance();
-      
+
       // Expectations
       await expect(service.setActiveProvider('invalid-id'))
         .rejects
@@ -651,7 +655,7 @@ describe('ProviderService', () => {
   });
 
   describe('createProvider', () => {
-    test('should create new provider', async () => {
+    test('should create new provider with ACID transaction', async () => {
       // Mock data
       const providerData = {
         name: 'new-provider',
@@ -668,10 +672,9 @@ describe('ProviderService', () => {
 
       // Mock repository
       const mockProviderRepo = {
-        create: jest.fn().mockResolvedValue(createdProvider),
-        resetDefaults: jest.fn().mockResolvedValue(undefined),
+        createWithDefaults: jest.fn().mockResolvedValue(createdProvider)
       };
-      
+
       (PrismaProviderRepository as jest.Mock).mockImplementation(() => mockProviderRepo);
 
       // Get fresh instance with mocked repo
@@ -681,8 +684,7 @@ describe('ProviderService', () => {
       // Expectations
       expect(ProviderValidation.POST.parse).toHaveBeenCalledWith(providerData);
       expect(apiKeyUtils.encryptApiKey).toHaveBeenCalledWith(providerData.apiKey);
-      expect(mockProviderRepo.resetDefaults).not.toHaveBeenCalled();
-      expect(mockProviderRepo.create).toHaveBeenCalledWith({
+      expect(mockProviderRepo.createWithDefaults).toHaveBeenCalledWith({
         name: providerData.name,
         displayName: providerData.displayName,
         apiKey: 'encrypted-api-key-123',
@@ -709,10 +711,9 @@ describe('ProviderService', () => {
 
       // Mock repository
       const mockProviderRepo = {
-        create: jest.fn().mockResolvedValue(createdProvider),
-        resetDefaults: jest.fn().mockResolvedValue(undefined),
+        createWithDefaults: jest.fn().mockResolvedValue(createdProvider)  // Tambahkan ini
       };
-      
+
       (PrismaProviderRepository as jest.Mock).mockImplementation(() => mockProviderRepo);
 
       // Get fresh instance with mocked repo
@@ -720,46 +721,114 @@ describe('ProviderService', () => {
       const result = await service.createProvider(providerData);
 
       // Expectations
-      expect(mockProviderRepo.resetDefaults).toHaveBeenCalled();
-      expect(mockProviderRepo.create).toHaveBeenCalled();
+      expect(mockProviderRepo.createWithDefaults).toHaveBeenCalledWith({
+        name: providerData.name,
+        displayName: providerData.displayName,
+        apiKey: 'encrypted-api-key-123',
+        isActive: providerData.isActive,
+        isDefault: providerData.isDefault,
+      });
+      expect(ProviderValidation.RESPONSE.parse).toHaveBeenCalledWith(createdProvider);
     });
   });
 
   describe('Transaction and Data Consistency Tests', () => {
-    test('createDefaultProvider should handle failure gracefully', async () => {
-      // Mock repositories
+    test('createDefaultProvider should use atomic transaction', async () => {
+      // Mock data
+      const mockProvider = {
+        id: 'provider-id',
+        name: 'gemini',
+        displayName: 'Google Gemini',
+        apiKey: 'encrypted-test-api-key',
+        isActive: true,
+        isDefault: true,
+        activeModelId: 'model-id',
+        models: [
+          { id: 'model-id', name: 'Gemini 2.0 Flash', modelIdentifier: 'gemini-2.0-flash' }
+        ],
+        activeModel: { id: 'model-id', name: 'Gemini 2.0 Flash' }
+      };
+
+      // Mock repository with createDefaultProviderWithModel implementation
       const mockProviderRepo = {
-        create: jest.fn().mockResolvedValue({
-          id: 'provider-id',
-          name: 'Test Provider',
-        }),
-        updateById: jest.fn().mockResolvedValue({}),
-        findById: jest.fn().mockResolvedValue(null), // Simulate failure
+        createDefaultProviderWithModel: jest.fn().mockResolvedValue(mockProvider)
       };
-      
-      const mockModelRepo = {
-        create: jest.fn().mockResolvedValue({
-          id: 'model-id',
-          name: 'Test Model',
-        }),
-      };
-      
+
       (PrismaProviderRepository as jest.Mock).mockImplementation(() => mockProviderRepo);
-      (PrismaAIModelRepository as jest.Mock).mockImplementation(() => mockModelRepo);
 
       // Simulate environment variable
       process.env.GEMINI_API_KEY = 'test-api-key';
-      
-      // Get fresh instance with mocked repos
+
+      // Get fresh instance with mocked repo
       const service = ProviderServiceClass.getInstance();
-      
-      // Expectations
-      await expect(service['createDefaultProvider']())
-        .rejects
-        .toThrow('Failed to create default provider');
-        
+
+      // Call private method directly using bracket notation
+      const result = await service['createDefaultProvider']();
+
+      // Verify transaction was used
+      expect(mockProviderRepo.createDefaultProviderWithModel).toHaveBeenCalled();
+      expect(mockProviderRepo.createDefaultProviderWithModel).toHaveBeenCalledWith(
+        expect.objectContaining({
+          name: 'gemini',
+          displayName: 'Google Gemini',
+          apiKey: 'encrypted-test-api-key',
+          isActive: true,
+          isDefault: true,
+        }),
+        expect.objectContaining({
+          name: 'Gemini 2.0 Flash',
+          modelIdentifier: 'gemini-2.0-flash',
+          isDefault: true,
+          isAvailable: true
+        })
+      );
+
+      expect(result).toBe(mockProvider);
+
       // Cleanup
       delete process.env.GEMINI_API_KEY;
+    });
+
+    test('getActiveOrDefaultProvider should use transaction for activation', async () => {
+      // Mock default provider (not active)
+      const mockDefaultProvider = {
+        id: 'default-id',
+        name: 'Default Provider',
+        isActive: false,
+        isDefault: true,
+        activeModel: null,
+        models: []
+      };
+
+      const updatedProvider = {
+        ...mockDefaultProvider,
+        isActive: true
+      };
+
+      // Mock repository focusing on transaction behavior
+      const mockRepo = {
+        findActive: jest.fn().mockResolvedValue(null),
+        findByDefault: jest.fn().mockResolvedValue(mockDefaultProvider),
+        updateById: jest.fn().mockResolvedValue(updatedProvider), // updateById handles transaction
+      };
+
+      (PrismaProviderRepository as jest.Mock).mockImplementation(() => mockRepo);
+
+      // Get fresh instance with mocked repo
+      const service = ProviderServiceClass.getInstance();
+      await service.getActiveOrDefaultProvider();
+
+      // Verify transaction-safe method was used
+      expect(mockRepo.updateById).toHaveBeenCalledWith(
+        mockDefaultProvider.id,
+        { isActive: true },
+        expect.objectContaining({
+          activeModel: true,
+          models: expect.objectContaining({
+            where: { isAvailable: true }
+          })
+        })
+      );
     });
   });
 
@@ -769,16 +838,43 @@ describe('ProviderService', () => {
       const mockProviderRepo = {
         findMany: jest.fn().mockRejectedValue(new Error('Database connection lost')),
       };
-      
+
       (PrismaProviderRepository as jest.Mock).mockImplementation(() => mockProviderRepo);
 
       // Get fresh instance with mocked repo
       const service = ProviderServiceClass.getInstance();
-      
+
       // Expectations
       await expect(service.getAllProviders())
         .rejects
         .toThrow('Database connection lost');
+    });
+
+    test('should throw error when default provider creation fails', async () => {
+      const mockProviderRepo = {
+        findActive: jest.fn().mockResolvedValue(null),
+        findByDefault: jest.fn().mockResolvedValue(null),
+        createDefaultProviderWithModel: jest.fn().mockResolvedValue(null)
+      };
+
+      (PrismaProviderRepository as jest.Mock).mockImplementation(() => mockProviderRepo);
+
+      // Simulate environment variable
+      process.env.GEMINI_API_KEY = 'test-api-key';
+
+      // Get fresh instance with mocked repo
+      const service = ProviderServiceClass.getInstance();
+
+      // Verify error thrown when createDefaultProviderWithModel returns null
+      await expect(service.getActiveOrDefaultProvider()).rejects.toThrow('Failed to create default provider');
+
+      // Verify mocks were called
+      expect(mockProviderRepo.findActive).toHaveBeenCalled();
+      expect(mockProviderRepo.findByDefault).toHaveBeenCalled();
+      expect(mockProviderRepo.createDefaultProviderWithModel).toHaveBeenCalled();
+
+      // Cleanup
+      delete process.env.GEMINI_API_KEY;
     });
   });
 
@@ -792,25 +888,25 @@ describe('ProviderService', () => {
         activeModel: null,
         models: [] // Empty models array
       };
-  
+
       const mockRepo = {
         findActive: jest.fn().mockResolvedValue(mockProvider),
         findByDefault: jest.fn(),
         updateById: jest.fn(),
       };
-      
+
       (PrismaProviderRepository as jest.Mock).mockImplementation(() => mockRepo);
-  
+
       // Get fresh instance with mocked repo
       const service = ProviderServiceClass.getInstance();
-      
+
       // Should fall back to creating default provider
       await service.getActiveOrDefaultProvider();
-      
+
       // Should not try to update activeModelId since there are no models
       expect(mockRepo.updateById).not.toHaveBeenCalled();
     });
-  
+
     test('should handle extremely long API keys', async () => {
       // Mock data
       const providerId = 'provider-id';
@@ -819,25 +915,25 @@ describe('ProviderService', () => {
         id: providerId,
         name: 'Test Provider',
       };
-      
+
       const mockProviderRepo = {
         findById: jest.fn().mockResolvedValue(mockProvider),
         updateApiKey: jest.fn().mockImplementation(() => {
           throw new Error('API key too long');
         }),
       };
-      
+
       (PrismaProviderRepository as jest.Mock).mockImplementation(() => mockProviderRepo);
-      
+
       // Get fresh instance with mocked repo
       const service = ProviderServiceClass.getInstance();
-      
+
       // Should throw error for extremely long API key
       await expect(service.updateApiKey(providerId, extremelyLongApiKey))
         .rejects
         .toThrow('API key too long');
     });
-  
+
     test('should handle unicode characters in provider and model names', async () => {
       // Mock data with unicode characters
       const providerData = {
@@ -847,30 +943,30 @@ describe('ProviderService', () => {
         isActive: true,
         isDefault: false,
       };
-      
+
       const createdProvider = {
         id: 'generated-id',
         ...providerData,
         apiKey: 'encrypted-api-key-123',
       };
-  
-      // Mock repository
+
       const mockProviderRepo = {
         create: jest.fn().mockResolvedValue(createdProvider),
         resetDefaults: jest.fn(),
+        createWithDefaults: jest.fn().mockResolvedValue(createdProvider)
       };
-      
+
       (PrismaProviderRepository as jest.Mock).mockImplementation(() => mockProviderRepo);
-  
+
       // Get fresh instance with mocked repo
       const service = ProviderServiceClass.getInstance();
       const result = await service.createProvider(providerData);
-  
+
       // Provider should be created correctly despite unicode characters
       expect(result).toHaveProperty('name', 'unicode-provider-😀');
       expect(result).toHaveProperty('displayName', '유니코드 프로바이더');
     });
-  
+
     test('should handle very large data response from repository', async () => {
       // Create very large array of models
       const largeModelsArray = Array(1000).fill(null).map((_, i) => ({
@@ -878,7 +974,7 @@ describe('ProviderService', () => {
         name: `Model ${i}`,
         modelIdentifier: `model-identifier-${i}`,
       }));
-      
+
       // Mock provider with very large models array
       const mockProvider = {
         id: 'provider-id',
@@ -887,23 +983,23 @@ describe('ProviderService', () => {
         activeModel: largeModelsArray[0],
         models: largeModelsArray,
       };
-  
+
       const mockRepo = {
         findActive: jest.fn().mockResolvedValue(mockProvider),
       };
-      
+
       (PrismaProviderRepository as jest.Mock).mockImplementation(() => mockRepo);
-      
+
       // Get fresh instance with mocked repo
       const service = ProviderServiceClass.getInstance();
-      
+
       // Should handle large data without crashing
       const result = await service.getActiveOrDefaultProvider();
-      
+
       expect(result).toHaveProperty('id', 'provider-id');
       expect(ProviderValidation.RESPONSE_WITH_MODELS.parse).toHaveBeenCalled();
     });
-    
+
     test('should handle null values in provider data', async () => {
       // Mock provider with null values
       const mockProvider = {
@@ -914,20 +1010,20 @@ describe('ProviderService', () => {
         apiKey: 'encrypted-key',
         models: [],
       };
-  
+
       const mockRepo = {
         findActive: jest.fn().mockResolvedValue(mockProvider),
       };
-      
+
       (PrismaProviderRepository as jest.Mock).mockImplementation(() => mockRepo);
-      
+
       // Modify parse to simulate validation error
       (ProviderValidation.RESPONSE_WITH_MODELS.parse as jest.Mock)
         .mockImplementationOnce(() => { throw new Error('Validation error: name cannot be null'); });
-      
+
       // Get fresh instance with mocked repo
       const service = ProviderServiceClass.getInstance();
-      
+
       // Should propagate Zod validation error
       await expect(service.getActiveOrDefaultProvider())
         .rejects

@@ -2,12 +2,16 @@ import { PrismaProviderRepository } from '@/app/(backend)/repositories/PrismaPro
 import prisma from '@/lib/prisma';
 
 jest.mock('@/lib/prisma', () => ({
+    $transaction: jest.fn(),
     provider: {
         findMany: jest.fn(),
         findFirst: jest.fn(),
         findUnique: jest.fn(),
         update: jest.fn(),
         updateMany: jest.fn(),
+        create: jest.fn(),
+    },
+    aIModel: {
         create: jest.fn(),
     }
 }));
@@ -189,27 +193,25 @@ describe('PrismaProviderRepository', () => {
     });
 
     describe('setActive', () => {
-        test('should set provider as active', async () => {
+        test('should set provider as active using ACID transaction', async () => {
             const providerId = 'provider-id';
             const updatedProvider = {
                 id: providerId,
                 isActive: true
             };
 
-            (prisma.provider.update as jest.Mock).mockResolvedValue(updatedProvider);
+            // Setup transaction mock
+            (prisma.$transaction as jest.Mock).mockResolvedValue([
+                { count: 2 }, // Result of updateMany (deactivate all)
+                updatedProvider // Result of update (activate specific provider)
+            ]);
 
             const result = await repository.setActive(providerId);
 
-            expect(prisma.provider.update).toHaveBeenCalledWith({
-                where: { id: providerId },
-                data: { isActive: true },
-                include: {
-                    models: {
-                        orderBy: { name: 'asc' },
-                    },
-                    activeModel: true
-                }
-            });
+            // Verify transaction was used
+            expect(prisma.$transaction).toHaveBeenCalled();
+
+            // Expect result matches the second item in transaction array (the update result)
             expect(result).toEqual(updatedProvider);
         });
     });
@@ -237,6 +239,127 @@ describe('PrismaProviderRepository', () => {
                 data: providerData
             });
             expect(result).toEqual(createdProvider);
+        });
+    });
+
+    describe('createWithDefaults', () => {
+        test('should create provider with handling defaults in a transaction', async () => {
+            const providerData = {
+                name: 'test-provider',
+                displayName: 'Test Provider',
+                apiKey: 'encrypted-key',
+                isActive: true,
+                isDefault: true
+            };
+
+            const createdProvider = { id: 'new-id', ...providerData };
+
+            // Mock transaction function
+            (prisma.$transaction as jest.Mock).mockImplementation(async (callback) => {
+                const result = await callback(prisma);
+                return result;
+            });
+
+            // Mock transaction operations
+            (prisma.provider.updateMany as jest.Mock).mockResolvedValue({ count: 1 });
+            (prisma.provider.create as jest.Mock).mockResolvedValue(createdProvider);
+
+            const result = await repository.createWithDefaults(providerData);
+
+            expect(prisma.$transaction).toHaveBeenCalled();
+            expect(prisma.provider.updateMany).toHaveBeenCalledWith({
+                where: { isDefault: true },
+                data: { isDefault: false }
+            });
+            expect(prisma.provider.create).toHaveBeenCalledWith({ data: providerData });
+            expect(result).toEqual(createdProvider);
+        });
+        test('should not reset defaults when isDefault is false', async () => {
+            const providerData = {
+                name: 'test-provider',
+                displayName: 'Test Provider',
+                apiKey: 'encrypted-key',
+                isActive: true,
+                isDefault: false
+            };
+
+            const createdProvider = { id: 'new-id', ...providerData };
+
+            // Mock transaction function
+            (prisma.$transaction as jest.Mock).mockImplementation(async (callback) => {
+                const result = await callback(prisma);
+                return result;
+            });
+
+            (prisma.provider.create as jest.Mock).mockResolvedValue(createdProvider);
+
+            await repository.createWithDefaults(providerData);
+
+            expect(prisma.$transaction).toHaveBeenCalled();
+            expect(prisma.provider.updateMany).not.toHaveBeenCalled();
+            expect(prisma.provider.create).toHaveBeenCalledWith({ data: providerData });
+        });
+    });
+
+    describe('createDefaultProviderWithModel', () => {
+        test('should create default provider with model in a transaction', async () => {
+            const providerData = {
+                name: 'default-provider',
+                displayName: 'Default Provider',
+                apiKey: 'encrypted-key',
+                isActive: true,
+                isDefault: true
+            };
+
+            const modelData = {
+                name: 'Default Model',
+                modelIdentifier: 'default-model',
+                isDefault: true,
+                isAvailable: true
+            };
+
+            const createdProvider = { id: 'provider-id', ...providerData };
+            const createdModel = { id: 'model-id', ...modelData, providerId: 'provider-id' };
+
+            const completeProvider = {
+                ...createdProvider,
+                activeModelId: 'model-id',
+                models: [createdModel],
+                activeModel: createdModel
+            };
+
+            // Mock transaction function
+            (prisma.$transaction as jest.Mock).mockImplementation(async (callback) => {
+                const result = await callback(prisma);
+                return result;
+            });
+
+            // Mock transaction operations
+            (prisma.provider.updateMany as jest.Mock).mockResolvedValue({ count: 1 });
+            (prisma.provider.create as jest.Mock).mockResolvedValue(createdProvider);
+            (prisma.aIModel.create as jest.Mock).mockResolvedValue(createdModel);
+            (prisma.provider.update as jest.Mock).mockResolvedValue(completeProvider);
+
+            const result = await repository.createDefaultProviderWithModel(providerData, modelData);
+
+            expect(prisma.$transaction).toHaveBeenCalled();
+            expect(prisma.provider.updateMany).toHaveBeenCalledWith({
+                where: { isDefault: true },
+                data: { isDefault: false }
+            });
+            expect(prisma.provider.create).toHaveBeenCalledWith({ data: providerData });
+            expect(prisma.aIModel.create).toHaveBeenCalledWith({
+                data: { ...modelData, providerId: 'provider-id' }
+            });
+            expect(prisma.provider.update).toHaveBeenCalledWith({
+                where: { id: 'provider-id' },
+                data: { activeModelId: 'model-id' },
+                include: expect.objectContaining({
+                    models: expect.any(Object),
+                    activeModel: true
+                })
+            });
+            expect(result).toEqual(completeProvider);
         });
     });
 
