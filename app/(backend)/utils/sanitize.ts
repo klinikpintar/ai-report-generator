@@ -5,7 +5,7 @@ export function isContentSafe(content: string): boolean {
   let foundTag = false;
 
   const parser = new Parser({
-    onopentag(name) {
+    onopentag() {
       foundTag = true;
       parser.pause();
     },
