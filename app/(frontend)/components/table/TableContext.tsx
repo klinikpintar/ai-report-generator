@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useReducer, ReactNode, Dispatch } from "react";
+import React, { createContext, useContext, useReducer, ReactNode, Dispatch, useMemo } from "react";
 
 export interface FilterGroup<T> {
   all: T[];
@@ -84,7 +84,11 @@ export function createTableProvider<T, FilterTypes extends Record<string, unknow
       initialState
     );
 
-    return <TableContext.Provider value={{ state, dispatch }}>{children}</TableContext.Provider>;
+    const contextValue = useMemo(() => {
+      return { state, dispatch };
+    }, [state, dispatch]); 
+
+    return <TableContext.Provider value={contextValue}>{children}</TableContext.Provider>;
   };
 }
 
