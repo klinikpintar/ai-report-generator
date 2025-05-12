@@ -23,7 +23,7 @@ export class AIModelSchema {
     .string()
     .min(1, { message: "Model identifier cannot be empty" })
     .max(255, { message: "Model identifier is too long" })
-    .refine((val) => /^[a-z0-9\-\.]+$/.test(val), {
+    .refine((val) => /^[a-z0-9-.]+$/.test(val), {
       message: "Model identifier must contain only lowercase letters, numbers, hyphens, and dots"
     });
 }
