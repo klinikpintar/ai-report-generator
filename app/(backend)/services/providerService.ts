@@ -84,8 +84,18 @@ class ProviderService {
 
       // Aktifkan provider default jika ditemukan
       if (provider) {
-        await this.providerRepository.updateById(provider.id, { isActive: true });
-        provider.isActive = true;
+        // Gunakan updateById yang ditingkatkan untuk ACID
+        provider = await this.providerRepository.updateById(
+          provider.id,
+          { isActive: true },
+          {
+            activeModel: true,
+            models: {
+              where: { isAvailable: true },
+              orderBy: { name: 'asc' }
+            }
+          }
+        );
       }
     }
 
@@ -94,14 +104,20 @@ class ProviderService {
       // Cari model default untuk provider ini
       const defaultModel = provider.models.find(model => model.isDefault);
       // Atau gunakan model pertama jika tidak ada default
-      const modelToActivate = defaultModel || provider.models[0];
+      const modelToActivate = defaultModel ?? provider.models[0];
 
       // Set model sebagai aktif
-      await this.providerRepository.updateById(provider.id, { activeModelId: modelToActivate.id });
-
-      // Update provider object dalam memory
-      provider.activeModelId = modelToActivate.id;
-      provider.activeModel = modelToActivate;
+      provider = await this.providerRepository.updateById(
+        provider.id,
+        { activeModelId: modelToActivate.id },
+        {
+          activeModel: true,
+          models: {
+            where: { isAvailable: true },
+            orderBy: { name: 'asc' }
+          }
+        }
+      );
     }
 
     // Jika masih tidak ada provider, buat provider default on-the-fly
@@ -186,6 +202,8 @@ class ProviderService {
 
   /**
    * Set provider as active and deactivate others
+   * Mengimplementasikan ACID dengan transaksi untuk menjamin bahwa operasi
+   * deactivateAll dan setActive terjadi dalam satu transaksi atomik
    */
   async setActiveProvider(
     providerId: string
@@ -198,10 +216,7 @@ class ProviderService {
       throw new NotFoundResponse(`Provider with ID ${validatedData.providerId} not found`);
     }
 
-    // Nonaktifkan semua provider
-    await this.providerRepository.deactivateAll();
-
-    // Aktifkan provider yang dipilih
+    // Menggunakan setActive yang ditingkatkan untuk menjalankan deactivateAll dan update dalam satu transaksi
     const updatedProvider = await this.providerRepository.setActive(validatedData.providerId);
 
     // Transform output dengan skema Zod
@@ -210,6 +225,7 @@ class ProviderService {
 
   /**
    * Buat provider baru
+   * Mengimplementasikan ACID untuk operasi reset defaults dan create provider
    */
   async createProvider(
     data: z.infer<typeof ProviderValidation.POST>
@@ -217,13 +233,7 @@ class ProviderService {
     const validatedData = ProviderValidation.POST.parse(data);
     const encryptedApiKey = encryptApiKey(validatedData.apiKey);
 
-    // Jika ini provider default, reset semua default lain
-    if (validatedData.isDefault) {
-      await this.providerRepository.resetDefaults();
-    }
-
-    // Buat provider
-    const provider = await this.providerRepository.create({
+    const provider = await this.providerRepository.createWithDefaults({
       name: validatedData.name,
       displayName: validatedData.displayName,
       apiKey: encryptedApiKey,
@@ -251,45 +261,31 @@ class ProviderService {
       isDefault: true,
     });
 
-    // Enkripsi API key
     const encryptedApiKey = encryptApiKey(defaultProviderData.apiKey);
-
-    // Buat provider default
-    const provider = await this.providerRepository.create({
-      name: defaultProviderData.name,
-      displayName: defaultProviderData.displayName,
-      apiKey: encryptedApiKey,
-      isActive: defaultProviderData.isActive,
-      isDefault: defaultProviderData.isDefault,
-    });
 
     // Validasi data model dengan Zod
     const defaultModelData = AIModelValidation.POST.parse({
       name: 'Gemini 2.0 Flash',
       modelIdentifier: 'gemini-2.0-flash',
-      providerId: provider.id,
+      providerId: 'temporary', // Will be replaced in transaction
       isDefault: true,
       isAvailable: true
     });
 
-    // Buat model default
-    const model = await this.modelRepository.create(defaultModelData);
-
-    // Set sebagai active model
-    await this.providerRepository.updateById(
-      provider.id,
-      { activeModelId: model.id }
-    );
-
-    // Dapatkan provider lengkap dengan model
-    const completeProvider = await this.providerRepository.findById(
-      provider.id,
+    // Menggunakan createDefaultProviderWithModel yang menjalankan semua operasi dalam satu transaksi
+    const completeProvider = await this.providerRepository.createDefaultProviderWithModel(
       {
-        models: {
-          orderBy: { name: 'asc' },
-          where: { isAvailable: true }
-        },
-        activeModel: true
+        name: defaultProviderData.name,
+        displayName: defaultProviderData.displayName,
+        apiKey: encryptedApiKey,
+        isActive: defaultProviderData.isActive,
+        isDefault: defaultProviderData.isDefault,
+      },
+      {
+        name: defaultModelData.name,
+        modelIdentifier: defaultModelData.modelIdentifier,
+        isDefault: defaultModelData.isDefault,
+        isAvailable: defaultModelData.isAvailable
       }
     );
 
