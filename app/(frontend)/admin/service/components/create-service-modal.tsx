@@ -124,8 +124,6 @@ const CreateServiceModal = ({ isVisible, onClose }: Props) => {
         setFormData({ name: "", platform: "" });
         onClose();
         eventBus.publish(EVENTS.SERVICE_UPDATED); // Notify other components
-      } else {
-        toast.error(`Failed to submit service: ${response.statusText}`);
       }
     } catch (error) {
       toast.error(`Error submitting service: ${error}`);
