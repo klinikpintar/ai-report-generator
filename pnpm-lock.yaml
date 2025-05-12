@@ -166,6 +166,9 @@ devDependencies:
   '@types/dompurify':
     specifier: ^3.0.5
     version: 3.2.0
+  '@types/htmlparser2':
+    specifier: ^4.1.0
+    version: 4.1.0
   '@types/jest':
     specifier: ^29.5.14
     version: 29.5.14
@@ -2361,6 +2364,13 @@ packages:
     dependencies:
       '@types/unist': 3.0.3
     dev: false
+
+  /@types/htmlparser2@4.1.0:
+    resolution: {integrity: sha512-gjTGZEamCmIoGd0pfZZI5ufese3iTN/5JdWep9UEKwAA9itAViW63znsjD385FvGuAcWpgJRb6Wx+uHFqe8xWg==}
+    deprecated: This is a stub types definition. htmlparser2 provides its own type definitions, so you do not need this installed.
+    dependencies:
+      htmlparser2: 8.0.2
+    dev: true
 
   /@types/istanbul-lib-coverage@2.0.6:
     resolution: {integrity: sha512-2QF/t/auWm0lsy8XtKVPG19v3sSOQlJe/YHZgfjb/KBBHOGSV+J2q/S671rcq9uTBrLAXmZpqJiaQbMT+zNU1w==}
