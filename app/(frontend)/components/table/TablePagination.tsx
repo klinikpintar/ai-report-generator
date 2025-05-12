@@ -11,9 +11,9 @@ import React from "react";
 import { generatePagination } from "./pagination";
 
 type TablePaginationProps = {
-  currentPage: number;
-  lastPage: number;
-  onPageChange: (page: number) => void;
+  readonly currentPage: number;
+  readonly lastPage: number;
+  readonly onPageChange: (page: number) => void;
 };
 
 export function TablePagination({ currentPage, lastPage, onPageChange }: TablePaginationProps) {

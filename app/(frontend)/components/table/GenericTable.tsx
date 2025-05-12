@@ -17,11 +17,11 @@ export interface GenericTableColumn<T> {
 }
 
 export interface GenericTableProps<T> {
-  columns: GenericTableColumn<T>[];
-  data: T[];
-  isLoading: boolean;
-  emptyMessage?: string;
-  keyExtractor: (item: T) => string | number;
+  readonly columns: GenericTableColumn<T>[];
+  readonly data: T[];
+  readonly isLoading: boolean;
+  readonly emptyMessage?: string;
+  readonly keyExtractor: (item: T) => string | number;
 }
 
 export function GenericTable<T>({
@@ -44,7 +44,7 @@ export function GenericTable<T>({
       </TableHeader>
       <TableBody>
         {isLoading &&
-          [...Array(5)].map((_, i) => (
+          [...Array(5)].map((i) => (
             <TableRow key={`loader-${i}`}>
               {columns.map((column) => (
                 <TableCell key={column.key} style={{ width: column.width }} className="h-12">
