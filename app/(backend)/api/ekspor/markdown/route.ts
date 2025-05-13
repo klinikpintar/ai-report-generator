@@ -2,12 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { MarkdownExporter } from "@/app/(backend)/services/markdownExporter";
 import { ReportSchema } from "@/app/(backend)/dtos/report.dto";
 import { ZodError } from "zod";
-import { apiResponseDuration } from "@/app/(backend)/utils/metrics";
+import { apiResponseDuration, apiMetrics } from '@/app/(backend)/utils/metrics';
 
 const route = "/api/ekspor/markdown";
 export async function POST(req: NextRequest) {
   const method = "POST";
   const endTimer = apiResponseDuration.startTimer({ route, method });
+  apiMetrics(method, route);
   try {
     const body = await req.json();
 

@@ -2,12 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { PdfExporter } from "@/app/(backend)/services/pdfExporter";
 import { ReportSchema } from "@/app/(backend)/dtos/report.dto";
 import { ZodError } from "zod";
-import { apiResponseDuration } from "@/app/(backend)/utils/metrics";
+import { apiResponseDuration, apiMetrics } from '@/app/(backend)/utils/metrics';
 
 const route = "/api/ekspor/pdf";
 export async function POST(req: NextRequest) {
   const method = "POST";
   const endTimer = apiResponseDuration.startTimer({ route, method });
+  apiMetrics(method, route);
   try {
     const { searchParams } = req.nextUrl; 
     const isPreview = searchParams.get("preview") === "true";

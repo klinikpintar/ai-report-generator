@@ -3,12 +3,13 @@ import providerService from '@/app/(backend)/services/providerService';
 import { ErrorResponse, InternalServerErrorResponse } from '@/app/(backend)/utils/exceptions';
 import { ProviderValidation } from '@/app/(backend)/dtos/provider.dto';
 import { validateBody } from '@/app/(backend)/utils/validationUtils';
-import { apiResponseDuration } from '@/app/(backend)/utils/metrics';
+import { apiResponseDuration, apiMetrics } from '@/app/(backend)/utils/metrics';
 
 const route = '/api/ai/activate';
 export async function PATCH(request: NextRequest) {
   const method = 'PATCH';
   const endTimer = apiResponseDuration.startTimer({ route, method });
+  apiMetrics(method, route);
   try {
     const validatedData = await validateBody(ProviderValidation.ACTIVATE, request);
     

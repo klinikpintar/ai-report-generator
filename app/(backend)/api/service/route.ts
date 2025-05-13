@@ -3,12 +3,13 @@ import { StatusCodes } from 'http-status-codes';
 import serviceService from '@/app/(backend)/services/serviceService';
 import { validateServiceInput } from '@/app/(backend)/utils/serviceUtils';
 import { handleError } from '@backend/utils/errorUtils';
-import { apiResponseDuration } from '@backend/utils/metrics';
+import { apiResponseDuration, apiMetrics } from '@/app/(backend)/utils/metrics';
 
 const route = '/api/service';
 export async function GET() {
   const method = 'GET';
   const endTimer = apiResponseDuration.startTimer({ route, method });
+  apiMetrics(method, route);
   try {
     const services = await serviceService.findAllServices();
     endTimer({ route, method });
@@ -22,6 +23,7 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   const method = 'POST';
   const endTimer = apiResponseDuration.startTimer({ route, method });
+  apiMetrics(method, route);
   try {
     const body = await req.json();
     const validated = validateServiceInput(body);
@@ -37,6 +39,7 @@ export async function POST(req: NextRequest) {
 export async function DELETE(req: NextRequest) {
   const method = 'DELETE';
   const endTimer = apiResponseDuration.startTimer({ route, method });
+  apiMetrics(method, route);
   try {
     const body = await req.json();
     if (!body.id) {

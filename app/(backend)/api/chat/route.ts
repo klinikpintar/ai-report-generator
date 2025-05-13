@@ -11,7 +11,7 @@ import { findRelevantSchemaContent } from '@/lib/schema-embedding';
 import { getUserFromRequest } from '@/app/(backend)/utils/authUtils';
 import prisma from '@/lib/prisma';
 import { NextResponse } from 'next/server';
-import { apiResponseDuration } from '@backend/utils/metrics';
+import { apiResponseDuration, apiMetrics } from '@/app/(backend)/utils/metrics';
 
 // Define an interface for the relevant content items
 export interface RelevantSchemaContentItem {
@@ -24,6 +24,7 @@ const route = '/api/chat';
 export async function POST(req: Request) {
   const method = 'POST';
   const endTimer = apiResponseDuration.startTimer({ route, method });
+  apiMetrics(method, route);
   const errorHandler = new ErrorHandler();
   const validator = new RequestValidator();
   const factory = new ModelFactory();

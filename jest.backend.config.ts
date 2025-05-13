@@ -15,6 +15,9 @@ const backendConfig: Config = {
   moduleFileExtensions: ["ts", "tsx", "js", "jsx", "json", "node"],
   roots: ["<rootDir>/__test__/backend"],
   setupFilesAfterEnv: ["<rootDir>/jest.setup.ts"],
+  coveragePathIgnorePatterns: [
+    "<rootDir>/app/(backend)/utils/metrics.ts",
+  ],
   moduleNameMapper: {
     "^jose$": "<rootDir>/__mocks__/jose.ts",
     "^@backend/(.*)$": "<rootDir>/app/(backend)/$1",

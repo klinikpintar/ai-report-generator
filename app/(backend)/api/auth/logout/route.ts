@@ -2,13 +2,14 @@ import { NextResponse } from "next/server";
 import { extractToken } from "@backend/utils/authUtils";
 import authService from "@backend/services/authService";
 import { ErrorResponse } from "@backend/utils/exceptions";
-import { apiResponseDuration } from "@backend/utils/metrics";
+import { apiResponseDuration, apiMetrics } from '@/app/(backend)/utils/metrics';
 
 const route = "/api/auth/logout";
 export async function POST(req: Request) {
   const method = "POST";
 
   const endTimer = apiResponseDuration.startTimer({ route, method });
+  apiMetrics(method, route);
   const cookie = req.headers.get("Cookie") ?? "";
   try {
     const token = extractToken(cookie, "access_token");

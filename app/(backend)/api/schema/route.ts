@@ -4,12 +4,13 @@ import schemaService from '../../services/schemaService';
 import { validateSchemaInput } from '../../utils/schemaUtils';
 import { handleError } from '@backend/utils/errorUtils';
 import { GetSchemaDto } from '@backend/interfaces/ISchemaService';
-import { apiResponseDuration } from '@backend/utils/metrics';
+import { apiResponseDuration, apiMetrics } from '@/app/(backend)/utils/metrics';
 
 const route = '/api/schema';
 export async function GET(req: NextRequest) {
   const method = 'GET';
   const endTimer = apiResponseDuration.startTimer({ route, method });
+  apiMetrics(method, route);
   try {
     const { searchParams } = new URL(req.url);
 
@@ -41,6 +42,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   const method = 'POST';
   const endTimer = apiResponseDuration.startTimer({ route, method });
+  apiMetrics(method, route);
   try {
     const body = await req.json();
     const validatedData = validateSchemaInput(body);
@@ -58,6 +60,7 @@ export async function POST(req: NextRequest) {
 export async function PATCH(req: NextRequest) {
   const method = 'PATCH';
   const endTimer = apiResponseDuration.startTimer({ route, method });
+  apiMetrics(method, route);
   try {
     const body = await req.json();
 
@@ -78,6 +81,7 @@ export async function PATCH(req: NextRequest) {
 export async function DELETE(req: NextRequest) {
   const method = 'DELETE';
   const endTimer = apiResponseDuration.startTimer({ route, method });
+  apiMetrics(method, route);
   try {
     const body = await req.json();
 

@@ -2,13 +2,14 @@ import { NextResponse } from "next/server";
 import authService from "@backend/services/authService";
 import { BadRequestResponse, ErrorResponse } from "@backend/utils/exceptions";
 import { LoginSchemaDto } from "@backend/dtos/auth.dto";
-import { apiResponseDuration } from "@backend/utils/metrics";
+import { apiResponseDuration, apiMetrics } from '@/app/(backend)/utils/metrics';
 
 const route = '/api/auth/login';
 
 export async function POST(req: Request) {
   const method = "POST";
   const endTimer = apiResponseDuration.startTimer({ route, method });
+  apiMetrics(method, route);
   const body = await req.json();
   try {
     const parseData = LoginSchemaDto.safeParse(body);

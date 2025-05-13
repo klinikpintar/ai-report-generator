@@ -1,7 +1,7 @@
 import { NextResponse, NextRequest } from 'next/server';
 import prisma from '@/lib/prisma';
 import { getUserFromRequest } from '@/app/(backend)/utils/authUtils';
-import { apiResponseDuration } from '@backend/utils/metrics';
+import { apiResponseDuration, apiMetrics } from '@/app/(backend)/utils/metrics';
 
 const route = '/api/chat-sessions/[id]';
 // Get a specific chat session with its messages
@@ -11,6 +11,7 @@ export async function GET(
 ) {
   const method = 'GET';
   const endTimer = apiResponseDuration.startTimer({ route, method });
+  apiMetrics(method, route);
   try {
     const user = await getUserFromRequest();
     if (!user) {
@@ -48,6 +49,7 @@ export async function DELETE(
 ) {
   const method = 'DELETE';
   const endTimer = apiResponseDuration.startTimer({ route, method });
+  apiMetrics(method, route);
   try {
     const user = await getUserFromRequest();
     if (!user) {
@@ -86,6 +88,7 @@ export async function PATCH(
 ) {
   const method = 'PATCH';
   const endTimer = apiResponseDuration.startTimer({ route, method });
+  apiMetrics(method, route);
   try {
     const user = await getUserFromRequest();
     if (!user) {

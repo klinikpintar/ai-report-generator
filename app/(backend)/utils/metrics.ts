@@ -42,6 +42,11 @@ export const apiErrorResponses = new Counter({
   registers: [register],
 });
 
+export const apiMetrics = (method: string, route: string) => {
+  apiRequests.inc({ method, route });
+  totalRequests.inc({ method });
+}
+
 export async function getMetrics(): Promise<string> {
   return await register.metrics();
 }
