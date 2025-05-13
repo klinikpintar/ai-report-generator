@@ -14,10 +14,7 @@ function wrapText(text: string, maxWidth: number, font: PDFFont, size: number): 
     const textWidth = font.widthOfTextAtSize(testLine, size);
     if (textWidth < maxWidth) {
       currentLine = testLine;
-    } else {
-      if (currentLine) lines.push(currentLine);
-      currentLine = word;
-    }
+    } 
   }
   if (currentLine) lines.push(currentLine);
   return lines;

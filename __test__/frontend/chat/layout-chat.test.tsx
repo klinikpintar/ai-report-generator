@@ -2,8 +2,6 @@ import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import Layout from '@frontend/(chat)/layout';
 import { UIStateContext } from '@frontend/(chat)/context/uiStateContext';
-import { ServiceProvider } from '@frontend/(chat)/context/serviceContext';
-import { SessionProvider } from '@frontend/(chat)/context/sessionContext';
 
 // Mock the components used in the Layout
 jest.mock('@frontend/(chat)/components/sidebar', () => ({

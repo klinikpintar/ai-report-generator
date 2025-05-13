@@ -137,7 +137,7 @@ export default function ChatBox() {
     // Define the schema structure
     interface Schema {
       id: number;
-      [key: string]: any; // Additional schema properties
+      [key: string]: unknown; // Additional schema properties
     }
 
     // Cast the schemas array with the correct type

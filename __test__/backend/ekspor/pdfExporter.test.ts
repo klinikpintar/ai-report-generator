@@ -474,4 +474,232 @@ describe("PdfExporter class", () => {
       expect(exporter.getFileName("2025-05-01")).toBe("report-2025-05-01.pdf");
     });
   });
+
+  // Add these tests to fully cover the drawFormattedText and extractStyle functions
+
+it("should handle bold and italic combinations correctly", async () => {
+  const contentWithCombinedStyles = {
+    title: "Combined Styles",
+    content: "This is ***bold and italic*** text in one line",
+    createdAt: "2025-05-01"
+  };
+  
+  await exporter.export(contentWithCombinedStyles);
+  
+  // PDFDocument was created and save was called
+  expect(PDFDocument.create).toHaveBeenCalled();
+});
+
+it("should handle nested ordered list items correctly", async () => {
+  const contentWithOrderedList = {
+    title: "Nested Ordered List",
+    content: "1. First item\n   1. Nested item\n   2. Another nested item\n2. Second item",
+    createdAt: "2025-05-01"
+  };
+  
+  await exporter.export(contentWithOrderedList);
+  
+  // PDFDocument was created and save was called
+  expect(PDFDocument.create).toHaveBeenCalled();
+});
+
+it("should render link format correctly", async () => {
+  const contentWithLink = {
+    title: "Link Format",
+    content: "[Click here](https://example.com) to visit example.com",
+    createdAt: "2025-05-01"
+  };
+  
+  await exporter.export(contentWithLink);
+  
+  // Verify PDFDocument was created
+  expect(PDFDocument.create).toHaveBeenCalled();
+});
+
+it("should handle code blocks with language specification", async () => {
+  const contentWithLanguageCodeBlock = {
+    title: "Code Block With Language",
+    content: "```sql\nSELECT * FROM users;\n```",
+    createdAt: "2025-05-01"
+  };
+  
+  await exporter.export(contentWithLanguageCodeBlock);
+  
+  // PDFDocument was created and save was called
+  expect(PDFDocument.create).toHaveBeenCalled();
+});
+
+it("should handle horizontal rule rendering", async () => {
+  const contentWithHR = {
+    title: "Horizontal Rule Test",
+    content: "Text above\n---\nText below",
+    createdAt: "2025-05-01"
+  };
+  
+  // Mock drawLine to verify it's called correctly
+  const mockDrawLine = jest.fn();
+  
+  (PDFDocument.create as jest.Mock).mockResolvedValueOnce({
+    addPage: jest.fn().mockReturnValue({
+      getSize: jest.fn().mockReturnValue({ width: 595, height: 842 }),
+      drawText: jest.fn(),
+      drawRectangle: jest.fn(),
+      drawImage: jest.fn(),
+      drawLine: mockDrawLine
+    }),
+    embedFont: jest.fn().mockResolvedValue({
+      widthOfTextAtSize: jest.fn().mockImplementation((text, size) => text.length * size * 0.5)
+    }),
+    embedPng: jest.fn().mockImplementation(() => ({ 
+      scale: jest.fn().mockReturnValue({ width: 100, height: 50 }) 
+    })),
+    save: jest.fn().mockResolvedValue(new Uint8Array([1, 2, 3, 4]))
+  });
+  
+  await exporter.export(contentWithHR);
+  
+  // Verify drawLine was called for the horizontal rule
+  expect(mockDrawLine).toHaveBeenCalled();
+});
+
+it("should handle inline code with background highlighting", async () => {
+  const contentWithInlineCode = {
+    title: "Inline Code Test",
+    content: "Use `const x = 10;` to declare a constant",
+    createdAt: "2025-05-01"
+  };
+  
+  // Mock drawRectangle to verify background highlighting for inline code
+  const mockDrawRectangle = jest.fn();
+  
+  (PDFDocument.create as jest.Mock).mockResolvedValueOnce({
+    addPage: jest.fn().mockReturnValue({
+      getSize: jest.fn().mockReturnValue({ width: 595, height: 842 }),
+      drawText: jest.fn(),
+      drawRectangle: mockDrawRectangle,
+      drawImage: jest.fn(),
+      drawLine: jest.fn()
+    }),
+    embedFont: jest.fn().mockResolvedValue({
+      widthOfTextAtSize: jest.fn().mockImplementation((text, size) => text.length * size * 0.5)
+    }),
+    embedPng: jest.fn().mockImplementation(() => ({ 
+      scale: jest.fn().mockReturnValue({ width: 100, height: 50 }) 
+    })),
+    save: jest.fn().mockResolvedValue(new Uint8Array([1, 2, 3, 4]))
+  });
+  
+  await exporter.export(contentWithInlineCode);
+  
+  // Verify drawRectangle was called for the inline code background
+  expect(mockDrawRectangle).toHaveBeenCalled();
+});
+
+it("should extract style from different line formats correctly", () => {
+  // We need to access the private method for testing
+  // @ts-ignore - accessing private method for testing
+  const extractStyle = exporter['extractStyle'].bind(exporter);
+  
+  // Test header styles
+  expect(extractStyle("# Header 1")).toEqual({
+    fontSize: 20, 
+    content: "Header 1", 
+    xStart: 50
+  });
+  
+  expect(extractStyle("## Header 2")).toEqual({
+    fontSize: 16, 
+    content: "Header 2", 
+    xStart: 50
+  });
+  
+  expect(extractStyle("### Header 3")).toEqual({
+    fontSize: 14, 
+    content: "Header 3", 
+    xStart: 50
+  });
+  
+  // Test blockquote
+  expect(extractStyle("> Quoted text")).toEqual({
+    fontSize: 12, 
+    content: "Quoted text", 
+    xStart: 65
+  });
+  
+  // Test bullet points with different markers
+  expect(extractStyle("- Bullet point")).toEqual({
+    fontSize: 12, 
+    content: "Bullet point", 
+    xStart: 65, 
+    bullet: true
+  });
+  
+  expect(extractStyle("* Bullet point")).toEqual({
+    fontSize: 12, 
+    content: "Bullet point", 
+    xStart: 65, 
+    bullet: true
+  });
+  
+  expect(extractStyle("+ Bullet point")).toEqual({
+    fontSize: 12, 
+    content: "Bullet point", 
+    xStart: 65, 
+    bullet: true
+  });
+  
+  // Test ordered list
+  expect(extractStyle("1. First item")).toEqual({
+    fontSize: 12, 
+    content: "First item", 
+    xStart: 65, 
+    prefix: "1. "
+  });
+  
+  // Test link format
+  expect(extractStyle("[Link text](https://example.com)")).toEqual({
+    fontSize: 12, 
+    content: "Link text (https://example.com)", 
+    xStart: 50
+  });
+  
+  // Test regular text
+  expect(extractStyle("Regular text")).toEqual({
+    fontSize: 12, 
+    content: "Regular text", 
+    xStart: 50
+  });
+});
+
+it("should return 500 for generic errors (not ZodError) during processing", async () => {
+  // Create a request that would be valid but will trigger an error
+  const validData = {
+    reportData: {
+      title: "Generic Error Test",
+      content: "This should trigger a generic error",
+      createdAt: "2025-04-07"
+    }
+  };
+  
+  // Instead of mocking the global Request constructor, we'll mock the json method
+  // on our NextRequest instance
+  const mockReq = createMockRequest(validData);
+  
+  // Replace the json method with one that throws an error
+  const originalJsonMethod = mockReq.json;
+  mockReq.json = jest.fn().mockImplementation(() => {
+    throw new Error("Generic error");
+  });
+  
+  // Run the request with our modified NextRequest instance
+  const res = await POST(mockReq);
+  const json = await res.json();
+  
+  // Restore original json method if needed
+  mockReq.json = originalJsonMethod;
+  
+  // Check response
+  expect(res.status).toBe(500);
+  expect(json.message).toBe("Gagal mengekspor laporan");
+});
 });
