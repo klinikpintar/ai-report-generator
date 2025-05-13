@@ -187,4 +187,25 @@ describe("Auth API - Refresh Token", () => {
     expect(response.status).toBe(403);
     expect(json).toHaveProperty("message", "Invalid refresh token");
   });
+
+  // Server Error
+  test("Should handle server error gracefully", async () => {
+    (prisma.refreshToken.findFirst as jest.Mock).mockRejectedValueOnce(
+      new Error("Server error")
+    );
+
+    const request = new NextRequest(new URL(BASE_API_URL_AUTH_TOKEN_REFRESH), {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Cookie: `refresh_token=${refreshToken}`,
+      },
+    });
+
+    const response = await refreshHandler(request);
+    const json = await response.json();
+
+    expect(response.status).toBe(500);
+    expect(json).toHaveProperty("message", "Internal server error");
+  });
 });
