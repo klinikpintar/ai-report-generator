@@ -20,23 +20,23 @@ services:
     networks:
       - app_network
   
-  app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    ports:
-      - "3000:3000"
-    env_file:
-      - .env
-    environment:
-      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db_postgre:5432/${POSTGRES_DB}
-      - NEXT_PUBLIC_BASE_URL=http://localhost:3000
-      - NODE_ENV=production
-    depends_on:
-      db_postgre:
-        condition: service_healthy
-    networks:
-      - app_network
+  # app:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile
+  #   ports:
+  #     - "3000:3000"
+  #   env_file:
+  #     - .env
+  #   environment:
+  #     - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db_postgre:5432/${POSTGRES_DB}
+  #     - NEXT_PUBLIC_BASE_URL=http://localhost:3000
+  #     - NODE_ENV=production
+  #   depends_on:
+  #     db_postgre:
+  #       condition: service_healthy
+  #   networks:
+  #     - app_network
 
 volumes:
   postgres_data:

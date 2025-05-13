@@ -23,6 +23,8 @@ const FIVE_MINUTES_IN_SECONDS = 300;
 const AUTH_ROUTES = {
   LOGIN: "/login",
   API_LOGIN: "/api/auth/login",
+  API_LOGOUT: "/api/auth/logout",
+  API_VERIFY: "/api/auth/token/verify",
   API_REFRESH: "/api/auth/token/refresh",
 };
 
@@ -36,61 +38,6 @@ const ROLE_REDIRECTS: Record<ROLE, RoleConfig> = {
     restrictedPaths: ["/admin"],
   },
 };
-
-const API_ACCESS_RULES: {
-  path: string;
-  permissions: Record<ROLE, string[]>;
-}[] = [
-  {
-    path: "/chat",
-    permissions: {
-      BUSINESS_ANALYST: ["POST"],
-      ADMIN: [],
-    },
-  },
-  {
-    path: "/ekspor",
-    permissions: {
-      BUSINESS_ANALYST: ["POST"],
-      ADMIN: [],
-    },
-  },
-  {
-    path: "/users",
-    permissions: {
-      ADMIN: ["GET", "POST", "DELETE", "PATCH"],
-      BUSINESS_ANALYST: [],
-    },
-  },
-  {
-    path: "/service",
-    permissions: {
-      ADMIN: ["GET", "POST", "DELETE"],
-      BUSINESS_ANALYST: ["GET"],
-    },
-  },
-  {
-    path: "/schema",
-    permissions: {
-      ADMIN: ["GET", "POST", "PATCH", "DELETE"],
-      BUSINESS_ANALYST: ["GET"],
-    },
-  },
-  {
-    path: "/chat-session",
-    permissions: {
-      ADMIN: [],
-      BUSINESS_ANALYST: ["GET", "POST", "DELETE", "PATCH"],
-    },
-  },
-  {
-    path: "/ai",
-    permissions: {
-      ADMIN: ["PATCH", "GET"],
-      BUSINESS_ANALYST: ["GET"],
-    },
-  },
-];
 
 // Token management functions
 export async function verifyAccessToken(
@@ -165,30 +112,38 @@ async function logAccess(
   }
 }
 
+const API_ACCESS_RULES: Record<ROLE, Record<string, string[]>> = {
+  ADMIN: {
+    GET: ["/users", "/service", "/schema", "/ai"],
+    POST: ["/users", "/service", "/schema"],
+    PATCH: ["/users", "/schema", "/ai"],
+    DELETE: ["/users", "/service", "/schema"],
+  },
+  BUSINESS_ANALYST: {
+    GET: ["/service", "/schema", "/chat-session", "/ai"],
+    POST: ["/chat", "/ekspor", "/chat-session"],
+    PATCH: ["/chat-session"],
+    DELETE: ["/chat-session"],
+  }
+};
+
 function checkApiAccess(
   pathname: string,
   role: ROLE,
   method: string
 ): NextResponse | null {
-  const matchingRule = API_ACCESS_RULES.filter((rule) =>
-    pathname.startsWith(`/api${rule.path}`)
-  ).sort((a, b) => b.path.length - a.path.length)[0];
-
-  if (matchingRule) {
-    const allowedMethods = matchingRule.permissions[role] || [];
-
-    if (allowedMethods.length === 0) {
-      return NextResponse.json({ message: "Unauthorized" }, { status: 403 });
-    }
-
-    if (!allowedMethods.includes(method)) {
-      return NextResponse.json(
-        { message: "Method Not Allowed" },
-        { status: 405 }
-      );
-    }
+  const path = pathname.replace(/^\/api/, '');
+  const allowedPaths = API_ACCESS_RULES[role]?.[method] || [];
+  
+  // Check if there's a matching path
+  const hasAccess = allowedPaths.some(allowedPath => 
+    path === allowedPath || path.startsWith(`${allowedPath}/`)
+  );
+  
+  if (!hasAccess) {
+    return NextResponse.json({ message: "Unauthorized" }, { status: 403 });
   }
-
+  
   return null;
 }
 
@@ -219,9 +174,13 @@ async function handleBackgroundTokenRefresh(
 export async function middleware(req: NextRequest, event: NextFetchEvent) {
   const { pathname } = req.nextUrl;
 
+  console.log("Middleware triggered for path:", pathname);
+
   if (isAuthRoute(pathname)) {
     return NextResponse.next();
   }
+
+  console.log("Middleware triggered for path:", isAuthRoute(pathname));
 
   let accessToken = req.cookies.get("access_token")?.value ?? null;
   const refreshToken = req.cookies.get("refresh_token")?.value ?? null;
