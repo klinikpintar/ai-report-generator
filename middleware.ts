@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest, NextFetchEvent } from "next/server";
 import * as jose from "jose";
+import { totalRequests } from "@backend/utils/metrics";
 
 type ROLE = "ADMIN" | "BUSINESS_ANALYST";
 
@@ -244,6 +245,7 @@ export async function middleware(req: NextRequest, event: NextFetchEvent) {
   }
 
   if (isApiRoute(pathname)) {
+    totalRequests.inc({ method: req.method });
     event.waitUntil(logAccess(user.id, pathname, user.role));
     const accessResult = checkApiAccess(pathname, user.role, req.method);
     if (accessResult) return accessResult;

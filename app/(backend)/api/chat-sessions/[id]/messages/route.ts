@@ -1,11 +1,15 @@
 import { NextResponse, NextRequest } from 'next/server';
 import prisma from '@/lib/prisma';
 import { getUserFromRequest } from '@/app/(backend)/utils/authUtils';
+import { apiResponseDuration } from '@backend/utils/metrics';
 
+const route = '/api/chat-sessions/[id]/messages';
 export async function GET(
   request: NextRequest,
   context: { params: Promise<{ id: string }> }
 ) {
+  const method = 'GET';
+  const endTimer = apiResponseDuration.startTimer({ route, method });
   try {
     const user = await getUserFromRequest();
     if (!user) {
@@ -28,9 +32,11 @@ export async function GET(
       orderBy: { createdAt: 'asc' },
     });
 
+    endTimer({ route, method });
     return NextResponse.json({ messages });
   } catch (error) {
     console.error('Error fetching chat messages:', error);
+    endTimer({ route, method });
     return NextResponse.json({ error: 'Server error' }, { status: 500 });
   }
 }
@@ -39,6 +45,8 @@ export async function POST(
   request: NextRequest,
   context: { params: Promise<{ id: string }> }
 ) {
+  const method = 'POST';
+  const endTimer = apiResponseDuration.startTimer({ route, method });
   try {
     const user = await getUserFromRequest();
     if (!user) {
@@ -73,9 +81,11 @@ export async function POST(
       data: { updatedAt: new Date() },
     });
 
+    endTimer({ route, method });
     return NextResponse.json({ message }, { status: 201 });
   } catch (error) {
     console.error('Error creating chat message:', error);
+    endTimer({ route, method });
     return NextResponse.json({ error: 'Failed to create chat message' }, { status: 500 });
   }
 }

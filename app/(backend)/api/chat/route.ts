@@ -11,6 +11,7 @@ import { findRelevantSchemaContent } from '@/lib/schema-embedding';
 import { getUserFromRequest } from '@/app/(backend)/utils/authUtils';
 import prisma from '@/lib/prisma';
 import { NextResponse } from 'next/server';
+import { apiResponseDuration } from '@backend/utils/metrics';
 
 // Define an interface for the relevant content items
 export interface RelevantSchemaContentItem {
@@ -19,7 +20,10 @@ export interface RelevantSchemaContentItem {
   similarity: number;
 }
 
+const route = '/api/chat';
 export async function POST(req: Request) {
+  const method = 'POST';
+  const endTimer = apiResponseDuration.startTimer({ route, method });
   const errorHandler = new ErrorHandler();
   const validator = new RequestValidator();
   const factory = new ModelFactory();
@@ -178,11 +182,13 @@ Use this schema information if relevant to answer the user's question.`;
       }
     }
     
+    endTimer({ route, method });
     return new Response(JSON.stringify(response), {
       status: 200,
       headers: { 'Content-Type': 'application/json' },
     });
   } catch (error) {
+    endTimer({ route, method });
     return errorHandler.handleError(error);
   }
 }

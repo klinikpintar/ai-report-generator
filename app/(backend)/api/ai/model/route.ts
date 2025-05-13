@@ -3,8 +3,12 @@ import providerService from '@/app/(backend)/services/providerService';
 import { ErrorResponse, InternalServerErrorResponse } from '@/app/(backend)/utils/exceptions';
 import { ProviderValidation } from '@/app/(backend)/dtos/provider.dto';
 import { validateQueryParams, validateBody } from '@/app/(backend)/utils/validationUtils';
+import { apiResponseDuration } from '@/app/(backend)/utils/metrics';
 
+const route = '/api/ai/model';
 export async function GET(request: NextRequest) {
+  const method = 'GET';
+  const endTimer = apiResponseDuration.startTimer({ route, method });
   try {
     const validatedParams = validateQueryParams(ProviderValidation.GET, request);
     
@@ -22,6 +26,7 @@ export async function GET(request: NextRequest) {
       providers = [defaultProvider];
     }
     
+    endTimer({ route, method });
     return NextResponse.json(providers);
   } catch (error) {
     if (error instanceof ErrorResponse) {
@@ -29,11 +34,14 @@ export async function GET(request: NextRequest) {
     }
     
     console.error('Error fetching models:', error);
+    endTimer({ route, method });
     return new InternalServerErrorResponse('Failed to fetch AI models').generate();
   }
 }
 
 export async function PATCH(request: NextRequest) {
+  const method = 'PATCH';
+  const endTimer = apiResponseDuration.startTimer({ route, method });
   try {
     const validatedData = await validateBody(ProviderValidation.SET_ACTIVE_MODEL, request);
     
@@ -43,12 +51,14 @@ export async function PATCH(request: NextRequest) {
       validatedData.modelId
     );
     
+    endTimer({ route, method });
     return NextResponse.json(updatedProvider);
   } catch (error) {
     if (error instanceof ErrorResponse) {
       return error.generate();
     }
     
+    endTimer({ route, method });
     console.error('Error updating active model:', error);
     return new InternalServerErrorResponse('Failed to update active model').generate();
   }

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { apiErrorResponses } from "./metrics";
 
 export class ErrorResponse {
   message: string;
@@ -7,6 +8,11 @@ export class ErrorResponse {
   constructor(message: string, status: number) {
     this.message = message;
     this.status = status;
+
+    apiErrorResponses.inc({
+      status: status.toString(),
+      message: this.constructor.name,
+    });
   }
 
   generate() {

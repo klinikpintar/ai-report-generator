@@ -7,11 +7,15 @@ import { NextResponse } from "next/server";
 import { UserValidation } from "@backend/dtos/users.dto";
 import usersService from "@backend/services/usersService";
 import authService from "@backend/services/authService";
+import { apiResponseDuration } from "@backend/utils/metrics";
 
+const route = "/api/users/[id]";
 export async function DELETE(
   _: Request,
   context: { params: Promise<{ id: string }> }
 ) {
+  const method = "DELETE";
+  const endTimer = apiResponseDuration.startTimer({ route, method });
   try {
     const userLogin = await authService.getUserLogin();
     if (!userLogin) throw new UnauthenticatedResponse("Unauthorized");
@@ -27,6 +31,7 @@ export async function DELETE(
     }
 
     const user = await usersService.deleteUser(id);
+    endTimer({ route, method });
     return NextResponse.json({
       message: "User deleted successfully",
       data: user,
@@ -36,6 +41,7 @@ export async function DELETE(
       return error.generate();
     }
     console.error("Unexpected error during user deletion:", error);
+    endTimer({ route, method });
     return new ErrorResponse("Internal server error", 500).generate();
   }
 }
@@ -44,6 +50,8 @@ export async function PATCH(
   req: Request,
   context: { params: Promise<{ id: string }> }
 ) {
+  const method = "PATCH";
+  const endTimer = apiResponseDuration.startTimer({ route, method });
   try {
     const { id } = await context.params;
     const body = await req.json();
@@ -55,6 +63,7 @@ export async function PATCH(
     const { id: userId, ...restData } = parseQuery.data;
 
     const user = await usersService.updateUser(userId as string, restData);
+    endTimer({ route, method });
     return NextResponse.json({
       message: "User updated successfully",
       data: user,
@@ -64,6 +73,7 @@ export async function PATCH(
       return error.generate();
     }
     console.error("Unexpected error during user update:", error);
+    endTimer({ route, method });
     return new ErrorResponse("Internal server error", 500).generate();
   }
 }
