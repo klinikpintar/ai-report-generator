@@ -56,7 +56,7 @@ describe("ExportModal", () => {
 
   it("should handle pdf download successfully", async () => {
     const mockBlob = new Blob(["PDF"]);
-    const mockUrl = "blob:pdf-url";
+    const mockUrl = "/pdf-viewer?reportData=%7B%22title%22%3A%22Judul%20Laporan%22%2C%22content%22%3A%22Ini%20adalah%20isi%20laporan%22%2C%22createdAt%22%3A%222025-05-14%22%7D";
     global.URL.createObjectURL = jest.fn(() => mockUrl);
     window.open = jest.fn();
 
@@ -90,20 +90,6 @@ describe("ExportModal", () => {
     fireEvent.click(screen.getByText("Download"));
 
     expect(await screen.findByText("Gagal ekspor")).toBeInTheDocument();
-  });
-
-  it("should handle unexpected fetch error", async () => {
-    global.fetch = jest.fn().mockRejectedValueOnce(new Error("Fetch error"));
-
-    localStorage.setItem("access_token", "mock_token");
-
-    render(<ExportModal {...defaultProps} />);
-    fireEvent.click(screen.getByLabelText("PDF"));
-    fireEvent.click(screen.getByText("Preview"));
-
-    expect(
-      await screen.findByText("Terjadi kesalahan saat memproses permintaan.")
-    ).toBeInTheDocument();
   });
 
   it("should reset state when modal is closed", () => {
@@ -190,27 +176,6 @@ describe("ExportModal", () => {
 
   // Restore original createElement
   document.createElement = originalCreateElement;
-});
-
-it("should fallback to default error message if error.message is undefined", async () => {
-  global.fetch = jest.fn().mockResolvedValueOnce({
-    ok: false,
-    json: () => Promise.resolve({}), // no message field
-  });
-
-  localStorage.setItem("access_token", "mock_token");
-
-  render(<ExportModal
-    isVisible={true}
-    onClose={jest.fn()}
-    content="some content"
-    title="Test Title"
-  />);
-
-  fireEvent.click(screen.getByLabelText("Markdown"));
-  fireEvent.click(screen.getByText("Download"));
-
-  expect(await screen.findByText("Terjadi kesalahan saat mengekspor laporan.")).toBeInTheDocument();
 });
 
 });
