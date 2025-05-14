@@ -11,8 +11,7 @@ export class ProviderTransform {
     /**
      * Menyamarkan API key agar tidak terekspos
      */
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    static maskApiKey(apiKey: string): string {
+    static maskApiKey(_: string): string {
       return '********';
     }
   }
