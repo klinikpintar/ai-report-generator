@@ -14,8 +14,12 @@ function wrapText(text: string, maxWidth: number, font: PDFFont, size: number): 
     const textWidth = font.widthOfTextAtSize(testLine, size);
     if (textWidth < maxWidth) {
       currentLine = testLine;
-    } 
+    } else {
+      if (currentLine) lines.push(currentLine);
+      currentLine = word;
+    }
   }
+
   if (currentLine) lines.push(currentLine);
   return lines;
 }
@@ -75,6 +79,12 @@ export class PdfExporter implements IExporter {
     const pdfDoc = await PDFDocument.create();
     let page = pdfDoc.addPage();
     const { width, height } = page.getSize();
+
+    // 🧠 Tambahan dari branch 303: custom PDF metadata
+    pdfDoc.setTitle(reportData.title);
+    pdfDoc.setAuthor("Klinik Pintar");
+    pdfDoc.setSubject(`Laporan - ${reportData.title}`);
+    pdfDoc.setCreator("Klinik Pintar AI Report Generator");
 
     const logoImage = await this.embedLogo(pdfDoc);
     const fonts = await this.loadFonts(pdfDoc);
@@ -154,31 +164,27 @@ export class PdfExporter implements IExporter {
   private extractStyle(line: string) {
     const fontSize = 12;
     const trimmed = line.trim();
-  
+
     if (trimmed.startsWith("# ")) {
       return { fontSize: 20, content: trimmed.slice(2), xStart: 50 };
     }
-  
+
     if (trimmed.startsWith("## ")) {
       return { fontSize: 16, content: trimmed.slice(3), xStart: 50 };
     }
-  
+
     if (trimmed.startsWith("### ")) {
       return { fontSize: 14, content: trimmed.slice(4), xStart: 50 };
     }
-  
+
     if (trimmed.startsWith("> ")) {
       return { fontSize, content: trimmed.slice(2), xStart: 65 };
     }
-  
-    if (
-      trimmed.startsWith("- ") ||
-      trimmed.startsWith("* ") ||
-      trimmed.startsWith("+ ")
-    ) {
+
+    if (/^[-*+]\s/.test(trimmed)) {
       return { fontSize, content: trimmed.slice(2), xStart: 65, bullet: true };
     }
-  
+
     const orderedMatch = /^(\d+)\.\s/.exec(trimmed);
     if (orderedMatch) {
       const number = orderedMatch[1];
@@ -189,23 +195,23 @@ export class PdfExporter implements IExporter {
         prefix: `${number}. `,
       };
     }
-  
+
     const linkMatch = /^\[(.*?)\]\((.*?)\)$/.exec(trimmed);
     if (linkMatch) {
       const text = linkMatch[1];
       const url = linkMatch[2];
       return { fontSize, content: `${text} (${url})`, xStart: 50 };
     }
-  
+
     return { fontSize, content: trimmed, xStart: 50 };
   }
-  
 
   getMimeType(): string {
     return "application/pdf";
   }
 
-  getFileName(createdAt: string): string {
-    return `report-${createdAt}.pdf`;
+  getFileName(title: string): string {
+    const sanitized = title.replace(/[/\\?%*:|"<>]/g, '-');
+    return `Klinik Pintar Laporan - ${sanitized}`;
   }
 }
