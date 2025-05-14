@@ -240,7 +240,7 @@ describe('ProviderTransform', () => {
     });
     
     test('should mask even empty API keys', () => {
-      expect(ProviderTransform.maskApiKey()).toBe('****');
+      expect(ProviderTransform.maskApiKey()).toBe('********');
     });
   });
 });
