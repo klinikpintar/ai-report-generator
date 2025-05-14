@@ -236,11 +236,11 @@ describe('ProviderTransform', () => {
 
   describe('maskApiKey', () => {
     test('should mask API key with asterisks', () => {
-      expect(ProviderTransform.maskApiKey('secret-api-key-12345')).toBe('********');
+      expect(ProviderTransform.maskApiKey()).toBe('********');
     });
     
     test('should mask even empty API keys', () => {
-      expect(ProviderTransform.maskApiKey('')).toBe('********');
+      expect(ProviderTransform.maskApiKey()).toBe('****');
     });
   });
 });

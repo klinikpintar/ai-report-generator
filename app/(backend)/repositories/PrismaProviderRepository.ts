@@ -65,7 +65,7 @@ export class PrismaProviderRepository implements IProviderRepository {
 
   async setActive(providerId: string): Promise<ProviderWithModels> {
     // Menonaktifkan semua dan mengaktifkan satu dalam satu transaksi
-    const [_, updatedProvider] = await prisma.$transaction([
+    const [, updatedProvider] = await prisma.$transaction([
       prisma.provider.updateMany({
         data: { isActive: false }
       }),

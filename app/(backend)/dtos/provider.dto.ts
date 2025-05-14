@@ -11,7 +11,7 @@ export class ProviderTransform {
     /**
      * Menyamarkan API key agar tidak terekspos
      */
-    static maskApiKey(_: string): string {
+    static maskApiKey(): string {
       return '********';
     }
   }
