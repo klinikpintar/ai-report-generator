@@ -343,7 +343,11 @@ describe('ProviderService', () => {
       const modelId = 'model-id';
 
       mockProviderRepo.findById.mockResolvedValue(createMockProvider({ id: 'provider-id' }));
-      mockModelService.findById.mockResolvedValue({ id: modelId, name: 'Model Name' });
+      mockModelService.findById.mockResolvedValue(createMockModel({
+        id: modelId,
+        name: 'Model Name',
+        providerId: providerId
+      }));
       mockProviderRepo.updateActiveModel.mockResolvedValue({
         id: providerId,
         name: 'Gemini',

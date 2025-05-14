@@ -1,4 +1,5 @@
 import { ProviderValidation } from '@/app/(backend)/dtos/provider.dto';
+import { ProviderTransform } from '@/app/(backend)/dtos/provider.dto';
 import { ZodError } from 'zod';
 
 describe('Provider DTO Validation', () => {
@@ -213,6 +214,33 @@ describe('Provider DTO Validation', () => {
       
       const result = ProviderValidation.RESPONSE_WITH_MODELS.parse(providerWithNullActiveModel);
       expect(result.activeModel).toBeNull();
+    });
+  });
+});
+
+describe('ProviderTransform', () => {
+  // Test langsung untuk class transformasi
+  describe('stringToBoolean', () => {
+    test('should convert "true" to true', () => {
+      expect(ProviderTransform.stringToBoolean('true')).toBe(true);
+    });
+
+    test('should convert "false" to false', () => {
+      expect(ProviderTransform.stringToBoolean('false')).toBe(false);
+    });
+
+    test('should return undefined for undefined input', () => {
+      expect(ProviderTransform.stringToBoolean(undefined)).toBeUndefined();
+    });
+  });
+
+  describe('maskApiKey', () => {
+    test('should mask API key with asterisks', () => {
+      expect(ProviderTransform.maskApiKey('secret-api-key-12345')).toBe('********');
+    });
+    
+    test('should mask even empty API keys', () => {
+      expect(ProviderTransform.maskApiKey('')).toBe('********');
     });
   });
 });
