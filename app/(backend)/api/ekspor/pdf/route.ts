@@ -4,11 +4,9 @@ import { PdfExporter } from "@/app/(backend)/services/pdfExporter";
 // Handle POST (form atau JSON)
 export async function POST(req: NextRequest) {
   try {
-    let title, content, createdAt;
-    
     // Hanya mendukung application/json
     const body = await req.json();
-    ({ title, content, createdAt } = body.reportData);
+    const { title, content, createdAt } = body.reportData;
 
     const exporter = new PdfExporter();
     const reportData = { title, content, createdAt };
