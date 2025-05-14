@@ -8,7 +8,7 @@ import { DefaultProviderFactory } from '../factories/defaultProviderFactory';
 import { IProviderService } from '../interfaces/IProviderService';
 
 export class ProviderService implements IProviderService {
-  private defaultProviderFactory: DefaultProviderFactory;
+  private readonly defaultProviderFactory: DefaultProviderFactory;
   
   constructor(
     private readonly providerRepository: IProviderRepository,

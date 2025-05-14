@@ -5,10 +5,10 @@ import { BadRequestResponse } from '../utils/exceptions';
 import { IApiKeyService } from '../interfaces/IApikeyService';
 
 export class ApiKeyService implements IApiKeyService {
-    private ENCRYPTION_KEY: string;
-    private ALGORITHM: string;
-    private SECRET_KEY: Buffer;
-    private httpClient: AxiosInstance;
+    private readonly ENCRYPTION_KEY: string;
+    private readonly ALGORITHM: string;
+    private readonly SECRET_KEY: Buffer;
+    private readonly httpClient: AxiosInstance;
 
     constructor(
         configService = config,
@@ -74,14 +74,15 @@ export class ApiKeyService implements IApiKeyService {
         try {
             const normalizedName = providerName.toLowerCase();
             switch (normalizedName) {
-                case 'gemini':
+                case 'gemini': {
                     const geminiResponse = await this.httpClient.get(
                         `https://generativelanguage.googleapis.com/v1/models?key=${apiKey}`,
                         { timeout: 5000 }
                     );
                     return geminiResponse.status === 200;
-
-                case 'deepseek':
+                }
+                
+                case 'deepseek': {
                     const deepseekResponse = await this.httpClient.get('https://api.deepseek.com/v1/models', {
                         headers: {
                             'Authorization': `Bearer ${apiKey}`,
@@ -90,6 +91,7 @@ export class ApiKeyService implements IApiKeyService {
                         timeout: 5000
                     });
                     return deepseekResponse.status === 200;
+                }
 
                 default:
                     // Semua provider lain (kalau ada) tidak divalidasi karena belum diatur mekanismenya
