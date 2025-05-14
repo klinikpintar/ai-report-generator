@@ -104,7 +104,7 @@ export default function Navbar() {
               {showProfileDropdown && (
                 <div className="absolute right-0 border-1 border-blue-7 bg-white border rounded shadow-md p-3 z-50 w-48">
                   <p className="text-sm font-reguler text-gray-700 mb-2 text-center">
-                    {name || "User"}
+                    {name}
                   </p>
                   <button
                     onClick={handleLogout}

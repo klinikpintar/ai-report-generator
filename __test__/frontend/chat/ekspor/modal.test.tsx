@@ -135,4 +135,82 @@ describe("ExportModal", () => {
     expect(screen.getByLabelText("Markdown")).not.toBeChecked();
     expect(screen.getByLabelText("PDF")).not.toBeChecked();
   });
+  
+  it("should trigger download when format is markdown", async () => {
+  const mockBlob = new Blob(["Markdown content"]);
+  const mockUrl = "blob:mock-url";
+  const clickSpy = jest.fn();
+  const revokeMock = jest.fn();
+
+  const originalCreateElement = document.createElement;
+
+  // Mock revokeObjectURL
+  Object.defineProperty(URL, "revokeObjectURL", {
+    value: revokeMock,
+    writable: true,
+  });
+
+  global.URL.createObjectURL = jest.fn(() => mockUrl);
+
+  // Mock <a> element
+  document.createElement = jest.fn((tagName: string) => {
+    if (tagName === "a") {
+      return {
+        href: "",
+        download: "",
+        click: clickSpy,
+      } as unknown as HTMLAnchorElement;
+    }
+    return originalCreateElement.call(document, tagName);
+  });
+
+  localStorage.setItem("access_token", "mock_token");
+
+  global.fetch = jest.fn().mockResolvedValueOnce({
+    ok: true,
+    blob: () => Promise.resolve(mockBlob),
+  });
+
+  render(
+    <ExportModal
+      isVisible={true}
+      onClose={jest.fn()}
+      content="Isi laporan"
+      title="Judul"
+    />
+  );
+
+  fireEvent.click(screen.getByLabelText("Markdown"));
+  fireEvent.click(screen.getByText("Download"));
+
+  await waitFor(() => {
+    expect(clickSpy).toHaveBeenCalled();
+    expect(revokeMock).toHaveBeenCalledWith(mockUrl);
+  });
+
+  // Restore original createElement
+  document.createElement = originalCreateElement;
+});
+
+it("should fallback to default error message if error.message is undefined", async () => {
+  global.fetch = jest.fn().mockResolvedValueOnce({
+    ok: false,
+    json: () => Promise.resolve({}), // no message field
+  });
+
+  localStorage.setItem("access_token", "mock_token");
+
+  render(<ExportModal
+    isVisible={true}
+    onClose={jest.fn()}
+    content="some content"
+    title="Test Title"
+  />);
+
+  fireEvent.click(screen.getByLabelText("Markdown"));
+  fireEvent.click(screen.getByText("Download"));
+
+  expect(await screen.findByText("Terjadi kesalahan saat mengekspor laporan.")).toBeInTheDocument();
+});
+
 });
