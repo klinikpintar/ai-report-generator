@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useSession } from "../context/sessionContext";
+import { useService } from "../context/serviceContext";
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 
@@ -21,6 +22,7 @@ interface ChatSession {
 
 export default function Sidebar({ isOpen }: SidebarProps) {
   const { createNewSession, setActiveSessionId, isNewSession, shouldRefresh, setShouldRefresh } = useSession();
+  const { services, setSelectedService } = useService();
   const [chatSessions, setChatSessions] = useState<ChatSession[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
@@ -65,6 +67,8 @@ export default function Sidebar({ isOpen }: SidebarProps) {
 
   const handleNewChat = async () => {
     try {
+      setSelectedService(services);
+
       const sessionId = await createNewSession();
       setActiveSessionId(sessionId);
       router.push(`/?sessionId=${sessionId}`);
