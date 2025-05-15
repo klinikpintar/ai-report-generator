@@ -45,7 +45,12 @@ export default function ChatBox() {
   const [isLoading, setIsLoading] = useState(false);
   const [isInitializing, setIsInitializing] = useState(true);
   const chatContainerRef = useRef<HTMLDivElement>(null);
-  const { selectedService, services, getServiceRepresentation } = useService(); // Ambil service dari context
+  const {
+    selectedService,
+    services,
+    getServiceRepresentation,
+    setSelectedService, // Make sure this is exposed in your context
+  } = useService(); // Ambil service dari context
   const [isExportModalVisible, setIsExportModalVisible] = useState(false);
   const {
     activeSessionId,
@@ -74,6 +79,17 @@ export default function ChatBox() {
       setIsInitializing(false); // No session to load
     }
   }, [searchParams, setActiveSessionId]);
+
+  // Add this new useEffect to select all services when starting a new chat
+  useEffect(() => {
+    const sessionId = searchParams.get("sessionId");
+
+    // If there's no sessionId (new chat) and no services are selected yet
+    if (!sessionId && (!selectedService || selectedService.length === 0)) {
+      // Select all services by default
+      setSelectedService(services);
+    }
+  }, [searchParams, services, selectedService, setSelectedService]);
 
   // Load messages from a session
   const loadSessionMessages = async (sessionId: string) => {
@@ -268,7 +284,7 @@ export default function ChatBox() {
       </div>
 
       {isInitializing ? (
-        <div className="flex items-center justify-between items-center h-full">
+          <div className="flex items-center justify-center h-full">
           <div className="animate-spin rounded-full h-8 w-8 border-2 border-blue-500 border-t-transparent"></div>
         </div>
       ) : !hasChatted ? (
