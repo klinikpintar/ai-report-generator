@@ -3,7 +3,7 @@ import { PrismaAIModelRepository } from '../repositories/PrismaAIModelRepository
 import { ApiKeyService } from '../services/apiKeyService';
 import { ProviderService } from '../services/providerService';
 import { IProviderRepository } from '../interfaces/IProviderRepository';
-import { IApiKeyService } from '../interfaces/IApikeyService';
+import { IApiKeyService } from '../interfaces/IApiKeyService';
 import { IModelService } from '../interfaces/IModelService';
 import { IProviderService } from '../interfaces/IProviderService';
 import { ModelService } from '../services/modelService';
@@ -14,7 +14,7 @@ import { ModelService } from '../services/modelService';
  * handling their dependency injection needs.
  */
 export class ServiceFactory {
-  private static providerService: ProviderService | null = null;
+  private static providerService: IProviderService | null = null;
   private static apiKeyService: IApiKeyService | null = null;
   private static modelService: IModelService | null = null;
   
