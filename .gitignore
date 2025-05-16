@@ -53,3 +53,5 @@ next-env.d.ts
 sonar-project-local.properties
 
 devcontainer.json
+
+*storybook.log

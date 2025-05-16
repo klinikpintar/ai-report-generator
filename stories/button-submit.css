@@ -1,0 +1,47 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
+
+.btn-submit {
+  min-width: 212px;
+  font-size: 18px;
+  font-weight: bold;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.625rem 1.25rem; /* px-5 py-2.5 */
+  text-align: center;
+  border-radius: 9999px;
+  outline: none;
+  transition: all 0.3s;
+  overflow: hidden;
+  font-family: 'Inter', sans-serif;
+}
+
+/* Primary Style (no border) */
+.btn-primary {
+  color: white;
+  background-color: #00B0EB;
+  border: none;
+}
+
+.btn-primary:hover {
+  background-color: #13A1DE;
+}
+
+.btn-primary:focus {
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.5);
+}
+
+/* Secondary Style (with border) */
+.btn-secondary {
+  color: #00B0EB;
+  background-color: white;
+  border: 2px solid #00B0EB;
+}
+
+.btn-secondary:hover {
+  color: #13A1DE;
+}
+
+.btn-secondary:focus {
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.5);
+}
