@@ -110,7 +110,21 @@ export class PrismaProviderRepository implements IProviderRepository {
     modelData: ModelCreateData
   ): Promise<ProviderWithModels> {
     return prisma.$transaction(async (tx) => {
-      // Reset default provider jika ada
+      //lakukan pengecekan apakah provider default sudah ada
+      const existingDefaultProvider = await tx.provider.findFirst({
+        where: { isDefault: true },
+        include: {
+          models: true,
+          activeModel: true
+        }
+      });
+
+      // Jika provider default sudah ada, kembalikan saja
+      if (existingDefaultProvider) {
+        return existingDefaultProvider as ProviderWithModels;
+      }
+
+      // Memastikan tidak ada provider lain yang di-set sebagai default
       await tx.provider.updateMany({
         where: { isDefault: true },
         data: { isDefault: false }
