@@ -361,6 +361,72 @@ describe('PrismaProviderRepository', () => {
             });
             expect(result).toEqual(completeProvider);
         });
+
+        test('should return existing default provider without creating new one', async () => {
+            // Setup existing provider yang akan ditemukan oleh findFirst
+            const existingProvider = {
+                id: 'existing-provider-id',
+                name: 'existing-provider',
+                displayName: 'Existing Default Provider',
+                apiKey: 'encrypted-existing-key',
+                isActive: true,
+                isDefault: true,
+                models: [{
+                    id: 'existing-model-id',
+                    name: 'Existing Model',
+                    modelIdentifier: 'existing-model'
+                }],
+                activeModel: {
+                    id: 'existing-model-id',
+                    name: 'Existing Model',
+                    modelIdentifier: 'existing-model'
+                }
+            };
+
+            const providerData = {
+                name: 'new-provider',
+                displayName: 'New Provider',
+                apiKey: 'encrypted-new-key',
+                isActive: true,
+                isDefault: true
+            };
+
+            const modelData = {
+                name: 'New Model',
+                modelIdentifier: 'new-model',
+                isDefault: true,
+                isAvailable: true
+            };
+
+            // Mock transaction function
+            (prisma.$transaction as jest.Mock).mockImplementation(async (callback) => {
+                const result = await callback(prisma);
+                return result;
+            });
+
+            // Mock findFirst untuk mengembalikan provider yang sudah ada
+            (prisma.provider.findFirst as jest.Mock).mockResolvedValue(existingProvider);
+
+            const result = await repository.createDefaultProviderWithModel(providerData, modelData);
+
+            expect(prisma.$transaction).toHaveBeenCalled();
+            expect(prisma.provider.findFirst).toHaveBeenCalledWith({
+                where: { isDefault: true },
+                include: {
+                    models: true,
+                    activeModel: true
+                }
+            });
+
+            // Verifikasi bahwa operasi pembuatan TIDAK dipanggil
+            expect(prisma.provider.updateMany).not.toHaveBeenCalled();
+            expect(prisma.provider.create).not.toHaveBeenCalled();
+            expect(prisma.aIModel.create).not.toHaveBeenCalled();
+            expect(prisma.provider.update).not.toHaveBeenCalled();
+
+            // Verifikasi bahwa kita mendapatkan existing provider
+            expect(result).toEqual(existingProvider);
+        });
     });
 
     describe('resetDefaults', () => {
