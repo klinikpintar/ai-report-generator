@@ -2,7 +2,7 @@ import { NotFoundResponse } from '../utils/exceptions';
 import { ProviderValidation } from '@/app/(backend)/dtos/provider.dto';
 import { z } from 'zod';
 import { IProviderRepository, ProviderInclude} from '../interfaces/IProviderRepository';
-import { IApiKeyService } from '@backend/interfaces/IApikeyService';
+import { IApiKeyService } from '@backend/interfaces/IApiKeyService';
 import { IModelService } from '@backend/interfaces/IModelService';
 import { DefaultProviderFactory } from '../factories/defaultProviderFactory';
 import { IProviderService } from '../interfaces/IProviderService';

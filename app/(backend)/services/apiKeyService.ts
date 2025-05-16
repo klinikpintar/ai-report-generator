@@ -2,7 +2,7 @@ import crypto from 'crypto';
 import config from "../config";
 import axios, { AxiosInstance } from 'axios';
 import { BadRequestResponse } from '../utils/exceptions';
-import { IApiKeyService } from '../interfaces/IApikeyService';
+import { IApiKeyService } from '../interfaces/IApiKeyService';
 
 export class ApiKeyService implements IApiKeyService {
     private readonly ENCRYPTION_KEY: string;

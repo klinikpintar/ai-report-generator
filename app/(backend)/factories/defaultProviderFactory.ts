@@ -1,4 +1,4 @@
-import { IApiKeyService } from "../interfaces/IApikeyService";
+import { IApiKeyService } from "../interfaces/IApiKeyService";
 import { IProviderRepository, ProviderWithModels } from "../interfaces/IProviderRepository";
 import { ProviderValidation } from '../dtos/provider.dto';
 import { AIModelValidation } from "../dtos/aimodel.dto";

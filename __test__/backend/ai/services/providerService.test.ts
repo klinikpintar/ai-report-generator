@@ -1,6 +1,6 @@
 import { ProviderService } from '@/app/(backend)/services/providerService';
 import { IProviderRepository } from '@/app/(backend)/interfaces/IProviderRepository';
-import { IApiKeyService } from '@/app/(backend)/interfaces/IApikeyService';
+import { IApiKeyService } from '@backend/interfaces/IApiKeyService';
 import { IModelService } from '@/app/(backend)/interfaces/IModelService';
 import { DefaultProviderFactory } from '@backend/factories/defaultProviderFactory';
 import { NotFoundResponse } from '@/app/(backend)/utils/exceptions';

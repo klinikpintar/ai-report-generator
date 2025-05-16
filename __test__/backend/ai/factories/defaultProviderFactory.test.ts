@@ -1,6 +1,6 @@
 import { DefaultProviderFactory } from '@backend/factories/defaultProviderFactory';
 import { IProviderRepository } from '@/app/(backend)/interfaces/IProviderRepository';
-import { IApiKeyService } from '@/app/(backend)/interfaces/IApikeyService';
+import { IApiKeyService } from '@backend/interfaces/IApiKeyService';
 import { ProviderValidation } from '@/app/(backend)/dtos/provider.dto';
 import { AIModelValidation } from '@/app/(backend)/dtos/aimodel.dto';
 
