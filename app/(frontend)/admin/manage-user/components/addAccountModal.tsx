@@ -1,5 +1,5 @@
 import React from "react";
-import Modal from "./plainModal";
+import FormModal from "./formModal";
 import UserForm from "./userForm"; 
 import { useAddAccount } from "../hooks/useAddAccount";
 
@@ -23,11 +23,10 @@ const AddAccountModal: React.FC<AddAccountModalProps> = ({ isVisible, onClose })
   };
 
   return (
-    <Modal
+    <FormModal
       isVisible={isVisible}
       title="Sign up new account"
       subtitle="Isi data pengguna untuk memberikan akses sesuai peran mereka."
-      isForm={true}
       onClose={handleCancel}
       onClearForm={clearForm}
     >
@@ -38,7 +37,7 @@ const AddAccountModal: React.FC<AddAccountModalProps> = ({ isVisible, onClose })
         handleSubmit={handleSubmit}
         handleCancel={handleCancel}
       />
-    </Modal>
+    </FormModal>
   );
 };
 

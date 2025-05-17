@@ -1,6 +1,6 @@
 // components/EditAccountModal.tsx
 import React from "react";
-import Modal from "./plainModal";
+import FormModal from "./formModal";
 import UserForm from "./userFormEdit";
 import { useEditAccount } from "@frontend/admin/manage-user/hooks/useEditAccount";
 
@@ -32,11 +32,10 @@ const EditAccountModal: React.FC<EditAccountModalProps> = ({ isVisible, onClose,
   };
 
   if (!isVisible) return (
-    <Modal
+    <FormModal
       isVisible={isVisible}
       title="Edit Akun Pengguna"
       subtitle="Perbarui informasi akun pengguna sesuai kebutuhan"
-      isForm={true}
       onClose={handleCancel}
     >
       <div aria-hidden="true">
@@ -48,15 +47,14 @@ const EditAccountModal: React.FC<EditAccountModalProps> = ({ isVisible, onClose,
           handleCancel={handleCancel}
         />
       </div>
-    </Modal>
+    </FormModal>
   );
 
   return (
-    <Modal
+    <FormModal
       isVisible={isVisible}
       title="Edit Akun Pengguna"
       subtitle="Perbarui informasi akun pengguna sesuai kebutuhan"
-      isForm={true}
       onClose={handleCancel}
     >
       <UserForm
@@ -66,7 +64,7 @@ const EditAccountModal: React.FC<EditAccountModalProps> = ({ isVisible, onClose,
         handleSubmit={handleSubmit}
         handleCancel={handleCancel}
       />
-    </Modal>
+    </FormModal>
   );
 };
 
