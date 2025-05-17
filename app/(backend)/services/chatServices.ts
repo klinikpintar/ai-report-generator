@@ -1,5 +1,6 @@
 import { deepseek } from '@ai-sdk/deepseek';
 import { google } from '@ai-sdk/google';
+import { getAllModelInstances } from '@/app/(backend)/utils/AImodelUtils';
 import { generateText, CoreMessage } from 'ai';
 import prisma from '@/lib/prisma';
 import { AI_INSTRUCTION } from '@backend/constant/ai-instruction';
@@ -54,13 +55,18 @@ export interface SchemaRepository {
   getSchemaById(id: number): Promise<Schema | null>;
 }
 
-// Service Classes
 export class DeepseekProvider implements ModelProvider {
-  generateResponse(messages: Message[]): Promise<GenerationResult> {
+  async generateResponse(messages: Message[]): Promise<GenerationResult> {
     const sdkMessages = messages as CoreMessage[];
-    
+    const instances = await getAllModelInstances();
+    const deepseekInstance = instances.find(i => i.providerName === 'deepseek');
+
+    if (!deepseekInstance) {
+      throw new Error('Deepseek model instance not found');
+    }
+
     return generateText({
-      model: deepseek('deepseek-chat'),
+      model: deepseekInstance.instance,
       messages: sdkMessages,
       system: AI_INSTRUCTION,
     });
@@ -72,11 +78,17 @@ export class DeepseekProvider implements ModelProvider {
 }
 
 export class GeminiProvider implements ModelProvider {
-  generateResponse(messages: Message[]): Promise<GenerationResult> {
+  async generateResponse(messages: Message[]): Promise<GenerationResult> {
     const sdkMessages = messages as CoreMessage[];
-    
+    const instances = await getAllModelInstances();
+    const geminiInstance = instances.find(i => i.providerName === 'gemini');
+
+    if (!geminiInstance) {
+      throw new Error('Gemini model instance not found');
+    }
+
     return generateText({
-      model: google('gemini-2.0-flash'),
+      model: geminiInstance.instance,
       messages: sdkMessages,
       system: AI_INSTRUCTION,
     });

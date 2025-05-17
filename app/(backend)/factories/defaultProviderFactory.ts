@@ -31,7 +31,7 @@ export class DefaultProviderFactory {
     const defaultModelData = AIModelValidation.POST.parse({
       name: 'Gemini 2.0 Flash',
       modelIdentifier: 'gemini-2.0-flash',
-      providerId: 'temporary', // Will be replaced in transaction
+      providerId: 'e15833b7-743c-4854-9525-8a961cdeecf7', // Will be replaced in transaction
       isDefault: true,
       isAvailable: true
     });
