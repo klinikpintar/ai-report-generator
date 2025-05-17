@@ -5,16 +5,16 @@ export class ProviderTransform {
      * Mengubah string boolean query parameter menjadi boolean sebenarnya
      */
     static stringToBoolean(value: string | undefined): boolean | undefined {
-      return value === undefined ? undefined : value === 'true';
+        return value === undefined ? undefined : value === 'true';
     }
-  
+
     /**
      * Menyamarkan API key agar tidak terekspos
      */
     static maskApiKey(): string {
-      return '********';
+        return '********';
     }
-  }
+}
 
 export class ProviderSchema {
     static readonly NAME_SCHEMA = z
@@ -83,10 +83,14 @@ export class ProviderValidation {
 
     // Validasi untuk query parameters dengan transformasi terpisah
     static readonly GET = z.object({
-        includeModels: z
-            .enum(['true', 'false'])
-            .optional()
-            .transform(ProviderTransform.stringToBoolean),
+        includeModels: z.union([
+            z.enum(['true', 'false']),
+            z.boolean()
+        ])
+            .transform(val =>
+                typeof val === 'string' ? val === 'true' : val
+            )
+            .optional(),
 
         onlyActive: z
             .enum(['true', 'false'])
