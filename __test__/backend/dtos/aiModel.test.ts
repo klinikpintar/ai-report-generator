@@ -1,4 +1,5 @@
 import { AIModelValidation } from '@/app/(backend)/dtos/aimodel.dto';
+import { AIModelTransform, AIModelSchema } from '@/app/(backend)/dtos/aimodel.dto';
 import { ZodError } from 'zod';
 
 describe('AI Model DTO Validation', () => {
@@ -169,6 +170,47 @@ describe('AI Model DTO Validation', () => {
       
       const result = AIModelValidation.RESPONSE_WITH_PROVIDER.parse(modelWithProvider);
       expect(result.provider.displayName).toBe('OpenAI');
+    });
+  });
+});
+
+describe('AIModelTransform', () => {
+  describe('stringToBoolean', () => {
+    test('should convert "true" to true', () => {
+      expect(AIModelTransform.stringToBoolean('true')).toBe(true);
+    });
+
+    test('should convert "false" to false', () => {
+      expect(AIModelTransform.stringToBoolean('false')).toBe(false);
+    });
+
+    test('should return undefined for undefined input', () => {
+      expect(AIModelTransform.stringToBoolean(undefined)).toBeUndefined();
+    });
+  });
+});
+
+describe('AIModelSchema', () => {
+  // Test untuk konstanta schema
+  describe('NAME_SCHEMA', () => {
+    test('should validate valid model name', () => {
+      const validName = 'Test Model';
+      expect(AIModelSchema.NAME_SCHEMA.parse(validName)).toBe(validName);
+    });
+
+    test('should reject empty model name', () => {
+      expect(() => AIModelSchema.NAME_SCHEMA.parse('')).toThrow();
+    });
+  });
+
+  describe('IDENTIFIER_SCHEMA', () => {
+    test('should validate valid identifier', () => {
+      const validIdentifier = 'gpt-3.5-turbo';
+      expect(AIModelSchema.IDENTIFIER_SCHEMA.parse(validIdentifier)).toBe(validIdentifier);
+    });
+
+    test('should reject identifier with invalid characters', () => {
+      expect(() => AIModelSchema.IDENTIFIER_SCHEMA.parse('invalid_identifier!')).toThrow();
     });
   });
 });
