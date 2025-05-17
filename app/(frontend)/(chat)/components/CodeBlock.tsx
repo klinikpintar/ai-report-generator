@@ -7,6 +7,7 @@ import { atomDark } from "react-syntax-highlighter/dist/cjs/styles/prism";
 type CodeBlockProps = {
   language: string;
   value: string;
+  isVerified?: boolean;
 };
 
 export const CodeBlock: React.FC<CodeBlockProps> = ({ language, value }) => {
