@@ -45,7 +45,9 @@ export default function ChatBox() {
   const [isLoading, setIsLoading] = useState(false);
   const [isInitializing, setIsInitializing] = useState(true);
   const chatContainerRef = useRef<HTMLDivElement>(null);
-  const [titleSession, setTitleSession] = useState<string>("AI Report Generator");
+  const [titleSession, setTitleSession] = useState<string>(
+    "AI Report Generator"
+  );
   const { selectedService, services, getServiceRepresentation } = useService(); // Ambil service dari context
   const [isExportModalVisible, setIsExportModalVisible] = useState(false);
   const {
@@ -211,14 +213,14 @@ export default function ChatBox() {
       };
 
       setMessages((prevMessages) => [...prevMessages, assistantMessage]);
-      
+
       // Add this after successfully submitting the first message
       if (isNewSession) {
-        refreshSessions(); 
+        refreshSessions();
       }
-      
+
       if (!isNewSession && messages.length === 0) {
-        refreshSessions(); 
+        refreshSessions();
       }
     } catch (error) {
       console.error("Error sending message:", error);
@@ -316,6 +318,7 @@ export default function ChatBox() {
                             <CodeBlock
                               language={match[1]}
                               value={String(children).replace(/\n$/, "")}
+                              isVerified={false}
                             />
                           ) : (
                             <code
