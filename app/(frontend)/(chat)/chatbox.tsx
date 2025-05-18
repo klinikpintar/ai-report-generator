@@ -99,31 +99,35 @@ export default function ChatBox() {
 
       const data = await response.json();
 
-      interface SessionMessage {
-        id: string;
-        content: string;
-        role: string;
-        modelUsed?: string;
-      }
-
-      // Convert session messages to your format
-      const formattedMessages = data.session.messages.map(
-        (msg: SessionMessage) => ({
-          id: msg.id,
-          sender: msg.role === "user" ? "user" : "assistant",
-          content: msg.content,
-          modelUsed: msg.modelUsed || undefined,
-        })
+      // Set messages from the session data
+      setMessages(
+        data.session.messages.map((m: any) => ({
+          id: m.id,
+          sender: m.role,
+          content: m.content,
+        }))
       );
 
-      setMessages(formattedMessages);
+      // Restore saved service selection
+      if (
+        data.session.lastSelectedServices &&
+        data.session.lastSelectedServices.length > 0
+      ) {
+        // Find services that match the saved IDs
+        const serviceIds = data.session.lastSelectedServices;
+        const servicesToSelect = services.filter((service) =>
+          serviceIds.includes(service.id)
+        );
 
-      // Add this line to show chat history if messages exist
-      if (formattedMessages.length > 0) {
-        setHasChatted(true);
+        // Set selected services if we found matches
+        if (servicesToSelect.length > 0) {
+          setSelectedService(servicesToSelect);
+        }
       }
+
+      setHasChatted(true);
     } catch (error) {
-      console.error("Error loading session messages:", error);
+      console.error("Error loading session:", error);
     }
   };
 
@@ -192,8 +196,12 @@ export default function ChatBox() {
     }
 
     try {
+      // Get the IDs of selected services
+      const serviceIds = selectedService.map((service) => service.id);
+      
+      // Convert service IDs to schema IDs - using your existing function
       const schemaIds = await getRelatedSchemaIds(selectedService);
-
+      
       const apiMessages = messages.map((msg) => ({
         role: msg.sender === "user" ? "user" : "assistant",
         content: msg.content,
@@ -206,8 +214,9 @@ export default function ChatBox() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           messages: apiMessages,
-          schemaId: schemaIds,
-          sessionId: currentSessionId, // Add this line to your existing code
+          sessionId: currentSessionId,
+          serviceIds: serviceIds, // For storing with the session
+          schemaId: schemaIds
         }),
       });
 
@@ -224,14 +233,14 @@ export default function ChatBox() {
       };
 
       setMessages((prevMessages) => [...prevMessages, assistantMessage]);
-      
+
       // Add this after successfully submitting the first message
       if (isNewSession) {
-        refreshSessions(); 
+        refreshSessions();
       }
-      
+
       if (!isNewSession && messages.length === 0) {
-        refreshSessions(); 
+        refreshSessions();
       }
     } catch (error) {
       console.error("Error sending message:", error);

@@ -34,7 +34,7 @@ export async function POST(req: Request) {
     }
 
     // Extract sessionId from request (keep other params as they are)
-    const { messages, model = 'gemini', schemaId, sessionId } = await req.json();
+    const { messages, model = 'gemini', schemaId, sessionId, serviceIds } = await req.json();
 
     // Verify this session belongs to the user if sessionId is provided
     if (sessionId) {
@@ -143,10 +143,22 @@ Use this schema information if relevant to answer the user's question.`;
       });
       
       // Update session timestamp to show as most recent
-      await prisma.chatSession.update({
-        where: { id: sessionId },
-        data: { updatedAt: new Date() }
-      });
+      if (serviceIds && serviceIds.length > 0) {
+        // Update session with service selection
+        await prisma.chatSession.update({
+          where: { id: sessionId, userId: user.id },
+          data: {
+            lastSelectedServices: serviceIds,
+            updatedAt: new Date()
+          }
+        });
+      } else {
+        // Just update timestamp if no services provided
+        await prisma.chatSession.update({
+          where: { id: sessionId },
+          data: { updatedAt: new Date() }
+        });
+      }
       
       // If it's a new session, update title based on first message
       const session = await prisma.chatSession.findUnique({
