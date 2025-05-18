@@ -118,9 +118,25 @@ export class ProviderValidation {
         activeModelId: ProviderSchema.UUID_SCHEMA.nullable(),
     });
 
+    static readonly BASE_RESPONSE_INTERNAL = z.object({
+        id: ProviderSchema.UUID_SCHEMA,
+        name: z.string(),
+        displayName: z.string(),
+        apiKey: z.string(),
+        isActive: z.boolean(),
+        isDefault: z.boolean(),
+        activeModelId: ProviderSchema.UUID_SCHEMA.nullable(),
+    });
+
     static readonly RESPONSE = ProviderValidation.BASE_RESPONSE;
+    static readonly RESPONSE_INTERNAL = ProviderValidation.BASE_RESPONSE_INTERNAL;
 
     static readonly RESPONSE_WITH_MODELS = ProviderValidation.BASE_RESPONSE.extend({
+        models: z.array(ProviderValidation.MODEL_SCHEMA),
+        activeModel: ProviderValidation.MODEL_SCHEMA.nullable(),
+    });
+
+    static readonly RESPONSE_WITH_MODELS_INTERNAL = ProviderValidation.BASE_RESPONSE_INTERNAL.extend({
         models: z.array(ProviderValidation.MODEL_SCHEMA),
         activeModel: ProviderValidation.MODEL_SCHEMA.nullable(),
     });
