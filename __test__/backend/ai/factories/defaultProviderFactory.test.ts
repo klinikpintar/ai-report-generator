@@ -21,6 +21,10 @@ jest.mock('@/app/(backend)/dtos/aimodel.dto', () => ({
   }
 }));
 
+jest.mock('crypto', () => ({
+  randomUUID: jest.fn(() => 'mocked-uuid')
+}));
+
 describe('DefaultProviderFactory', () => {
   let providerRepo: jest.Mocked<IProviderRepository>;
   let apiKeyService: jest.Mocked<IApiKeyService>;
@@ -79,7 +83,7 @@ describe('DefaultProviderFactory', () => {
       expect(AIModelValidation.POST.parse).toHaveBeenCalledWith({
         name: 'Gemini 2.0 Flash',
         modelIdentifier: 'gemini-2.0-flash',
-        providerId: 'temporary',
+        providerId: 'mocked-uuid',
         isDefault: true,
         isAvailable: true
       });

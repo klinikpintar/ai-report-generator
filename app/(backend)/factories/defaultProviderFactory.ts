@@ -2,6 +2,7 @@ import { IApiKeyService } from "../interfaces/IApiKeyService";
 import { IProviderRepository, ProviderWithModels } from "../interfaces/IProviderRepository";
 import { ProviderValidation } from '../dtos/provider.dto';
 import { AIModelValidation } from "../dtos/aimodel.dto";
+import { randomUUID } from "crypto";
 
 export class DefaultProviderFactory {
   constructor(
@@ -31,7 +32,7 @@ export class DefaultProviderFactory {
     const defaultModelData = AIModelValidation.POST.parse({
       name: 'Gemini 2.0 Flash',
       modelIdentifier: 'gemini-2.0-flash',
-      providerId: 'e15833b7-743c-4854-9525-8a961cdeecf7', // Will be replaced in transaction
+      providerId: randomUUID(), // Will be replaced in transaction, only needed to pass validation
       isDefault: true,
       isAvailable: true
     });
