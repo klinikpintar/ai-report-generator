@@ -55,3 +55,6 @@ next-env.d.ts
 sonar-project-local.properties
 
 devcontainer.json
+
+# Sentry Config File
+.env.sentry-build-plugin

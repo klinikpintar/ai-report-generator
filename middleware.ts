@@ -27,6 +27,7 @@ const WHITELIST_ROUTES = {
   API_VERIFY: "/api/auth/token/verify",
   API_REFRESH: "/api/auth/token/refresh",
   API_METRICS: "/api/metrics",
+  API_SENTRY: "/api/sentry-example-api",
 };
 
 const ROLE_REDIRECTS: Record<ROLE, RoleConfig> = {

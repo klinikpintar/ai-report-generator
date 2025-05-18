@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { apiErrorResponses } from "./metrics";
+import * as Sentry from '@sentry/nextjs';
 
 export class ErrorResponse {
   message: string;
@@ -26,6 +27,10 @@ export class ErrorResponse {
 export class NotFoundResponse extends ErrorResponse {
   constructor(message: Error | string = "Resource not found") {
     super(message?.toString() ?? "Resource not found", 404);
+    // Log the error to Sentry
+    Sentry.captureException(new Error(this.message), {
+      tags: { status: this.status.toString() },
+    });
   }
 }
 
