@@ -5,7 +5,6 @@ interface SelectInputProps {
   name: string;
   options: { value: string; label: string }[];
   value?: string;
-  defaultValue?: string;
   onChange?: (e: React.ChangeEvent<HTMLSelectElement>) => void;
 }
 

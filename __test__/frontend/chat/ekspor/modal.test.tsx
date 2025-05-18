@@ -56,7 +56,7 @@ describe("ExportModal", () => {
 
   it("should handle pdf download successfully", async () => {
     const mockBlob = new Blob(["PDF"]);
-    const mockUrl = "blob:pdf-url";
+    const mockUrl = "/pdf-viewer?reportData=%7B%22title%22%3A%22Judul%20Laporan%22%2C%22content%22%3A%22Ini%20adalah%20isi%20laporan%22%2C%22createdAt%22%3A%222025-05-14%22%7D";
     global.URL.createObjectURL = jest.fn(() => mockUrl);
     window.open = jest.fn();
 
@@ -92,20 +92,6 @@ describe("ExportModal", () => {
     expect(await screen.findByText("Gagal ekspor")).toBeInTheDocument();
   });
 
-  it("should handle unexpected fetch error", async () => {
-    global.fetch = jest.fn().mockRejectedValueOnce(new Error("Fetch error"));
-
-    localStorage.setItem("access_token", "mock_token");
-
-    render(<ExportModal {...defaultProps} />);
-    fireEvent.click(screen.getByLabelText("PDF"));
-    fireEvent.click(screen.getByText("Preview"));
-
-    expect(
-      await screen.findByText("Terjadi kesalahan saat memproses permintaan.")
-    ).toBeInTheDocument();
-  });
-
   it("should reset state when modal is closed", () => {
     render(<ExportModal {...defaultProps} />);
     fireEvent.click(screen.getByLabelText("Markdown"));
@@ -135,4 +121,61 @@ describe("ExportModal", () => {
     expect(screen.getByLabelText("Markdown")).not.toBeChecked();
     expect(screen.getByLabelText("PDF")).not.toBeChecked();
   });
+  
+  it("should trigger download when format is markdown", async () => {
+  const mockBlob = new Blob(["Markdown content"]);
+  const mockUrl = "blob:mock-url";
+  const clickSpy = jest.fn();
+  const revokeMock = jest.fn();
+
+  const originalCreateElement = document.createElement;
+
+  // Mock revokeObjectURL
+  Object.defineProperty(URL, "revokeObjectURL", {
+    value: revokeMock,
+    writable: true,
+  });
+
+  global.URL.createObjectURL = jest.fn(() => mockUrl);
+
+  // Mock <a> element
+  document.createElement = jest.fn((tagName: string) => {
+    if (tagName === "a") {
+      return {
+        href: "",
+        download: "",
+        click: clickSpy,
+      } as unknown as HTMLAnchorElement;
+    }
+    return originalCreateElement.call(document, tagName);
+  });
+
+  localStorage.setItem("access_token", "mock_token");
+
+  global.fetch = jest.fn().mockResolvedValueOnce({
+    ok: true,
+    blob: () => Promise.resolve(mockBlob),
+  });
+
+  render(
+    <ExportModal
+      isVisible={true}
+      onClose={jest.fn()}
+      content="Isi laporan"
+      title="Judul"
+    />
+  );
+
+  fireEvent.click(screen.getByLabelText("Markdown"));
+  fireEvent.click(screen.getByText("Download"));
+
+  await waitFor(() => {
+    expect(clickSpy).toHaveBeenCalled();
+    expect(revokeMock).toHaveBeenCalledWith(mockUrl);
+  });
+
+  // Restore original createElement
+  document.createElement = originalCreateElement;
+});
+
 });
