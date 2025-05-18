@@ -18,8 +18,8 @@ export class DefaultProviderFactory {
     const defaultProviderData = ProviderValidation.POST.parse({
       name: 'gemini',
       displayName: 'Google Gemini',
-      apiKey: process.env.GEMINI_API_KEY ?? (() => {
-        throw new Error('GEMINI_API_KEY env var is required to bootstrap the default provider');
+      apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY ?? (() => {
+        throw new Error('GOOGLE_GENERATIVE_AI_API_KEY env var is required to bootstrap the default provider');
       })(),
       isActive: true,
       isDefault: true,
