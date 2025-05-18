@@ -1,5 +1,3 @@
-import { deepseek } from '@ai-sdk/deepseek';
-import { google } from '@ai-sdk/google';
 import { getAllModelInstances } from '@/app/(backend)/utils/AImodelUtils';
 import { generateText, CoreMessage } from 'ai';
 import prisma from '@/lib/prisma';

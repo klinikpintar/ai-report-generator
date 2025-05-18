@@ -13,8 +13,10 @@ const apiKeyService = new ApiKeyService();
 const modelService = new ModelService(new PrismaAIModelRepository());
 const providerRepository = new PrismaProviderRepository();
 const providerService = new ProviderService(providerRepository, modelService, apiKeyService);
+import { LanguageModelV1 } from 'ai';
 
-type ModelBuilderFn = (apiKey: string, modelIdentifier: string) => ReturnType<ReturnType<any>>;
+type ModelBuilderFn = (apiKey: string, modelIdentifier: string) => LanguageModelV1;
+
 
 const modelBuilders: Record<string, ModelBuilderFn> = {
   deepseek: (apiKey, modelId) => createDeepSeek({ apiKey })(modelId),
