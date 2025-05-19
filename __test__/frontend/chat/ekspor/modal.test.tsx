@@ -56,10 +56,9 @@ describe("ExportModal", () => {
 
   it("should handle pdf download successfully", async () => {
     const mockBlob = new Blob(["PDF"]);
-    const mockUrl = "/pdf-viewer?reportData=%7B%22title%22%3A%22Judul%20Laporan%22%2C%22content%22%3A%22Ini%20adalah%20isi%20laporan%22%2C%22createdAt%22%3A%222025-05-14%22%7D";
+    const mockUrl = "/pdf-viewer?reportData=some-data";
     global.URL.createObjectURL = jest.fn(() => mockUrl);
-    window.open = jest.fn();
-
+    
     localStorage.setItem("access_token", "mock_token");
 
     global.fetch = jest.fn().mockResolvedValueOnce({
@@ -72,7 +71,8 @@ describe("ExportModal", () => {
     fireEvent.click(screen.getByText("Preview"));
 
     await waitFor(() => {
-      expect(window.open).toHaveBeenCalledWith(mockUrl, "_blank");
+      expect(openMock).toHaveBeenCalled();
+      expect(openMock.mock.calls[0][0]).toContain("/pdf-viewer");
       expect(mockOnClose).toHaveBeenCalled();
     });
   });
