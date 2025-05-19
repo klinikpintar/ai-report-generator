@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import Image from "next/image";
 import ReactMarkdown from "react-markdown"; // Import Markdown Renderer
 import remarkGfm from "remark-gfm";
@@ -36,6 +36,14 @@ interface ApiResponse {
     };
     modelUsed: string;
   };
+}
+
+interface ChatMessageData {
+  id: string;
+  role: string;
+  content: string;
+  createdAt?: string;
+  modelUsed?: string;
 }
 
 export default function ChatBox() {
@@ -91,45 +99,61 @@ export default function ChatBox() {
     }
   }, [searchParams, services, selectedService, setSelectedService]);
 
-  // Load messages from a session
-  const loadSessionMessages = async (sessionId: string) => {
-    try {
-      const response = await fetch(`/api/chat-sessions/${sessionId}`);
-      if (!response.ok) throw new Error("Failed to load session");
+  // First, memoize the loadSessionMessages function with useCallback
+  const loadSessionMessages = useCallback(
+    async (sessionId: string) => {
+      try {
+        const response = await fetch(`/api/chat-sessions/${sessionId}`);
+        if (!response.ok) throw new Error("Failed to load session");
 
-      const data = await response.json();
+        const data = await response.json();
 
-      // Set messages from the session data
-      setMessages(
-        data.session.messages.map((m: any) => ({
-          id: m.id,
-          sender: m.role,
-          content: m.content,
-        }))
-      );
-
-      // Restore saved service selection
-      if (
-        data.session.lastSelectedServices &&
-        data.session.lastSelectedServices.length > 0
-      ) {
-        // Find services that match the saved IDs
-        const serviceIds = data.session.lastSelectedServices;
-        const servicesToSelect = services.filter((service) =>
-          serviceIds.includes(service.id)
+        // Set messages from the session data
+        setMessages(
+          data.session.messages.map((m: ChatMessageData) => ({
+            id: m.id,
+            sender: m.role,
+            content: m.content,
+          }))
         );
 
-        // Set selected services if we found matches
-        if (servicesToSelect.length > 0) {
-          setSelectedService(servicesToSelect);
-        }
-      }
+        // Restore saved service selection
+        if (
+          data.session.lastSelectedServices &&
+          data.session.lastSelectedServices.length > 0
+        ) {
+          // Find services that match the saved IDs
+          const serviceIds = data.session.lastSelectedServices;
+          const servicesToSelect = services.filter((service) =>
+            serviceIds.includes(service.id)
+          );
 
-      setHasChatted(true);
-    } catch (error) {
-      console.error("Error loading session:", error);
+          // Set selected services if we found matches
+          if (servicesToSelect.length > 0) {
+            setSelectedService(servicesToSelect);
+          }
+        }
+
+        setHasChatted(true);
+      } catch (error) {
+        console.error("Error loading session:", error);
+      }
+    },
+    [setMessages, setHasChatted, services, setSelectedService] // Add all dependencies used inside
+  );
+
+  // Update the useEffect calls to include loadSessionMessages
+  useEffect(() => {
+    const sessionId = searchParams.get("sessionId");
+    setIsInitializing(true);
+
+    if (sessionId) {
+      setActiveSessionId(sessionId);
+      loadSessionMessages(sessionId).finally(() => setIsInitializing(false));
+    } else {
+      setIsInitializing(false);
     }
-  };
+  }, [searchParams, setActiveSessionId, loadSessionMessages]); // Add loadSessionMessages
 
   // Auto-scroll ke pesan terbaru setiap kali messages diperbarui
   useEffect(() => {
@@ -269,7 +293,7 @@ export default function ChatBox() {
     } else {
       setIsInitializing(false);
     }
-  }, [searchParams, setActiveSessionId]);
+  }, [searchParams, setActiveSessionId, loadSessionMessages]);
 
   useEffect(() => {
     if (chatContainerRef.current) {
