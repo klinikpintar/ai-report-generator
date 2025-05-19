@@ -2,25 +2,26 @@
 
 import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
-import ReactMarkdown from "react-markdown"; // Import Markdown Renderer
-import remarkGfm from "remark-gfm";
-import rehypeRaw from "rehype-raw";
 import Dropdown from "./components/dropdown";
 import { useService } from "./context/serviceContext"; // Import context
 import Bantuan from "./components/bantuan";
 import type { Service } from "@frontend/common/types";
 import ExportModal from "@/app/(frontend)/(chat)/components/ekspor/modal";
-import { CodeBlock } from "./components/CodeBlock";
 import { useSession } from "./context/sessionContext";
 import { useSearchParams } from "next/navigation";
 import { useUser } from "@frontend/login/context/userContext";
+import { ReportFormatter } from "./components/ReportFormatter";
+import { QueryValidationResult } from "./interfaces/QueryValidationResult";
+
 
 // Definisikan tipe data pesan
+
 interface Message {
   id: string;
   sender: "user" | "assistant";
   content: string;
-  modelUsed?: string; // Tambahkan informasi model
+  modelUsed?: string;
+  queryValidationResults?: QueryValidationResult[];
 }
 
 interface ApiResponse {
@@ -28,6 +29,7 @@ interface ApiResponse {
   userPrompt: string;
   aiResponse: string;
   createdAt: string;
+  queryValidationResults: QueryValidationResult[];
   metadata: {
     finishReason: string;
     usage: {
@@ -48,13 +50,8 @@ export default function ChatBox() {
   const [titleSession, setTitleSession] = useState<string>("AI Report Generator");
   const { selectedService, services, getServiceRepresentation } = useService(); // Ambil service dari context
   const [isExportModalVisible, setIsExportModalVisible] = useState(false);
-  const {
-    activeSessionId,
-    setActiveSessionId,
-    createNewSession,
-    isNewSession,
-    refreshSessions,
-  } = useSession();
+  const { activeSessionId, setActiveSessionId, createNewSession, isNewSession, refreshSessions } =
+    useSession();
   const [exportModalData, setExportModalData] = useState<{
     id: string;
     content: string;
@@ -91,17 +88,17 @@ export default function ChatBox() {
         content: string;
         role: string;
         modelUsed?: string;
+        queryValidationResults?: QueryValidationResult[];
       }
 
       // Convert session messages to your format
-      const formattedMessages = data.session.messages.map(
-        (msg: SessionMessage) => ({
-          id: msg.id,
-          sender: msg.role === "user" ? "user" : "assistant",
-          content: msg.content,
-          modelUsed: msg.modelUsed ?? undefined,
-        })
-      );
+      const formattedMessages = data.session.messages.map((msg: SessionMessage) => ({
+        id: msg.id,
+        sender: msg.role === "user" ? "user" : "assistant",
+        content: msg.content,
+        modelUsed: msg.modelUsed ?? undefined,
+        queryValidationResults: msg.queryValidationResults ?? undefined,
+      }));
 
       setMessages(formattedMessages);
 
@@ -117,8 +114,7 @@ export default function ChatBox() {
   // Auto-scroll ke pesan terbaru setiap kali messages diperbarui
   useEffect(() => {
     if (chatContainerRef.current) {
-      chatContainerRef.current.scrollTop =
-        chatContainerRef.current.scrollHeight;
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
     }
   }, [messages]);
 
@@ -135,9 +131,7 @@ export default function ChatBox() {
     const responseData = await response.json();
     // ("Schema API response:", responseData);
 
-    const schemas = Array.isArray(responseData)
-      ? responseData
-      : responseData.data;
+    const schemas = Array.isArray(responseData) ? responseData : responseData.data;
 
     if (!Array.isArray(schemas)) {
       console.error("Unexpected API response format:", responseData);
@@ -204,21 +198,22 @@ export default function ChatBox() {
 
       // When adding the AI response, use the functional form to preserve existing messages
       const assistantMessage: Message = {
-        id: data.messageId || `${Date.now()}-ai`,
+        id: data.messageId ?? `${Date.now()}-ai`,
         sender: "assistant", // This is correct for your frontend interface
         content: data.aiResponse,
         modelUsed: data.metadata?.modelUsed,
+        queryValidationResults: data.queryValidationResults ?? [],
       };
 
       setMessages((prevMessages) => [...prevMessages, assistantMessage]);
-      
+
       // Add this after successfully submitting the first message
       if (isNewSession) {
-        refreshSessions(); 
+        refreshSessions();
       }
-      
+
       if (!isNewSession && messages.length === 0) {
-        refreshSessions(); 
+        refreshSessions();
       }
     } catch (error) {
       console.error("Error sending message:", error);
@@ -251,7 +246,7 @@ export default function ChatBox() {
       </div>
 
       {isInitializing ? (
-        <div className="flex items-center justify-between items-center h-full">
+        <div className="flex items-center justify-between h-full">
           <div className="animate-spin rounded-full h-8 w-8 border-2 border-blue-500 border-t-transparent"></div>
         </div>
       ) : !hasChatted ? (
@@ -259,10 +254,7 @@ export default function ChatBox() {
           Hello, {name} !!
         </h1>
       ) : (
-        <div
-          ref={chatContainerRef}
-          className="flex-1 overflow-y-auto px-4 bg-white"
-        >
+        <div ref={chatContainerRef} className="flex-1 overflow-y-auto px-4 bg-white">
           <div className="mt-4 flex flex-col gap-y-6">
             {messages.map((msg) => (
               <div
@@ -274,62 +266,14 @@ export default function ChatBox() {
                 {/* Bubble */}
                 <div
                   className={`p-3 rounded-lg ${
-                    msg.sender === "user"
-                      ? "bg-[#E4F6FC] text-[#00B0EB]"
-                      : "bg-gray-200 text-black"
+                    msg.sender === "user" ? "bg-[#E4F6FC] text-[#00B0EB]" : "bg-gray-200 text-black"
                   }`}
                 >
                   {msg.sender === "assistant" ? (
-                    <ReactMarkdown
-                      remarkPlugins={[remarkGfm]}
-                      rehypePlugins={[rehypeRaw]}
-                      components={{
-                        h1: (props) => (
-                          <h1 className="text-2xl font-bold my-4" {...props} />
-                        ),
-                        h2: (props) => (
-                          <h2 className="text-xl font-bold my-3" {...props} />
-                        ),
-                        h3: (props) => (
-                          <h3 className="text-lg font-bold my-2" {...props} />
-                        ),
-                        p: (props) => <p className="my-2" {...props} />,
-                        ul: (props) => (
-                          <ul className="list-disc pl-5 my-2" {...props} />
-                        ),
-                        ol: (props) => (
-                          <ol className="list-decimal pl-5 my-2" {...props} />
-                        ),
-                        li: (props) => <li className="my-1" {...props} />,
-                        code: ({
-                          inline,
-                          className,
-                          children,
-                          ...props
-                        }: {
-                          inline?: boolean;
-                          className?: string;
-                          children?: React.ReactNode;
-                        }) => {
-                          const match = /language-(\w+)/.exec(className || "");
-                          return !inline && match ? (
-                            <CodeBlock
-                              language={match[1]}
-                              value={String(children).replace(/\n$/, "")}
-                            />
-                          ) : (
-                            <code
-                              className="bg-gray-100 px-1 rounded text-sm"
-                              {...props}
-                            >
-                              {children}
-                            </code>
-                          );
-                        },
-                      }}
-                    >
-                      {msg.content}
-                    </ReactMarkdown>
+                    <ReportFormatter
+                      content={msg.content}
+                      validationResults={msg.queryValidationResults}
+                    />
                   ) : (
                     <p className="whitespace-pre-wrap">{msg.content}</p>
                   )}
@@ -381,10 +325,7 @@ export default function ChatBox() {
         <div className="w-full mx-auto flex flex-col">
           <p className="text-sm text-gray-600 mb-1">
             Service:{" "}
-            {getServiceRepresentation(
-              selectedService,
-              selectedService.length === services.length
-            )}
+            {getServiceRepresentation(selectedService, selectedService.length === services.length)}
           </p>
           <div className="flex items-center p-1 gap-2">
             <textarea
@@ -406,12 +347,7 @@ export default function ChatBox() {
               onClick={sendMessage}
               disabled={isLoading || !input.trim()}
             >
-              <Image
-                src="/icon-send.svg"
-                width={45}
-                height={45}
-                alt="Send Icon"
-              />
+              <Image src="/icon-send.svg" width={45} height={45} alt="Send Icon" />
             </button>
           </div>
           <p className="text-xs text-gray-600 text-center mt-1">

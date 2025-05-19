@@ -23,8 +23,8 @@ const Modal: React.FC<ModalProps> = (props) => {
     }
   }, [isVisible]);
 
-  const handleClose = (event: MouseEvent<HTMLDivElement>) => {
-    const target = event.target as HTMLDivElement;
+  const handleClose = (event: MouseEvent<HTMLButtonElement>) => {
+    const target = event.target as HTMLButtonElement;
     if (target.id === "wrapper") {
       if (!isForm) {
         onClose();
@@ -35,8 +35,7 @@ const Modal: React.FC<ModalProps> = (props) => {
   if (!shouldRender) return null;
 
   return (
-    <div
-      role="button"
+    <button
       tabIndex={0}
       className={`fixed inset-0 flex justify-center cursor-default items-center z-50 ${
         isVisible
@@ -65,7 +64,7 @@ const Modal: React.FC<ModalProps> = (props) => {
         </div>
         {children}
       </div>
-    </div>
+    </button>
   );
 };
 

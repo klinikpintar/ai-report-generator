@@ -8,7 +8,7 @@ import Navbar from "@frontend/components/navbar";
 import { UIStateContext } from "./context/uiStateContext"; // 🔥 pakai yang dari context
 
 type LayoutProps = {
-  children: React.ReactNode;
+  readonly children: React.ReactNode;
 };
 
 export default function Layout({ children }: LayoutProps) {
