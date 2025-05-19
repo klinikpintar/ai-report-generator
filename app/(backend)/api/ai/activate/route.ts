@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import providerService from '@/app/(backend)/services/providerService';
+import { ServiceFactory } from '@/app/(backend)/factories/serviceFactory';
 import { ErrorResponse, InternalServerErrorResponse } from '@/app/(backend)/utils/exceptions';
 import { ProviderValidation } from '@/app/(backend)/dtos/provider.dto';
 import { validateBody } from '@/app/(backend)/utils/validationUtils';
@@ -8,6 +8,9 @@ export async function PATCH(request: NextRequest) {
   try {
     const validatedData = await validateBody(ProviderValidation.ACTIVATE, request);
     
+    // Dapatkan instance providerService melalui factory
+    const providerService = ServiceFactory.getProviderService();
+
     // Set provider sebagai aktif
     const updatedProvider = await providerService.setActiveProvider(
       validatedData.providerId
