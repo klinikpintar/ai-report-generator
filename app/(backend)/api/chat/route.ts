@@ -11,6 +11,7 @@ import { findRelevantSchemaContent } from '@/lib/schema-embedding';
 import { getUserFromRequest } from '@/app/(backend)/utils/authUtils';
 import prisma from '@/lib/prisma';
 import { NextResponse } from 'next/server';
+import { QueryReportProcessor } from '@backend/services/query/QueryReportProcessor';
 
 // Define an interface for the relevant content items
 export interface RelevantSchemaContentItem {
@@ -107,18 +108,18 @@ Use this schema information if relevant to answer the user's question.`;
     
     // Generate response with enhanced messages
     const result = await provider.generateResponse(enhancedMessages);
-    
-    // Format response with schema metadata
+    const validationResults = QueryReportProcessor.getInstance().processReport(result.text);
+    console.log('Query Validation Results:', validationResults);
     const response = formatter.formatResponse(
       result, 
-      messages, // Original messages for userPrompt
+      messages,
       provider.getModelName(),
       schemaId,
       schemaIncluded || relevantContentFound,
       schemaName
     );
 
-    const aiResponse = response.aiResponse;;
+    const aiResponse = response.aiResponse;
     const metadata = { modelUsed: provider.getModelName() };
 
     // Save the conversation to history if sessionId is provided
