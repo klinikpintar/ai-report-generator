@@ -120,8 +120,8 @@ const API_ACCESS_RULES: Record<ROLE, Record<string, string[]>> = {
     DELETE: ["/users", "/service", "/schema"],
   },
   BUSINESS_ANALYST: {
-    GET: ["/service", "/schema", "/chat-session", "/ai"],
-    POST: ["/chat", "/ekspor", "/chat-session"],
+    GET: ["/service", "/schema", "/chat-sessions", "/ai"],
+    POST: ["/chat", "/ekspor", "/chat-sessions"],
     PATCH: ["/chat-session"],
     DELETE: ["/chat-session"],
   }
