@@ -22,9 +22,7 @@ export class QueryValidationService {
 
       let result: QueryValidationResult = {
         isValid: false,
-        validatorType: "Unknown",
-        skippedValidation: true,
-        message: `No validator found for the language: ${query.language}`,
+        warningMessage: `We don't provide validator for ${query.language} language`, 
       };
       if (validator) {
         try {
@@ -32,9 +30,7 @@ export class QueryValidationService {
         } catch { 
           result = {
             isValid: false,
-            validatorType: validator.constructor.name,
-            skippedValidation: false,
-            message: "Error during validation",
+            errorMessage: "Failed to validate this query. It may be invalid or not supported.",
           };
         }
       }

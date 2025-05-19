@@ -10,21 +10,11 @@ export class SQLQueryValidator implements IQueryValidator {
       this.parser.parse(query);
       return {
         isValid: true,
-        validatorType: this.constructor.name,
-        skippedValidation: false,
       };
-    } catch (error) {
-      let errorMessage = "Invalid SQL query";
-      if (error instanceof Error) {
-        errorMessage = error.message;
-      } else if (typeof error === 'string') {
-        errorMessage = error;
-      }
+    } catch {
       return {
         isValid: false,
-        validatorType: this.constructor.name,
-        message: errorMessage,
-        skippedValidation: false,
+        errorMessage: "This SQL query is either invalid or not supported by our validator",
       };
     }
   }

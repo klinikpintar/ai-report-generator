@@ -99,19 +99,21 @@ export class MongoQueryValidator implements IQueryValidator {
         const validator = this.validators[key];
         const isValid = validator.validate(query);
 
+        if (!isValid) {
+          return {
+            isValid: false,
+            errorMessage: 'This MongoDB query is either invalid or not supported by our validator',
+          };
+        }
+
         return {
-          isValid,
-          validatorType: 'MongoQueryValidator',
-          skippedValidation: false,
-          message: isValid ? undefined : 'Invalid MongoDB query',
+          isValid: true,
         };
       }
     }
     return {
       isValid: false,
-      validatorType: 'MongoQueryValidator',
-      skippedValidation: true,
-      message: 'No validator found for the this MongoDB query method',
+      warningMessage: 'We don\'t provide validator for this MongoDB query',
     };
   }
 }

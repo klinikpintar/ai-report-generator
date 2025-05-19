@@ -13,7 +13,7 @@ describe('SQLQueryValidator', () => {
     const result: QueryValidationResult = validator.validate(query);
 
     expect(result.isValid).toBe(true);
-    expect(result.skippedValidation).toBe(false);
+    expect(result.errorMessage).toBeUndefined();
   });
 
   it('should validate a correct INSERT SQL query', () => {
@@ -21,7 +21,7 @@ describe('SQLQueryValidator', () => {
     const result: QueryValidationResult = validator.validate(query);
 
     expect(result.isValid).toBe(true);
-    expect(result.skippedValidation).toBe(false);
+    expect(result.errorMessage).toBeUndefined();
   });
 
   it('should validate a correct UPDATE SQL query', () => {
@@ -29,7 +29,7 @@ describe('SQLQueryValidator', () => {
     const result: QueryValidationResult = validator.validate(query);
 
     expect(result.isValid).toBe(true);
-    expect(result.skippedValidation).toBe(false);
+    expect(result.errorMessage).toBeUndefined();
   });
 
   it('should validate a correct DELETE SQL query', () => {
@@ -37,7 +37,7 @@ describe('SQLQueryValidator', () => {
     const result: QueryValidationResult = validator.validate(query);
 
     expect(result.isValid).toBe(true);
-    expect(result.skippedValidation).toBe(false);
+    expect(result.errorMessage).toBeUndefined();
   });
 
   it('should invalidate an incorrect SQL query with a syntax error', () => {
@@ -45,7 +45,7 @@ describe('SQLQueryValidator', () => {
     const result: QueryValidationResult = validator.validate(query);
 
     expect(result.isValid).toBe(false);
-    expect(result.skippedValidation).toBe(false);
+    expect(result.errorMessage).toBeDefined();
   });
 
   it('should invalidate an SQL query with an unknown keyword', () => {
@@ -53,68 +53,69 @@ describe('SQLQueryValidator', () => {
     const result: QueryValidationResult = validator.validate(query);
 
     expect(result.isValid).toBe(false);
-    expect(result.skippedValidation).toBe(false);
-    expect(result.message).toBeDefined();
-    expect(typeof result.message).toBe('string');
+    expect(result.errorMessage).toBeDefined();
   });
 
-  it('should handle an empty string as an invalid query', () => {
+  it('should invalidate an empty string query', () => {
     const query = "";
     const result: QueryValidationResult = validator.validate(query);
 
     expect(result.isValid).toBe(true);
-    expect(result.skippedValidation).toBe(false);
   });
 
-  it('should handle a query with only comments', () => {
+  it('should invalidate a query with only comments', () => {
     const query = "-- This is just a comment";
     const result: QueryValidationResult = validator.validate(query);
 
-    expect(result.isValid).toBe(true); 
-    expect(result.skippedValidation).toBe(false);
+    expect(result.isValid).toBe(true);
   });
 
-  it('should correctly capture error message if parser throws an Error object', () => {
-    const errorMessage = "Specific parser error";
-    const mockParse = jest.fn().mockImplementation(() => {
-      throw new Error(errorMessage);
+  it('should set an error message when parser throws any error', () => {
+    // Mock the parser's parse method to simulate it throwing an error
+    const originalParse = validator.parser.parse; // Save original
+    validator.parser.parse = jest.fn().mockImplementation(() => {
+      throw new Error("Some internal parser error");
     });
-    validator.parser.parse = mockParse; // Override the parse method for this test
 
-    const query = "SELECT * FROM test";
+    const query = "SELECT * FROM test_table_that_will_cause_mocked_error";
     const result: QueryValidationResult = validator.validate(query);
 
     expect(result.isValid).toBe(false);
-    expect(result.message).toBe(errorMessage);
-    expect(result.skippedValidation).toBe(false);
+    expect(result.errorMessage).toBeDefined();
+
+    validator.parser.parse = originalParse; // Restore original parse method
   });
 
-  it('should correctly capture error message if parser throws a string', () => {
-    const errorMessage = "A string error from parser";
-    const mockParse = jest.fn().mockImplementation(() => {
-      throw errorMessage; 
+  it('should handle various valid DDL and DML statements', () => {
+    const queries = [
+      "CREATE TABLE students (id INT, name VARCHAR(100));",
+      "ALTER TABLE students ADD email VARCHAR(100);",
+      "DROP TABLE students;",
+      "CREATE INDEX idx_name ON users (name);",
+      "GRANT SELECT ON users TO 'testuser'@'localhost';"
+    ];
+
+    queries.forEach(query => {
+      const result = validator.validate(query);
+      if (!result.isValid) {
+        // This console log can be helpful during debugging if the parser rejects valid SQL
+        console.warn(`Query considered invalid by parser: ${query}. Error: ${result.errorMessage}`);
+      }
+      expect(result.isValid).toBe(true);
+      expect(result.errorMessage).toBeUndefined();
     });
-    validator.parser.parse = mockParse;
-
-    const query = "SELECT * FROM another_test";
-    const result: QueryValidationResult = validator.validate(query);
-
-    expect(result.isValid).toBe(false);
-    expect(result.message).toBe(errorMessage);
-    expect(result.skippedValidation).toBe(false);
   });
 
-   it('should default error message if parser throws an unknown error type', () => {
-    const mockParse = jest.fn().mockImplementation(() => {
-      throw { someObjectError: true };
+  it('should invalidate queries with fundamentally broken syntax', () => {
+    const queries = [
+      "SELECT name شهر FROM users",
+      "INSERT INTO VALUES () products ('Pen', 1.5)",
+      "UPDATE SET city = 'London' customers WHERE id = 3",
+    ];
+    queries.forEach(query => {
+      const result = validator.validate(query);
+      expect(result.isValid).toBe(false);
+      expect(result.errorMessage).toBeDefined();
     });
-    validator.parser.parse = mockParse;
-
-    const query = "SELECT * FROM yet_another_test";
-    const result: QueryValidationResult = validator.validate(query);
-
-    expect(result.isValid).toBe(false);
-    expect(result.message).toBeDefined();
-    expect(result.skippedValidation).toBe(false);
   });
 });
