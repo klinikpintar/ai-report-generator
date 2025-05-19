@@ -1,33 +1,21 @@
-import { encryptApiKey } from '../utils/apiKeyUtils';
 import { NotFoundResponse } from '../utils/exceptions';
 import { ProviderValidation } from '@/app/(backend)/dtos/provider.dto';
-import { AIModelValidation } from '@/app/(backend)/dtos/aimodel.dto';
 import { z } from 'zod';
-import { IProviderRepository, ProviderInclude, ProviderWithModels } from '../interfaces/IProviderRepository';
-import { IAIModelRepository } from '../interfaces/IAIModelRepository';
-import { PrismaProviderRepository } from '../repositories/PrismaProviderRepository';
-import { PrismaAIModelRepository } from '../repositories/PrismaAIModelRepository';
+import { IProviderRepository, ProviderInclude} from '../interfaces/IProviderRepository';
+import { IApiKeyService } from '@backend/interfaces/IApiKeyService';
+import { IModelService } from '@backend/interfaces/IModelService';
+import { DefaultProviderFactory } from '../factories/defaultProviderFactory';
+import { IProviderService } from '../interfaces/IProviderService';
 
-class ProviderService {
-  private static instance: ProviderService | null;
-
-  private constructor(
-    private providerRepository: IProviderRepository,
-    private modelRepository: IAIModelRepository
-  ) { }
-
-  public static getInstance(): ProviderService {
-    if (!ProviderService.instance) {
-      const providerRepository = new PrismaProviderRepository();
-      const aiModelRepository = new PrismaAIModelRepository();
-      ProviderService.instance = new ProviderService(providerRepository, aiModelRepository);
-    }
-
-    return ProviderService.instance;
-  }
-
-  public static resetInstance(): void {
-    ProviderService.instance = null;
+export class ProviderService implements IProviderService {
+  private readonly defaultProviderFactory: DefaultProviderFactory;
+  
+  constructor(
+    private readonly providerRepository: IProviderRepository,
+    private readonly modelService: IModelService,
+    private readonly apiKeyService: IApiKeyService
+  ) {
+    this.defaultProviderFactory = new DefaultProviderFactory(providerRepository, apiKeyService);
   }
 
   /**
@@ -84,29 +72,43 @@ class ProviderService {
 
       // Aktifkan provider default jika ditemukan
       if (provider) {
-        await this.providerRepository.updateById(provider.id, { isActive: true });
-        provider.isActive = true;
+        // Gunakan updateById yang ditingkatkan untuk ACID
+        provider = await this.providerRepository.updateById(
+          provider.id,
+          { isActive: true },
+          {
+            activeModel: true,
+            models: {
+              where: { isAvailable: true },
+              orderBy: { name: 'asc' }
+            }
+          }
+        );
       }
     }
 
     // Jika provider tidak memiliki model aktif, tetapkan model default atau pertama
     if (provider && !provider.activeModel && provider.models && provider.models.length > 0) {
-      // Cari model default untuk provider ini
-      const defaultModel = provider.models.find(model => model.isDefault);
-      // Atau gunakan model pertama jika tidak ada default
-      const modelToActivate = defaultModel || provider.models[0];
-
-      // Set model sebagai aktif
-      await this.providerRepository.updateById(provider.id, { activeModelId: modelToActivate.id });
-
-      // Update provider object dalam memory
-      provider.activeModelId = modelToActivate.id;
-      provider.activeModel = modelToActivate;
+      const modelId = await this.modelService.selectDefaultModelId(provider);
+      
+      if (modelId) {
+        provider = await this.providerRepository.updateById(
+          provider.id,
+          { activeModelId: modelId },
+          {
+            activeModel: true,
+            models: {
+              where: { isAvailable: true },
+              orderBy: { name: 'asc' }
+            }
+          }
+        );
+      }
     }
 
     // Jika masih tidak ada provider, buat provider default on-the-fly
     if (!provider) {
-      provider = await this.createDefaultProvider();
+      provider = await this.defaultProviderFactory.createDefault();
     }
 
     // Transform output dengan skema Zod
@@ -133,7 +135,7 @@ class ProviderService {
     }
 
     // Verifikasi model exists dan milik provider ini
-    const model = await this.modelRepository.findById(
+    const model = await this.modelService.findById(
       validatedData.modelId,
       validatedData.providerId
     );
@@ -172,7 +174,10 @@ class ProviderService {
       throw new NotFoundResponse(`Provider with ID ${validatedData.providerId} not found`);
     }
 
-    const encryptedApiKey = encryptApiKey(validatedData.apiKey);
+    // Validasi API key dengan request ke API provider
+    await this.apiKeyService.validateApiKey(provider.name, validatedData.apiKey);
+
+    const encryptedApiKey = this.apiKeyService.encryptApiKey(validatedData.apiKey);
 
     // Update API key
     const updatedProvider = await this.providerRepository.updateApiKey(
@@ -186,6 +191,8 @@ class ProviderService {
 
   /**
    * Set provider as active and deactivate others
+   * Mengimplementasikan ACID dengan transaksi untuk menjamin bahwa operasi
+   * deactivateAll dan setActive terjadi dalam satu transaksi atomik
    */
   async setActiveProvider(
     providerId: string
@@ -198,10 +205,7 @@ class ProviderService {
       throw new NotFoundResponse(`Provider with ID ${validatedData.providerId} not found`);
     }
 
-    // Nonaktifkan semua provider
-    await this.providerRepository.deactivateAll();
-
-    // Aktifkan provider yang dipilih
+    // Menggunakan setActive yang ditingkatkan untuk menjalankan deactivateAll dan update dalam satu transaksi
     const updatedProvider = await this.providerRepository.setActive(validatedData.providerId);
 
     // Transform output dengan skema Zod
@@ -210,20 +214,19 @@ class ProviderService {
 
   /**
    * Buat provider baru
+   * Mengimplementasikan ACID untuk operasi reset defaults dan create provider
    */
   async createProvider(
     data: z.infer<typeof ProviderValidation.POST>
   ): Promise<z.infer<typeof ProviderValidation.RESPONSE>> {
     const validatedData = ProviderValidation.POST.parse(data);
-    const encryptedApiKey = encryptApiKey(validatedData.apiKey);
 
-    // Jika ini provider default, reset semua default lain
-    if (validatedData.isDefault) {
-      await this.providerRepository.resetDefaults();
-    }
+    // Validasi API key dengan request ke API provider
+    await this.apiKeyService.validateApiKey(validatedData.name, validatedData.apiKey);
 
-    // Buat provider
-    const provider = await this.providerRepository.create({
+    const encryptedApiKey = this.apiKeyService.encryptApiKey(validatedData.apiKey);
+
+    const provider = await this.providerRepository.createWithDefaults({
       name: validatedData.name,
       displayName: validatedData.displayName,
       apiKey: encryptedApiKey,
@@ -234,71 +237,4 @@ class ProviderService {
     // Transform output dengan skema Zod
     return ProviderValidation.RESPONSE.parse(provider);
   }
-
-  /**
-   * Helper function untuk membuat provider default jika belum ada
-   * @private
-   */
-  private async createDefaultProvider(): Promise<ProviderWithModels> {
-    // Default values dengan validasi Zod
-    const defaultProviderData = ProviderValidation.POST.parse({
-      name: 'gemini',
-      displayName: 'Google Gemini',
-      apiKey: process.env.GEMINI_API_KEY ?? (() => {
-        throw new Error('GEMINI_API_KEY env var is required to bootstrap the default provider');
-      })(),
-      isActive: true,
-      isDefault: true,
-    });
-
-    // Enkripsi API key
-    const encryptedApiKey = encryptApiKey(defaultProviderData.apiKey);
-
-    // Buat provider default
-    const provider = await this.providerRepository.create({
-      name: defaultProviderData.name,
-      displayName: defaultProviderData.displayName,
-      apiKey: encryptedApiKey,
-      isActive: defaultProviderData.isActive,
-      isDefault: defaultProviderData.isDefault,
-    });
-
-    // Validasi data model dengan Zod
-    const defaultModelData = AIModelValidation.POST.parse({
-      name: 'Gemini 2.0 Flash',
-      modelIdentifier: 'gemini-2.0-flash',
-      providerId: provider.id,
-      isDefault: true,
-      isAvailable: true
-    });
-
-    // Buat model default
-    const model = await this.modelRepository.create(defaultModelData);
-
-    // Set sebagai active model
-    await this.providerRepository.updateById(
-      provider.id,
-      { activeModelId: model.id }
-    );
-
-    // Dapatkan provider lengkap dengan model
-    const completeProvider = await this.providerRepository.findById(
-      provider.id,
-      {
-        models: {
-          orderBy: { name: 'asc' },
-          where: { isAvailable: true }
-        },
-        activeModel: true
-      }
-    );
-
-    if (!completeProvider) {
-      throw new Error("Failed to create default provider");
-    }
-
-    return completeProvider;
-  }
 }
-
-export default ProviderService.getInstance();

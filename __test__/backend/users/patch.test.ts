@@ -64,7 +64,7 @@ describe("PATCH /api/users/[id] route (full flow including usersService)", () =>
     };
 
     const request = new Request("http://localhost", {
-      method: "PATCH",
+      method: "admin",
       body: JSON.stringify(invalidBody),
     });
 

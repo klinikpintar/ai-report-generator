@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { isContentSafe } from '@backend/utils/sanitize';
 
 // Validasi skema data laporan
 export const ReportSchema = z.object({
@@ -7,13 +8,9 @@ export const ReportSchema = z.object({
     .string()
     .trim()
     .min(1, "Isi laporan tidak boleh kosong")
-    .refine(
-      (val) => {
-        const scriptTagRegex = /<script[^>]*>(?:(?:(?!<\/script>)[\s\S])*?)<\/script>/gi;
-        return !scriptTagRegex.test(val);
-      },
-      { message: "Isi laporan tidak boleh mengandung tag <script>" }
-    ),
+    .refine((val) => isContentSafe(val), {
+      message: "Isi laporan tidak boleh mengandung tag HTML",
+    }),
   createdAt: z.string().refine((val) => !isNaN(Date.parse(val)), {
     message: "Format tanggal tidak valid",
   }),
