@@ -1,38 +1,71 @@
 "use client";
 
-import React from "react";
-import ReactMarkdown, { Components, ExtraProps } from "react-markdown"; // Import Markdown Renderer
+import type React from "react";
+import { useMemo } from "react";
+import ReactMarkdown, { type Components, type ExtraProps } from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeRaw from "rehype-raw";
-import { CodeBlock } from "./CodeBlock"; // Assuming CodeBlock is correctly implemented
-import { JSX } from "react/jsx-runtime";
+import { CodeBlock } from "./CodeBlock";
+import type { JSX } from "react/jsx-runtime";
+import type { QueryValidationResult } from "../interfaces/QueryValidationResult";
 
 type ElementProps<T extends keyof JSX.IntrinsicElements> = React.ComponentPropsWithoutRef<T> &
   ExtraProps;
 
 interface CustomCodeProps extends ElementProps<"code"> {
-  inline?: boolean; 
+  inline?: boolean;
+  codeToIdMap?: Map<string, string>;
+  validationResults?: QueryValidationResult[];
 }
+
+const normalizeCode = (code: string): string => {
+  return code
+    .trim()
+    .replace(/\s+/g, " ") // Replace multiple whitespace with single space
+    .replace(/\s*;\s*$/, ""); // Remove trailing semicolons
+};
 
 const MarkdownCodeRenderer: React.FC<CustomCodeProps> = ({
   inline,
   className,
   children,
-  ...props 
+  codeToIdMap,
+  validationResults = [],
+  ...props
 }) => {
   const match = /language-(\w+)/.exec(className ?? "");
-  if (!inline && match && React.isValidElement(children)) {
-    const childString = Array.isArray(children) ? children.join("") : String(children);
-    return <CodeBlock language={match[1]} value={childString.replace(/\n$/, "")} />;
-  } else if (!inline && match) {
-    return <CodeBlock language={match[1]} value={String(children).replace(/\n$/, "")} />;
+
+  if (!inline && match) {
+    const codeContent = String(children);
+    const normalizedCode = normalizeCode(codeContent);
+
+    let queryId: string | undefined;
+
+    codeToIdMap?.forEach((id, code) => {
+      if (normalizeCode(code) === normalizedCode) {
+        queryId = id;
+      }
+    });
+
+    const validationResult = queryId
+      ? validationResults.find((result) => result.query.id === queryId)
+      : undefined;
+
+    const validationStatus = validationResult
+      ? {
+          isValid: validationResult.isValid,
+          errorMessage: validationResult.errorMessage,
+          warningMessage: validationResult.warningMessage,
+        }
+      : undefined;
+
+    return (
+      <CodeBlock language={match[1]} value={codeContent} validationStatus={validationStatus} />
+    );
   }
 
   return (
-    <code
-      className={inline ? "bg-gray-100 px-1 rounded text-sm" : className}
-      {...props}
-    >
+    <code className={inline ? "bg-gray-100 px-1 rounded text-sm" : className} {...props}>
       {children}
     </code>
   );
@@ -82,9 +115,27 @@ const LiComponent: React.FC<ElementProps<"li">> = ({ children, ...props }) => (
 
 interface ReportFormatterProps {
   content: string;
+  validationResults?: QueryValidationResult[];
 }
 
-export const ReportFormatter: React.FC<ReportFormatterProps> = ({ content }) => {
+export const ReportFormatter: React.FC<ReportFormatterProps> = ({
+  content,
+  validationResults = [],
+}) => {
+  // Pre-process the markdown content to extract code blocks and their IDs
+  const codeToIdMap = useMemo(() => {
+    const map = new Map<string, string>();
+    const codeBlockRegex = /```([a-z]+)\s+id=([a-zA-Z0-9]+)\s*\n([\s\S]*?)```/g;
+
+    let match;
+    while ((match = codeBlockRegex.exec(content)) !== null) {
+      const [, , id, code] = match;
+      map.set(code.trim(), id);
+    }
+
+    return map;
+  }, [content]);
+
   const markdownComponents: Components = {
     h1: H1Component,
     h2: H2Component,
@@ -93,7 +144,12 @@ export const ReportFormatter: React.FC<ReportFormatterProps> = ({ content }) => 
     ul: UlComponent,
     ol: OlComponent,
     li: LiComponent,
-    code: MarkdownCodeRenderer,
+    code: (props) =>
+      MarkdownCodeRenderer({
+        ...props,
+        codeToIdMap,
+        validationResults,
+      }),
   };
 
   return (

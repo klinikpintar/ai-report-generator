@@ -11,13 +11,17 @@ import { useSession } from "./context/sessionContext";
 import { useSearchParams } from "next/navigation";
 import { useUser } from "@frontend/login/context/userContext";
 import { ReportFormatter } from "./components/ReportFormatter";
+import { QueryValidationResult } from "./interfaces/QueryValidationResult";
+
 
 // Definisikan tipe data pesan
+
 interface Message {
   id: string;
   sender: "user" | "assistant";
   content: string;
-  modelUsed?: string; // Tambahkan informasi model
+  modelUsed?: string;
+  queryValidationResults?: QueryValidationResult[];
 }
 
 interface ApiResponse {
@@ -25,6 +29,7 @@ interface ApiResponse {
   userPrompt: string;
   aiResponse: string;
   createdAt: string;
+  queryValidationResults: QueryValidationResult[];
   metadata: {
     finishReason: string;
     usage: {
@@ -83,6 +88,7 @@ export default function ChatBox() {
         content: string;
         role: string;
         modelUsed?: string;
+        queryValidationResults?: QueryValidationResult[];
       }
 
       // Convert session messages to your format
@@ -91,6 +97,7 @@ export default function ChatBox() {
         sender: msg.role === "user" ? "user" : "assistant",
         content: msg.content,
         modelUsed: msg.modelUsed ?? undefined,
+        queryValidationResults: msg.queryValidationResults ?? undefined,
       }));
 
       setMessages(formattedMessages);
@@ -191,10 +198,11 @@ export default function ChatBox() {
 
       // When adding the AI response, use the functional form to preserve existing messages
       const assistantMessage: Message = {
-        id: data.messageId || `${Date.now()}-ai`,
+        id: data.messageId ?? `${Date.now()}-ai`,
         sender: "assistant", // This is correct for your frontend interface
         content: data.aiResponse,
         modelUsed: data.metadata?.modelUsed,
+        queryValidationResults: data.queryValidationResults ?? [],
       };
 
       setMessages((prevMessages) => [...prevMessages, assistantMessage]);
@@ -262,7 +270,10 @@ export default function ChatBox() {
                   }`}
                 >
                   {msg.sender === "assistant" ? (
-                    <ReportFormatter content={msg.content} />
+                    <ReportFormatter
+                      content={msg.content}
+                      validationResults={msg.queryValidationResults}
+                    />
                   ) : (
                     <p className="whitespace-pre-wrap">{msg.content}</p>
                   )}
