@@ -53,6 +53,7 @@ export default function ChatBox() {
   const [isLoading, setIsLoading] = useState(false);
   const [isInitializing, setIsInitializing] = useState(true);
   const chatContainerRef = useRef<HTMLDivElement>(null);
+  const [titleSession, setTitleSession] = useState<string>("AI Report Generator");
   const {
     selectedService,
     services,
@@ -107,6 +108,8 @@ export default function ChatBox() {
         if (!response.ok) throw new Error("Failed to load session");
 
         const data = await response.json();
+
+      setTitleSession(data.session.title ?? "AI Report Generator");
 
         // Set messages from the session data
         setMessages(
@@ -429,7 +432,7 @@ export default function ChatBox() {
                   setIsExportModalVisible(false);
                 }}
                 content={exportModalData.content}
-                title={`Laporan-${exportModalData.id}`}
+                title={titleSession}
               />
             )}
 

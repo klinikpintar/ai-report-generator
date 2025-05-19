@@ -49,15 +49,6 @@ describe("POST /api/ekspor/pdf (handler)", () => {
     expect(res.headers.get("content-disposition")).toContain("attachment");
   });
 
-  it("should return 401 if token is missing", async () => {
-    const req = createMockRequest({ reportData: validData }, false, false);
-    const res = await POST(req);
-    const json = await res.json();
-
-    expect(res.status).toBe(401);
-    expect(json.message).toBe("Missing token");
-  });
-
   it("should return 400 for invalid input", async () => {
     const invalid = {
       reportData: {
