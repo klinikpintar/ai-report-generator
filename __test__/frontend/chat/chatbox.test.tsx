@@ -302,32 +302,36 @@ describe("ChatBox", () => {
     });
   });
 
-  it("✅ should handle errors when loading session messages", async () => {
-    // Mock session ID
-    getMock.mockImplementation((key: string) =>
-      key === "sessionId" ? "invalid-session" : null
-    );
+it("✅ should handle errors when loading session messages", async () => {
+  // Mock session ID
+  getMock.mockImplementation((key: string) =>
+    key === "sessionId" ? "invalid-session" : null
+  );
 
-    // Mock fetch to return error
-    global.fetch = jest.fn().mockResolvedValueOnce({
+  // Mock fetch to return a proper error response
+  global.fetch = jest.fn().mockImplementationOnce(() => 
+    Promise.resolve({
       ok: false,
       status: 404,
-    });
+      json: () => Promise.reject(new Error("Not found"))
+    })
+  );
 
-    // Spy on console.error
-    const consoleErrorSpy = jest
-      .spyOn(console, "error")
-      .mockImplementation(() => {});
+  // Spy on console.error
+  const consoleErrorSpy = jest
+    .spyOn(console, "error")
+    .mockImplementation(() => {});
 
-    renderChatBox();
+  renderChatBox();
 
-    await waitFor(() => {
-      expect(consoleErrorSpy).toHaveBeenCalledWith(
-        "Error loading session messages:",
-        expect.any(Error)
-      );
-    });
-
-    consoleErrorSpy.mockRestore();
+  await waitFor(() => {
+    // Make sure this matches EXACTLY what's in your component
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      "Error loading session:", 
+      expect.any(Error)
+    );
   });
+
+  consoleErrorSpy.mockRestore();
+});
 });
