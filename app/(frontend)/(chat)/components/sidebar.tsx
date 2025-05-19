@@ -7,7 +7,6 @@ import { useRouter } from "next/navigation";
 
 interface SidebarProps {
   isOpen: boolean;
-  onClose: () => void;
 }
 
 interface ChatSession {

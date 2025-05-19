@@ -1,122 +1,193 @@
 import { UserTable } from "@frontend/admin/manage-user/components/UserTable";
-import { User } from "@frontend/admin/manage-user/types/user";
 import { render, screen } from "@testing-library/react";
 import { adminUser, businessAnalystUser } from "@/__mocks__/user-data";
-import { UserTableProvider } from "@frontend/admin/manage-user/context/UserTableContext";
-import { fetchUsers } from "@frontend/admin/manage-user/utils/api";
 import { ToastContainer } from "react-toastify";
+import userEvent from "@testing-library/user-event";
 
-const mockUsers: User[] = [adminUser, businessAnalystUser];
+// Mock the data
+const mockUsers = [adminUser, businessAnalystUser];
 
+// Mock all hooks
+jest.mock("@frontend/admin/manage-user/hooks/useFetchUser", () => ({
+  useFetchUser: () => ({
+    refreshUsers: jest.fn(),
+  }),
+}));
+
+jest.mock("@frontend/admin/manage-user/hooks/useUserTablePagination", () => ({
+  useUserTablePagination: () => ({
+    handlePageChange: jest.fn(),
+  }),
+}));
+
+// Mock the context directly - this is the key for performance
+jest.mock("@frontend/admin/manage-user/context/UserTableContext", () => ({
+  useUserTableContext: () => ({
+    state: {
+      data: mockUsers,
+      isLoading: false,
+      error: null,
+      pagination: {
+        currentPage: 1,
+        lastPage: 2,
+        totalItems: mockUsers.length,
+      },
+      filters: {
+        role: {
+          selected: [],
+        },
+      },
+    },
+    dispatch: jest.fn(),
+  }),
+  UserTableProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+}));
+
+// Mock API
 jest.mock("@frontend/admin/manage-user/utils/api", () => ({
   fetchUsers: jest.fn(() => Promise.resolve({ data: mockUsers, pagination: { total_pages: 1 } })),
 }));
 
-// mock the router
+// Mock router
 jest.mock("next/navigation", () => ({
-  useRouter: jest.fn(() => ({
+  useRouter: () => ({
     push: jest.fn(),
-  })),
+  }),
+  useSearchParams: () => ({
+    get: jest.fn(),
+  }),
+}));
+
+// Mock the generic table components to reduce rendering complexity
+jest.mock("@frontend/components/table", () => ({
+  GenericTable: ({ columns, data }: { columns: Array<{ key: string; header: string; renderCell?: (item: any) => React.ReactNode }>; data: Array<any> }) => (
+    <table>
+      <thead>
+        <tr>
+          {columns.map((col) => (
+            <th key={col.key}>{col.header}</th>
+          ))}
+        </tr>
+      </thead>
+      <tbody>
+        {data.map((item) => (
+          <tr key={item.id}>
+            {columns.map((col) => (
+              <td key={`${item.id}-${col.key}`}>
+                {col.renderCell ? col.renderCell(item) : item[col.key]}
+              </td>
+            ))}
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  ),
+  GenericTableColumn: () => null,
+  TablePagination: () => (
+    <div>
+      <button>Sebelumnya</button>
+      <a href="#" aria-current="page">1</a>
+      <button>Selanjutnya</button>
+    </div>
+  ),
 }));
 
 describe("UserTable", () => {
-  const setup = () => {
+  const onEditUser = jest.fn();
+  const onDeleteUser = jest.fn();
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  test("renders table with correct headers and data", async () => {
     render(
       <>
         <ToastContainer />
-        <UserTableProvider>
-          <UserTable />
-        </UserTableProvider>
+        <UserTable onEditUser={onEditUser} onDeleteUser={onDeleteUser} />
       </>
     );
-  };
 
-  beforeEach(() => {
-    setup();
+    // Check that all headers are present
+    expect(screen.getByText("Nama Lengkap")).toBeInTheDocument();
+    expect(screen.getByText("Email")).toBeInTheDocument();
+    expect(screen.getByText("Role")).toBeInTheDocument();
+    expect(screen.getByText("Status")).toBeInTheDocument();
+    expect(screen.getByText("Aksi")).toBeInTheDocument();
+
+    // Check user data
+    expect(screen.getByText(adminUser.name)).toBeInTheDocument();
+    expect(screen.getByText(adminUser.email)).toBeInTheDocument();
+    expect(screen.getByText(businessAnalystUser.name)).toBeInTheDocument();
+    expect(screen.getByText(businessAnalystUser.email)).toBeInTheDocument();
+    
+    // Check role display
+    expect(screen.getByText("Admin")).toBeInTheDocument();
+    expect(screen.getByText("Business Analyst")).toBeInTheDocument();
+    
+    // Check status
+    expect(screen.getByText("Aktif")).toBeInTheDocument();
+    expect(screen.getByText("Nonaktif")).toBeInTheDocument();
+    
+    // Check action buttons
+    const editButtons = screen.getAllByRole("button", { name: /Edit/i });
+    expect(editButtons).toHaveLength(2);
+    
+    const deleteButtons = screen.getAllByRole("button", { name: /Hapus/i });
+    expect(deleteButtons).toHaveLength(2);
   });
 
-  describe("Column header of UserTable", () => {
-    it("should render Nama Lengkap column header", async () => {
-      const nameHeader = await screen.findByText("Nama Lengkap");
-      expect(nameHeader).toBeInTheDocument();
-    });
-    it("should render Email column header", async () => {
-      const emailHeader = await screen.findByText("Email");
-      expect(emailHeader).toBeInTheDocument();
-    });
-    it("should render Role column header", async () => {
-      const roleHeader = await screen.findByText("Role");
-      expect(roleHeader).toBeInTheDocument();
-    });
-    it("should render Status column header", async () => {
-      const statusHeader = await screen.findByText("Status");
-      expect(statusHeader).toBeInTheDocument();
-    });
-    it("should render Aksi column header", async () => {
-      const actionHeader = await screen.findByText("Aksi");
-      expect(actionHeader).toBeInTheDocument();
-    });
+  test("calls onEditUser when edit button is clicked", async () => {
+    render(
+      <>
+        <ToastContainer />
+        <UserTable onEditUser={onEditUser} onDeleteUser={onDeleteUser} />
+      </>
+    );
+    
+    const user = userEvent.setup();
+    const editButtons = screen.getAllByRole("button", { name: /Edit/i });
+    
+    await user.click(editButtons[0]);
+    expect(onEditUser).toHaveBeenCalledWith(mockUsers[0]);
   });
 
-  describe("UserTable data", () => {
-    // Positive test cases
-    it("should render the user full name", async () => {
-      const nameCell = await screen.findByText(adminUser.name);
-      expect(nameCell).toBeInTheDocument();
-    });
-    it("should render the user email", async () => {
-      const emailCell = await screen.findByText(adminUser.email);
-      expect(emailCell).toBeInTheDocument();
-    });
-    it("should render the user role for admin", async () => {
-      const roleCell = await screen.findByText("Admin");
-      expect(roleCell).toBeInTheDocument();
-    });
-    it("should render the user role for business analyst", async () => {
-      const roleCell = await screen.findByText("Business Analyst");
-      expect(roleCell).toBeInTheDocument();
-    });
-    it("should render the user status for active user", async () => {
-      const statusCell = await screen.findByText("Aktif");
-      expect(statusCell).toBeInTheDocument();
-    });
-    it("should render the user status for inactive user", async () => {
-      const statusCell = await screen.findByText("Nonaktif");
-      expect(statusCell).toBeInTheDocument();
-    });
-    it("should render the edit button", async () => {
-      const editButtons = await screen.findAllByRole("button", { name: /Edit/i });
-      expect(editButtons).toHaveLength(2);
-      expect(editButtons[0]).toBeInTheDocument();
-    });
-    it("should render the delete button", async () => {
-      const deleteButtons = await screen.findAllByRole("button", { name: /Hapus/i });
-      expect(deleteButtons).toHaveLength(2);
-      expect(deleteButtons[0]).toBeInTheDocument();
-    });
-
-    // Negative test cases
-    it("should display error message when fetching users fails", async () => {
-      (fetchUsers as jest.Mock).mockRejectedValueOnce(new Error("Failed to fetch users"));
-      setup();
-      const errorMessage = await screen.findByText("Gagal memuat data pengguna");
-      expect(errorMessage).toBeInTheDocument();
-    });
+  test("calls onDeleteUser when delete button is clicked", async () => {
+    render(
+      <>
+        <ToastContainer />
+        <UserTable onEditUser={onEditUser} onDeleteUser={onDeleteUser} />
+      </>
+    );
+    
+    const user = userEvent.setup();
+    const deleteButtons = screen.getAllByRole("button", { name: /Hapus/i });
+    
+    await user.click(deleteButtons[0]);
+    expect(onDeleteUser).toHaveBeenCalledWith(mockUsers[0]);
   });
 
-  describe("UserTable pagination", () => {
-    it("should render pagination component", async () => {
-      const prevButton = await screen.findByRole("button", { name: /Sebelumnya/i });
-      const nextButton = await screen.findByRole("button", { name: /Selanjutnya/i });
-      expect(prevButton).toBeInTheDocument();
-      expect(nextButton).toBeInTheDocument();
-    });
-
-    describe("UserTable pagination with URL query", () => {
-      it("should activate page link 1 when query page is not set", async () => {
-        const firstPageLink = await screen.findByRole("link", { name: "1" });
-        expect(firstPageLink).toHaveAttribute("aria-current", "page");
+  test("displays error message when there is an error", async () => {
+    // Override the mock to return an error state
+    jest.spyOn(require("@frontend/admin/manage-user/context/UserTableContext"), "useUserTableContext")
+      .mockReturnValueOnce({
+        state: {
+          data: [],
+          isLoading: false,
+          error: "Gagal memuat data pengguna",
+          pagination: { currentPage: 1, lastPage: 1, totalItems: 0 },
+          filters: { role: { selected: [] } },
+        },
+        dispatch: jest.fn(),
       });
-    });
+
+    render(
+      <>
+        <ToastContainer />
+        <UserTable onEditUser={onEditUser} onDeleteUser={onDeleteUser} />
+      </>
+    );
+    
+    expect(screen.getByText("Gagal memuat data pengguna")).toBeInTheDocument();
   });
 });

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { ServiceProvider } from "./context/serviceContext";
 import { SessionProvider } from "./context/sessionContext";
 import Sidebar from "./components/sidebar";
@@ -8,29 +8,29 @@ import Navbar from "@frontend/components/navbar";
 import { UIStateContext } from "./context/uiStateContext"; // 🔥 pakai yang dari context
 
 type LayoutProps = {
-  children: React.ReactNode;
+  readonly children: React.ReactNode;
 };
+
 
 export default function Layout({ children }: LayoutProps) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
-
+  
   const toggleSidebar = () => {
     setIsSidebarOpen((prev) => !prev);
     if (showProfileDropdown) {
       setShowProfileDropdown(false);
     }
   };
-
+  
+  const uiContextValue = useMemo(() => ({
+    isSidebarOpen,
+    setIsSidebarOpen,
+    showProfileDropdown,
+    setShowProfileDropdown,
+  }), [isSidebarOpen, setIsSidebarOpen, showProfileDropdown, setShowProfileDropdown]);
   return (
-    <UIStateContext.Provider
-      value={{
-        isSidebarOpen,
-        setIsSidebarOpen,
-        showProfileDropdown,
-        setShowProfileDropdown,
-      }}
-    >
+    <UIStateContext.Provider value={uiContextValue}>
       <SessionProvider>
         <ServiceProvider>
           <div className="min-h-screen bg-white relative">
@@ -39,7 +39,7 @@ export default function Layout({ children }: LayoutProps) {
 
             <div className="flex">
               {/* Sidebar */}
-              <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
+              <Sidebar isOpen={isSidebarOpen} />
 
               {/* Sidebar Toggle Button */}
               <button
