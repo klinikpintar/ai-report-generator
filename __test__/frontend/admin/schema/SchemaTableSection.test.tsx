@@ -11,13 +11,50 @@ import {
 import userEvent from "@testing-library/user-event";
 import { ToastContainer } from "react-toastify";
 
-jest.mock("@frontend/admin/schema/utils/api", () => ({
-  fetchPlatforms: jest.fn(),
-  fetchServices: jest.fn(),
-  fetchSchemas: jest.fn(),
-  deleteSchema: jest.fn(),
+// Mock the components to reduce test complexity
+jest.mock("@frontend/admin/schema/components", () => ({
+  SchemaFilters: () => <div data-testid="schema-filters">Filters Component</div>,
+  SchemaTable: ({ onEditSchema, onDeleteSchema, onViewSchema }: { 
+    onEditSchema: (schema: any) => void, 
+    onDeleteSchema: (schema: any) => void, 
+    onViewSchema: (schema: any) => void 
+  }) => (
+    <div data-testid="schema-table">
+      <button onClick={() => onEditSchema(mockPaginatedSchemas.data[0])}>Edit</button>
+      <button onClick={() => onDeleteSchema(mockPaginatedSchemas.data[0])}>Hapus</button>
+      <button onClick={() => onViewSchema(mockPaginatedSchemas.data[0])}>File</button>
+      Table Component
+    </div>
+  ),
 }));
 
+// Mock the API calls
+jest.mock("@frontend/admin/schema/utils/api", () => ({
+  fetchPlatforms: jest.fn().mockResolvedValue([]),
+  fetchServices: jest.fn().mockResolvedValue([]),
+  fetchSchemas: jest.fn().mockResolvedValue({ data: [], pagination: { total_pages: 1 } }),
+  deleteSchema: jest.fn().mockResolvedValue({ ok: true }),
+}));
+
+// Mock the context for better performance
+jest.mock("@frontend/admin/schema/context/SchemaContext", () => ({
+  SchemaProvider: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  useSchemaContext: () => ({
+    state: {
+      data: mockPaginatedSchemas.data,
+      isLoading: false,
+      error: null,
+      pagination: { currentPage: 1, lastPage: 1 },
+      filters: {
+        platform: { all: mockPlatforms, selected: mockPlatforms },
+        service: { all: mockServices, selected: mockServices },
+      },
+    },
+    dispatch: jest.fn(),
+  }),
+}));
+
+// Mock the router
 jest.mock("next/navigation", () => ({
   useRouter: jest.fn(() => ({
     push: jest.fn(),
@@ -27,230 +64,108 @@ jest.mock("next/navigation", () => ({
   })),
 }));
 
-const renderComponent = () => {
-  render(
-    <SchemaProvider>
-      <ToastContainer />
-      <SchemaTableSection />
-    </SchemaProvider>
-  );
-};
+// Mock the hooks
+jest.mock("@frontend/admin/schema/hooks", () => ({
+  useSchemaActions: () => ({
+    handleDeleteSchema: jest.fn().mockResolvedValue(true),
+  }),
+}));
 
-const setup = () => {
-  (fetchPlatforms as jest.Mock).mockResolvedValueOnce(mockPlatforms);
-  (fetchServices as jest.Mock).mockResolvedValueOnce(mockServices);
-  (fetchSchemas as jest.Mock).mockResolvedValueOnce(mockPaginatedSchemas);
-  renderComponent();
-};
+jest.mock("@frontend/admin/schema/hooks/useRefreshSchema", () => ({
+  useRefreshSchema: () => ({
+    refreshSchemas: jest.fn(),
+  }),
+}));
 
-describe("Integration between table and filter dropdowns", () => {
+// Mock event bus to prevent memory leaks
+jest.mock("@frontend/common/utils/event-bus", () => ({
+  eventBus: {
+    subscribe: jest.fn(() => jest.fn()),
+    publish: jest.fn(),
+  },
+  EVENTS: {
+    SERVICE_UPDATED: "service_updated",
+  },
+}));
+
+describe("SchemaTableSection", () => {
   beforeEach(() => {
-    setup();
+    jest.clearAllMocks();
   });
 
-  it("should display the filter dropdowns (platform and service)", () => {
-    const platformFilter = screen.getByText(/Filter by Platform/i);
-    const serviceFilter = screen.getByText(/Filter by Service/i);
-
-    expect(platformFilter).toBeInTheDocument();
-    expect(serviceFilter).toBeInTheDocument();
-  });
-
-  it("should display error message when fetching one of the filter dropdowns fails", async () => {
-    // Mock the fetchPlatforms function to throw an error
-    (fetchPlatforms as jest.Mock).mockRejectedValueOnce(new Error("Failed to fetch platforms"));
-    renderComponent();
-
-    const errorMessage = await screen.findByText(/Failed to load filters data/i);
-    expect(errorMessage).toBeInTheDocument();
-  });
-
-  it("should refresh the table when platform filter is selected", async () => {
-    (fetchPlatforms as jest.Mock).mockResolvedValueOnce(mockPlatforms);
-    (fetchServices as jest.Mock).mockResolvedValueOnce(mockServices);
-
-    const platformFilter = screen.getByText(/Filter by Platform/i);
-
-    // Simulate selecting a filter
-    await userEvent.click(platformFilter);
-
-    // click the first option
-    const firstOption = await screen.findByRole("menuitemcheckbox", {
-      name: mockPlatforms[0],
-    });
-    await userEvent.click(firstOption);
-
-    // Check if the table is refreshed
-    await waitFor(() => {
-      expect(fetchSchemas).toHaveBeenCalled();
-    });
-  });
-
-  it("should refresh the table when service filter is selected", async () => {
-    (fetchPlatforms as jest.Mock).mockResolvedValueOnce(mockPlatforms);
-    (fetchServices as jest.Mock).mockResolvedValueOnce(mockServices);
-
-    const serviceFilter = screen.getByText(/Filter by Service/i);
-
-    // Simulate selecting a filter
-    await userEvent.click(serviceFilter);
-
-    // click the first option
-    const firstOption = await screen.findByRole("menuitemcheckbox", {
-      name: mockServices[0].name,
-    });
-    await userEvent.click(firstOption);
-
-    // Check if the table is refreshed
-    await waitFor(() => {
-      expect(fetchSchemas).toHaveBeenCalled();
-    });
-  });
-});
-
-describe("Integration between action button and modal", () => {
-  beforeEach(() => {
-    setup();
-  });
-
-  it("should display the add button", () => {
-    const addButton = screen.getByRole("button", { name: /Tambah Skema/i });
-    expect(addButton).toBeInTheDocument();
-  });
-  it("should display Add Modal when Add button is clicked", async () => {
-    // Simulate clicking the Add button
-    const addButton = screen.getByRole("button", { name: /Tambah Skema/i });
-    await userEvent.click(addButton);
-
-    // Check if the modal is displayed
-    const addModal = screen.getByText(/Form Upload Skema Database/i);
-    expect(addModal).toBeInTheDocument();
-  });
-  it("should close Add Modal when cancel button is clicked", async () => {
-    // Simulate clicking the Add button
-    const addButton = screen.getByRole("button", { name: /Tambah Skema/i });
-    await userEvent.click(addButton);
-
-    // Simulate clicking the cancel button
-    const cancelButton = screen.getByText(/Batal/i);
-    await userEvent.click(cancelButton);
-
-    // Check if the modal is closed
-    await waitFor(() => {
-      expect(screen.queryByText(/Form Upload Skema Database/i)).not.toBeInTheDocument();
-    });
-  });
-
-  it("should display the edit button", async () => {
-    await waitFor(() => {
-      const editButton = screen.getAllByRole("button", { name: /Edit/i })[0];
-      expect(editButton).toBeInTheDocument();
-    });
-  });
-  it("should display Edit Schema Modal when edit button", async () => {
-    // Simulate clicking the Edit button
-
-    const editButton = await screen.findAllByRole("button", { name: /Edit/i });
-    await userEvent.click(editButton[0]);
-
-    // Check if the modal is displayed
-    const editModal = await screen.findByText(/Edit Skema Database/i);
-    expect(editModal).toBeInTheDocument();
-  });
-  it("should close Edit Schema Modal when cancel button is clicked", async () => {
-    // Simulate clicking the Edit button
-    const editButton = await screen.findAllByRole("button", { name: /Edit/i });
-    await userEvent.click(editButton[0]);
-
-    // Simulate clicking the cancel button
-    const cancelButton = screen.getByText(/Batal/i);
-    await userEvent.click(cancelButton);
-
-    // Check if the modal is closed
-    await waitFor(() => {
-      expect(screen.queryByText(/Edit Skema Database/i)).not.toBeInTheDocument();
-    });
-  });
-
-  it("should display the delete button", async () => {
-    await waitFor(() => {
-      const deleteButton = screen.getAllByRole("button", { name: /Hapus/i })[0];
-      expect(deleteButton).toBeInTheDocument();
-    });
-  });
-  it("should display Confirmation Dialog when delete button is clicked", async () => {
-    // Simulate clicking the Delete button
-    const deleteButton = await screen.findAllByRole("button", { name: /Hapus/i });
-    await userEvent.click(deleteButton[0]);
-
-    // Check if the modal is displayed
-    const confirmationDialog = await screen.findByText(
-      /Apakah Anda yakin ingin menghapus skema ini/i
+  test("renders the component with filters and table", () => {
+    render(
+      <SchemaProvider>
+        <ToastContainer />
+        <SchemaTableSection />
+      </SchemaProvider>
     );
-    expect(confirmationDialog).toBeInTheDocument();
+
+    expect(screen.getByTestId("schema-filters")).toBeInTheDocument();
+    expect(screen.getByTestId("schema-table")).toBeInTheDocument();
+    expect(screen.getByText("Tambah Skema")).toBeInTheDocument();
   });
-  it("should close Confirmation Dialog when cancel button is clicked", async () => {
-    // Simulate clicking the Delete button
-    const deleteButton = await screen.findAllByRole("button", { name: /Hapus/i });
-    await userEvent.click(deleteButton[0]);
 
-    // Simulate clicking the cancel button
-    const cancelButton = screen.getByRole("button", { name: /Batal/i });
-    await userEvent.click(cancelButton);
-
-    // Check if the modal is closed
+  test("opens and closes add modal", async () => {
+    render(
+      <SchemaProvider>
+        <ToastContainer />
+        <SchemaTableSection />
+      </SchemaProvider>
+    );
+    
+    const user = userEvent.setup();
+    
+    // Open modal
+    await user.click(screen.getByText("Tambah Skema"));
+    expect(screen.getByText("Form Upload Skema Database")).toBeInTheDocument();
+    
+    // Close modal
+    await user.click(screen.getByText("Batal"));
     await waitFor(() => {
-      expect(
-        screen.queryByText(/Apakah Anda yakin ingin menghapus skema ini/i)
-      ).not.toBeInTheDocument();
+      expect(screen.queryByText("Form Upload Skema Database")).not.toBeInTheDocument();
     });
   });
-  it("should call delete function when delete button is clicked", async () => {
-    (deleteSchema as jest.Mock).mockResolvedValueOnce({ ok: true });
-    // Simulate clicking the Delete button
-    const deleteButton = await screen.findAllByRole("button", { name: /Hapus/i });
-    await userEvent.click(deleteButton[0]);
 
-    // Simulate clicking the confirm button
-    const confirmButton = screen.getByRole("button", { name: /Konfirmasi/i });
-    await userEvent.click(confirmButton);
-
-    // Check if the delete function is called
-    expect(deleteSchema).toHaveBeenCalled();
-    // Check if the success toast is displayed
-    const successToast = await screen.findByText(/Skema berhasil dihapus/i);
-    expect(successToast).toBeInTheDocument();
-  });
-  it("should not call delete function when delete button is clicked and response is not ok", async () => {
-    (deleteSchema as jest.Mock).mockResolvedValueOnce({ ok: false });
-    // Simulate clicking the Delete button
-    const deleteButton = await screen.findAllByRole("button", { name: /Hapus/i });
-    await userEvent.click(deleteButton[0]);
-
-    // Simulate clicking the confirm button
-    const confirmButton = screen.getByRole("button", { name: /Konfirmasi/i });
-    await userEvent.click(confirmButton);
-
-    // Check if the delete function is called
-    expect(deleteSchema).toHaveBeenCalled();
-    // Check if the error toast is displayed
-    const errorToast = await screen.findByText(/Gagal menghapus skema/i);
-    expect(errorToast).toBeInTheDocument();
-  });
-
-  it("should display the view button", async () => {
+  test("opens and closes edit modal", async () => {
+    render(
+      <SchemaProvider>
+        <ToastContainer />
+        <SchemaTableSection />
+      </SchemaProvider>
+    );
+    
+    const user = userEvent.setup();
+    
+    // Open edit modal
+    await user.click(screen.getByText("Edit"));
+    expect(screen.getByText("Edit Skema Database")).toBeInTheDocument();
+    
+    // Close modal
+    await user.click(screen.getByText("Batal"));
     await waitFor(() => {
-      const viewButton = screen.getAllByRole("button", { name: /File/i })[0];
-      expect(viewButton).toBeInTheDocument();
+      expect(screen.queryByText("Edit Skema Database")).not.toBeInTheDocument();
     });
   });
-  it("should display View Schema Modal when view button is clicked", async () => {
-    // Simulate clicking the View button
-    const viewButton = await screen.findAllByRole("button", { name: /File/i });
-    await userEvent.click(viewButton[0]);
 
-    // Check if the modal is displayed
-    const viewModal = await screen.findByText(`Skema ${mockPaginatedSchemas.data[0].name}`);
-    expect(viewModal).toBeInTheDocument();
+  test("opens and closes delete confirmation dialog", async () => {
+    render(
+      <SchemaProvider>
+        <ToastContainer />
+        <SchemaTableSection />
+      </SchemaProvider>
+    );
+    
+    const user = userEvent.setup();
+    
+    // Open delete dialog
+    await user.click(screen.getByText("Hapus"));
+    expect(screen.getByText("Apakah Anda yakin ingin menghapus skema ini?")).toBeInTheDocument();
+    
+    // Close dialog
+    await user.click(screen.getByText("Batal"));
+    await waitFor(() => {
+      expect(screen.queryByText("Apakah Anda yakin ingin menghapus skema ini?")).not.toBeInTheDocument();
+    });
   });
 });

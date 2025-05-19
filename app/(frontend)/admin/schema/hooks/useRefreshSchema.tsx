@@ -58,7 +58,13 @@ export const useRefreshSchema = () => {
         dispatch({ type: "FETCH_ERROR", payload: "Failed to fetch schemas" });
       }
     },
-    [dispatch, state.filters.service.selected, state.filters.platform.selected]
+    [
+      dispatch, 
+      state.filters.service.selected, 
+      state.filters.platform.selected,
+      state.pagination.currentPage,
+      getSelectedFilters
+    ]
   );
 
   return {
