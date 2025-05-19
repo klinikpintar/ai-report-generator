@@ -116,7 +116,8 @@ Use this schema information if relevant to answer the user's question.`;
       provider.getModelName(),
       schemaId,
       schemaIncluded || relevantContentFound,
-      schemaName
+      schemaName,
+      validationResults
     );
 
     const aiResponse = response.aiResponse;

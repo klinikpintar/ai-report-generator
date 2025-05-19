@@ -1,6 +1,9 @@
 import { NextResponse, NextRequest } from 'next/server';
 import prisma from '@/lib/prisma';
 import { getUserFromRequest } from '@/app/(backend)/utils/authUtils';
+import { QueryReportProcessor } from '@backend/services/query/QueryReportProcessor';
+import { ChatMessage } from '@prisma/client';
+import { QueryValidationResult } from '@backend/interfaces/query';
 
 // Get a specific chat session with its messages
 export async function GET(
@@ -14,7 +17,7 @@ export async function GET(
     }
 
     const { id } = await context.params;
-    
+
     // Verify the session exists and belongs to the user
     const session = await prisma.chatSession.findUnique({
       where: { id, userId: user.id },
@@ -28,6 +31,23 @@ export async function GET(
     if (!session) {
       return NextResponse.json({ error: 'Session not found' }, { status: 404 });
     }
+
+    type MessageWithValidation = ChatMessage & {
+      queryValidationResults?: QueryValidationResult[];
+    }
+    
+    const messages: MessageWithValidation[] = [];
+    const reportProcessor = QueryReportProcessor.getInstance();
+    session?.messages.forEach((message) => {
+      if (message.role === 'assistant') {
+        const validationResults = reportProcessor.processReport(message.content);
+        messages.push({ ...message, queryValidationResults: validationResults });
+      } else {
+        messages.push(message);
+      }
+    })
+
+    session.messages = messages;
 
     return NextResponse.json({ session });
   } catch (error) {
@@ -48,7 +68,7 @@ export async function DELETE(
     }
 
     const { id } = await context.params;
-    
+
     // Verify the session exists and belongs to the user
     const existingSession = await prisma.chatSession.findUnique({
       where: { id, userId: user.id },
@@ -83,7 +103,7 @@ export async function PATCH(
 
     const { id } = await context.params;
     const { title } = await req.json();
-    
+
     // First find by ID only
     const existingSession = await prisma.chatSession.findUnique({
       where: { id }
