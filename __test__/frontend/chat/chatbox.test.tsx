@@ -31,6 +31,17 @@ jest.mock("next/navigation", () => ({
   }),
 }));
 
+// Update the top-level service context mock to always include at least one service
+jest.mock("@frontend/(chat)/context/serviceContext", () => ({
+  useService: () => ({
+    selectedService: [],
+    services: [{ id: '1', name: 'Mock Service' }],
+    getServiceRepresentation: jest.fn(() => "Mock Service Representation"),
+    setSelectedService: jest.fn(),
+  }),
+  ServiceProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+}));
+
 Object.defineProperty(window, "open", { value: jest.fn() });
 
 beforeEach(() => {
@@ -147,12 +158,12 @@ describe("ChatBox", () => {
   });
 
   it("✅ should handle empty service list when fetching schemas", async () => {
-    jest.mock("@frontend/(chat)/context/serviceContext", () => ({
-      useService: () => ({
-        selectedService: [],
-        services: [],
-        getServiceRepresentation: jest.fn(),
-      }),
+    jest.spyOn(require("@frontend/(chat)/context/serviceContext"), "useService")
+    .mockImplementation(() => ({
+      selectedService: [],
+      services: [], // Empty services array for this test only
+      getServiceRepresentation: jest.fn(() => "No Services"),
+      setSelectedService: jest.fn(),
     }));
 
     renderChatBox();
@@ -165,6 +176,8 @@ describe("ChatBox", () => {
     await waitFor(() => {
       expect(screen.getByText("Test empty services")).toBeInTheDocument();
     });
+
+    jest.restoreAllMocks();
   });
 
   it("✅ should handle errors when fetching schemas", async () => {
