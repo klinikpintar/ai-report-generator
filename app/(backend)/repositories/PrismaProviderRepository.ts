@@ -1,6 +1,12 @@
 import { Provider } from '@prisma/client';
 import prisma from '@/lib/prisma';
-import { IProviderRepository, ProviderInclude, ProviderWithModels } from '../interfaces/IProviderRepository';
+import {
+  IProviderRepository,
+  ProviderInclude,
+  ProviderWithModels,
+  ProviderCreateData,
+  ModelCreateData
+} from '../interfaces/IProviderRepository';
 
 export class PrismaProviderRepository implements IProviderRepository {
   async findMany(options: {
@@ -58,27 +64,97 @@ export class PrismaProviderRepository implements IProviderRepository {
   }
 
   async setActive(providerId: string): Promise<ProviderWithModels> {
-    return prisma.provider.update({
-      where: { id: providerId },
-      data: { isActive: true },
-      include: {
-        models: {
-          orderBy: { name: 'asc' },
-        },
-        activeModel: true
-      }
-    }) as Promise<ProviderWithModels>;
+    // Menonaktifkan semua dan mengaktifkan satu dalam satu transaksi
+    const [, updatedProvider] = await prisma.$transaction([
+      prisma.provider.updateMany({
+        data: { isActive: false }
+      }),
+      prisma.provider.update({
+        where: { id: providerId },
+        data: { isActive: true },
+        include: {
+          models: {
+            orderBy: { name: 'asc' },
+          },
+          activeModel: true
+        }
+      })
+    ]);
+
+    return updatedProvider as ProviderWithModels;
   }
 
-  async create(data: {
-    name: string;
-    displayName: string;
-    apiKey: string;
-    isActive?: boolean;
-    isDefault?: boolean;
-  }): Promise<Provider> {
+  async create(data: ProviderCreateData): Promise<Provider> {
     return prisma.provider.create({
       data
+    });
+  }
+
+  async createWithDefaults(data: ProviderCreateData): Promise<Provider> {
+    // Menggunakan transaksi untuk reset dan create dalam satu operasi atomik
+    return prisma.$transaction(async (tx) => {
+      // Jika ini provider default, reset semua default lain
+      if (data.isDefault) {
+        await tx.provider.updateMany({
+          where: { isDefault: true },
+          data: { isDefault: false }
+        });
+      }
+
+      return tx.provider.create({ data });
+    });
+  }
+
+  async createDefaultProviderWithModel(
+    providerData: ProviderCreateData,
+    modelData: ModelCreateData
+  ): Promise<ProviderWithModels> {
+    return prisma.$transaction(async (tx) => {
+      //lakukan pengecekan apakah provider default sudah ada
+      const existingDefaultProvider = await tx.provider.findFirst({
+        where: { isDefault: true },
+        include: {
+          models: true,
+          activeModel: true
+        }
+      });
+
+      // Jika provider default sudah ada, kembalikan saja
+      if (existingDefaultProvider) {
+        return existingDefaultProvider as ProviderWithModels;
+      }
+
+      // Memastikan tidak ada provider lain yang di-set sebagai default
+      await tx.provider.updateMany({
+        where: { isDefault: true },
+        data: { isDefault: false }
+      });
+
+      // Buat provider default
+      const provider = await tx.provider.create({
+        data: providerData
+      });
+
+      // Buat model default untuk provider ini
+      const model = await tx.aIModel.create({
+        data: {
+          ...modelData,
+          providerId: provider.id
+        }
+      });
+
+      // Set sebagai active model
+      return tx.provider.update({
+        where: { id: provider.id },
+        data: { activeModelId: model.id },
+        include: {
+          models: {
+            orderBy: { name: 'asc' },
+            where: { isAvailable: true }
+          },
+          activeModel: true
+        }
+      }) as Promise<ProviderWithModels>;
     });
   }
 

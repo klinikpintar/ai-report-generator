@@ -4,7 +4,7 @@ import { generateReportContent } from "@/app/(backend)/utils/generateReportConte
 import { PDFDocument, PDFFont, rgb, StandardFonts, PDFPage } from "pdf-lib";
 import fs from "fs";
 
-function wrapText(text: string, maxWidth: number, font: PDFFont, size: number) {
+function wrapText(text: string, maxWidth: number, font: PDFFont, size: number): string[] {
   const words = text.split(" ");
   const lines: string[] = [];
   let currentLine = "";
@@ -12,7 +12,6 @@ function wrapText(text: string, maxWidth: number, font: PDFFont, size: number) {
   for (const word of words) {
     const testLine = currentLine ? `${currentLine} ${word}` : word;
     const textWidth = font.widthOfTextAtSize(testLine, size);
-
     if (textWidth < maxWidth) {
       currentLine = testLine;
     } else {
@@ -25,42 +24,53 @@ function wrapText(text: string, maxWidth: number, font: PDFFont, size: number) {
   return lines;
 }
 
-// 🔧 Fungsi untuk menggambar teks dengan inline bold (**...**)
-function drawFormattedText(
-  line: string,
-  xStart: number,
-  y: number,
-  fontSize: number,
-  page: PDFPage,
-  font: PDFFont,
-  fontBold: PDFFont,
-  fontItalic: PDFFont
-) {
-  // Match urutan **bold**, *italic*, dan plain teks
-  const parts = line.split(/(\*\*.*?\*\*|\*.*?\*)/);
+interface TextDrawOptions {
+  xStart: number;
+  y: number;
+  fontSize: number;
+  page: PDFPage;
+  fonts: {
+    regular: PDFFont;
+    bold: PDFFont;
+    italic: PDFFont;
+    mono: PDFFont;
+  };
+}
+
+function drawFormattedText(line: string, options: TextDrawOptions) {
+  const { xStart, y, fontSize, page, fonts } = options;
+  const parts = line.split(/(\*\*\*.*?\*\*\*|\*\*.*?\*\*|\*.*?\*|`.*?`)/);
   let x = xStart;
 
   for (const part of parts) {
     let text = part;
-    let usedFont = font;
+    let usedFont = fonts.regular;
+    let isInlineCode = false;
 
-    if (text.startsWith("**") && text.endsWith("**")) {
+    if (/^\*\*\*.*\*\*\*$/.test(text)) {
+      text = text.slice(3, -3);
+      usedFont = fonts.bold;
+    } else if (/^\*\*.*\*\*$/.test(text)) {
       text = text.slice(2, -2);
-      usedFont = fontBold;
-    } else if (text.startsWith("*") && text.endsWith("*")) {
+      usedFont = fonts.bold;
+    } else if (/^\*.*\*$/.test(text)) {
       text = text.slice(1, -1);
-      usedFont = fontItalic;
+      usedFont = fonts.italic;
+    } else if (/^`.*`$/.test(text)) {
+      text = text.slice(1, -1);
+      usedFont = fonts.mono;
+      isInlineCode = true;
     }
 
-    page.drawText(text, {
-      x,
-      y,
-      font: usedFont,
-      size: fontSize,
-      color: rgb(0, 0, 0),
-    });
+    const textWidth = usedFont.widthOfTextAtSize(text, fontSize);
+    const textHeight = fontSize + 2;
 
-    x += usedFont.widthOfTextAtSize(text, fontSize);
+    if (isInlineCode) {
+      page.drawRectangle({ x: x - 2, y: y - 2, width: textWidth + 4, height: textHeight, color: rgb(0.9, 0.9, 0.9) });
+    }
+
+    page.drawText(text, { x, y, font: usedFont, size: fontSize, color: rgb(0, 0, 0) });
+    x += textWidth;
   }
 }
 
@@ -70,49 +80,42 @@ export class PdfExporter implements IExporter {
     let page = pdfDoc.addPage();
     const { width, height } = page.getSize();
 
-    const imageBytes = await fs.promises.readFile("public/logo-kp.png");
-    const logoImage = await pdfDoc.embedPng(imageBytes);
-    const logoDims = logoImage.scale(0.15);
+    // 🧠 Tambahan dari branch 303: custom PDF metadata
+    pdfDoc.setTitle(reportData.title);
+    pdfDoc.setAuthor("Klinik Pintar");
+    pdfDoc.setSubject(`Laporan - ${reportData.title}`);
+    pdfDoc.setCreator("Klinik Pintar AI Report Generator");
 
-    const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
-    const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
-    const fontItalic = await pdfDoc.embedFont(StandardFonts.HelveticaOblique);
-    const fontMono = await pdfDoc.embedFont(StandardFonts.Courier);
+    const logoImage = await this.embedLogo(pdfDoc);
+    const fonts = await this.loadFonts(pdfDoc);
+
     const fontSize = 12;
-
-    const content = generateReportContent(reportData);
-    const lines = content.split("\n");
     const headerHeight = 60;
     let y = height - headerHeight - 40;
+    const content = generateReportContent(reportData);
 
-    const logoY = height - 60;
-    page.drawImage(logoImage, {
-      x: 50,
-      y: logoY,
-      width: logoDims.width,
-      height: logoDims.height,
-    });
+    page.drawImage(logoImage.image, { x: 50, y: height - 60, width: logoImage.width, height: logoImage.height });
 
     let inCodeBlock = false;
+    const lines = content.split("\n");
 
-    for (const line of lines) {
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
       const trimmed = line.trim();
 
-      if (trimmed === "```sql") {
-        inCodeBlock = true;
+      if (["```", "```sql"].includes(trimmed)) {
+        inCodeBlock = !inCodeBlock;
         continue;
       }
 
-      if (trimmed === "```") {
-        inCodeBlock = false;
+      if (trimmed === "---") {
+        page.drawLine({ start: { x: 50, y }, end: { x: width - 50, y }, thickness: 1, color: rgb(0.5, 0.5, 0.5) });
+        y -= fontSize + 6;
         continue;
       }
 
-      const isBullet = trimmed.startsWith("* ");
-      const bulletOffset = isBullet ? 10 : 0;
-      const contentLine = isBullet ? trimmed.slice(1).trimStart() : line;
-
-      const wrappedLines = wrapText(contentLine, width - 100 - bulletOffset, font, fontSize);
+      const styleInfo = this.extractStyle(trimmed);
+      const wrappedLines = wrapText(styleInfo.content, width - styleInfo.xStart - 50, fonts.regular, styleInfo.fontSize);
 
       for (const wrappedLine of wrappedLines) {
         if (y < 50) {
@@ -121,35 +124,86 @@ export class PdfExporter implements IExporter {
         }
 
         if (inCodeBlock) {
-          page.drawText(wrappedLine, {
-            x: 50,
-            y,
-            font: fontMono,
-            size: fontSize,
-            color: rgb(0, 0, 0),
-          });
-        } else {
-          if (isBullet && wrappedLine === wrappedLines[0]) {
-            page.drawText("•", {
-              x: 50,
-              y,
-              font,
-              size: fontSize,
-              color: rgb(0, 0, 0),
-            });
-            drawFormattedText(wrappedLine, 65, y, fontSize, page, font, fontBold, fontItalic);
-
-          } else {
-            drawFormattedText(wrappedLine, 50, y, fontSize, page, font, fontBold, fontItalic);
+          const codeLines = wrapText(wrappedLine, width - 100, fonts.mono, fontSize);
+          for (const codeLine of codeLines) {
+            page.drawText(codeLine, { x: 50, y, font: fonts.mono, size: fontSize, color: rgb(0, 0, 0) });
+            y -= fontSize + 4;
           }
+        } else {
+          if (styleInfo.bullet && wrappedLine === wrappedLines[0]) {
+            page.drawText("•", { x: 50, y, font: fonts.regular, size: fontSize, color: rgb(0, 0, 0) });
+          }
+          drawFormattedText(wrappedLine, { xStart: styleInfo.xStart, y, fontSize: styleInfo.fontSize, page, fonts });
+          y -= styleInfo.fontSize + 6;
         }
-
-        y -= fontSize + 6;
       }
+
+      if (["# ", "## ", ""].some(prefix => trimmed.startsWith(prefix))) y -= 4;
     }
 
     const pdfBytes = await pdfDoc.save();
     return Buffer.from(pdfBytes);
+  }
+
+  private async embedLogo(pdfDoc: PDFDocument) {
+    const imageBytes = await fs.promises.readFile("public/logo-kp.png");
+    const image = await pdfDoc.embedPng(imageBytes);
+    const scaled = image.scale(0.15);
+    return { image, width: scaled.width, height: scaled.height };
+  }
+
+  private async loadFonts(pdfDoc: PDFDocument) {
+    return {
+      regular: await pdfDoc.embedFont(StandardFonts.Helvetica),
+      bold: await pdfDoc.embedFont(StandardFonts.HelveticaBold),
+      italic: await pdfDoc.embedFont(StandardFonts.HelveticaOblique),
+      mono: await pdfDoc.embedFont(StandardFonts.Courier),
+    };
+  }
+
+  private extractStyle(line: string) {
+    const fontSize = 12;
+    const trimmed = line.trim();
+
+    if (trimmed.startsWith("# ")) {
+      return { fontSize: 20, content: trimmed.slice(2), xStart: 50 };
+    }
+
+    if (trimmed.startsWith("## ")) {
+      return { fontSize: 16, content: trimmed.slice(3), xStart: 50 };
+    }
+
+    if (trimmed.startsWith("### ")) {
+      return { fontSize: 14, content: trimmed.slice(4), xStart: 50 };
+    }
+
+    if (trimmed.startsWith("> ")) {
+      return { fontSize, content: trimmed.slice(2), xStart: 65 };
+    }
+
+    if (/^[-*+]\s/.test(trimmed)) {
+      return { fontSize, content: trimmed.slice(2), xStart: 65, bullet: true };
+    }
+
+    const orderedMatch = /^(\d+)\.\s/.exec(trimmed);
+    if (orderedMatch) {
+      const number = orderedMatch[1];
+      return {
+        fontSize,
+        content: trimmed.slice(orderedMatch[0].length),
+        xStart: 65,
+        prefix: `${number}. `,
+      };
+    }
+
+    const linkMatch = /^\[(.*?)\]\((.*?)\)$/.exec(trimmed);
+    if (linkMatch) {
+      const text = linkMatch[1];
+      const url = linkMatch[2];
+      return { fontSize, content: `${text} (${url})`, xStart: 50 };
+    }
+
+    return { fontSize, content: trimmed, xStart: 50 };
   }
 
   getMimeType(): string {
@@ -158,6 +212,6 @@ export class PdfExporter implements IExporter {
 
   getFileName(title: string): string {
     const sanitized = title.replace(/[/\\?%*:|"<>]/g, '-');
-    return `Klinik Pintar Laporan - ${sanitized}.pdf`;
+    return `Klinik Pintar Laporan - ${sanitized}`;
   }
 }

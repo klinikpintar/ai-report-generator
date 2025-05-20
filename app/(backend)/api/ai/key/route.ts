@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import providerService from '@/app/(backend)/services/providerService';
+import { ServiceFactory } from '@/app/(backend)/factories/serviceFactory';
 import { ErrorResponse, InternalServerErrorResponse } from '@/app/(backend)/utils/exceptions';
 import { ProviderValidation } from '@/app/(backend)/dtos/provider.dto';
 import { validateBody } from '@/app/(backend)/utils/validationUtils';
@@ -12,6 +12,9 @@ export async function PATCH(request: NextRequest) {
   apiMetrics(method, route);
   try {
     const validatedData = await validateBody(ProviderValidation.UPDATE_API_KEY, request);
+    
+    // Dapatkan instance melalui factory
+    const providerService = ServiceFactory.getProviderService();
     
     // Update API key
     const updatedProvider = await providerService.updateApiKey(

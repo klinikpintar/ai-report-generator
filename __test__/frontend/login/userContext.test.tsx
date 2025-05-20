@@ -5,13 +5,17 @@ import userEvent from "@testing-library/user-event";
 
 // Komponen uji coba yang memakai useUser
 const TestComponent = () => {
-  const { email, setEmailContext } = useUser();
+  const { email, name, setEmailContext, setNameContext } = useUser();
 
   return (
     <div>
       <p>Email: {email}</p>
+      <p>Name: {name}</p>
       <button onClick={() => setEmailContext("test@klinikpintar.id")}>
         Set Email
+      </button>
+      <button onClick={() => setNameContext("Test User")}>
+        Set Name
       </button>
     </div>
   );
@@ -60,7 +64,7 @@ describe("UserContext", () => {
   // ✅ SOLUSI BARU: Memastikan error tertangkap secara eksplisit
   test("should throw error if useUser is used outside provider", () => {
     // 🔹 Suppress expected error log from React agar tidak mengganggu output
-    const consoleError = jest.spyOn(console, "error").mockImplementation(() => {});
+    const consoleError = jest.spyOn(console, "error").mockImplementation(() => { });
 
     try {
       render(<BadComponent />);
@@ -80,5 +84,32 @@ describe("UserContext", () => {
     );
 
     expect(screen.getByText("Email:")).toBeInTheDocument();
+  });
+
+  test("should load name from localStorage on mount", () => {
+    localStorage.setItem("userName", "Stored User");
+
+    render(
+      <UserProvider>
+        <TestComponent />
+      </UserProvider>
+    );
+
+    expect(screen.getByText("Name: Stored User")).toBeInTheDocument();
+  });
+
+  test("should update name and display it correctly", async () => {
+    render(
+      <UserProvider>
+        <TestComponent />
+      </UserProvider>
+    );
+
+    expect(screen.getByText("Name:")).toBeInTheDocument();
+
+    const button = screen.getByRole("button", { name: /set name/i });
+    await userEvent.click(button);
+
+    expect(screen.getByText("Name: Test User")).toBeInTheDocument();
   });
 });

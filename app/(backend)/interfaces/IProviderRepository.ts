@@ -13,6 +13,21 @@ export type ProviderWithModels = Provider & {
   activeModel?: AIModel | null;
 };
 
+export type ProviderCreateData = {
+  name: string;
+  displayName: string;
+  apiKey: string;
+  isActive?: boolean;
+  isDefault?: boolean;
+};
+
+export type ModelCreateData = {
+  name: string;
+  modelIdentifier: string;
+  isDefault?: boolean;
+  isAvailable?: boolean;
+};
+
 export interface IProviderRepository {
   findMany(options: {
     where?: { isActive?: boolean };
@@ -31,14 +46,29 @@ export interface IProviderRepository {
   
   setActive(providerId: string): Promise<ProviderWithModels>;
   
-  create(data: {
-    name: string;
-    displayName: string;
-    apiKey: string;
-    isActive?: boolean;
-    isDefault?: boolean;
-  }): Promise<Provider>;
+  /**
+   * Membuat provider baru dengan parameter yang diberikan
+   */
+  create(data: ProviderCreateData): Promise<Provider>;
+
+  /**
+   * Membuat provider baru dan mengatur sebagai default jika diperlukan
+   * dalam satu transaksi untuk menjamin konsistensi data
+   */
+  createWithDefaults(data: ProviderCreateData): Promise<Provider>;
+
+  /**
+   * Membuat provider default dengan model dan mengatur hubungan antara keduanya
+   * dalam satu transaksi atomik
+   */
+  createDefaultProviderWithModel(
+    providerData: ProviderCreateData, 
+    modelData: ModelCreateData
+  ): Promise<ProviderWithModels>;
   
+  /**
+   * Reset semua provider default
+   */
   resetDefaults(): Promise<void>;
   
   updateById(id: string, data: Partial<Provider>, include?: ProviderInclude): Promise<ProviderWithModels>;
