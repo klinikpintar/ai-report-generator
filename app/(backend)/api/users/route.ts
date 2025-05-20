@@ -2,8 +2,13 @@ import { BadRequestResponse, ErrorResponse } from "@backend/utils/exceptions";
 import { NextResponse } from "next/server";
 import { UserValidation } from "@backend/dtos/users.dto";
 import usersService from "@backend/services/usersService";
+import { apiResponseDuration, apiMetrics } from '@/app/(backend)/utils/metrics';
 
+const route = "/api/users";
 export async function POST(req: Request) {
+  const method = "POST";
+  const endTimer = apiResponseDuration.startTimer({ route, method });
+  apiMetrics(method, route);
   const body = await req.json();
   try {
     const parseData = UserValidation.POST.safeParse(body);
@@ -12,17 +17,22 @@ export async function POST(req: Request) {
     }
 
     const user = await usersService.createUser(parseData.data);
+    endTimer({ route, method });
     return NextResponse.json({ message: "User created", data: { user } });
   } catch (error) {
     if (error instanceof ErrorResponse) {
       return error.generate();
     }
     console.error(error);
+    endTimer({ route, method });
     return new ErrorResponse("Internal server error", 500).generate();
   }
 }
 
 export async function GET(req: Request) {
+  const method = "GET";
+  const endTimer = apiResponseDuration.startTimer({ route, method });
+  apiMetrics(method, route);
   try {
     const { searchParams } = new URL(req.url);
     const params = Object.fromEntries(searchParams.entries());
@@ -39,6 +49,7 @@ export async function GET(req: Request) {
     });
 
     const { totalPages, totalItems } = pagination;
+    endTimer({ route, method });
 
     return NextResponse.json({
       message: "Users fetched successfully",
@@ -54,6 +65,7 @@ export async function GET(req: Request) {
       return error.generate();
     }
     console.error(error);
+    endTimer({ route, method });
     return new ErrorResponse("Internal server error", 500).generate();
   }
 }

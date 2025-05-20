@@ -4,9 +4,13 @@ import schemaService from '../../services/schemaService';
 import { validateSchemaInput } from '../../utils/schemaUtils';
 import { handleError } from '@backend/utils/errorUtils';
 import { GetSchemaDto } from '@backend/interfaces/ISchemaService';
+import { apiResponseDuration, apiMetrics } from '@/app/(backend)/utils/metrics';
 
-
+const route = '/api/schema';
 export async function GET(req: NextRequest) {
+  const method = 'GET';
+  const endTimer = apiResponseDuration.startTimer({ route, method });
+  apiMetrics(method, route);
   try {
     const { searchParams } = new URL(req.url);
 
@@ -27,26 +31,36 @@ export async function GET(req: NextRequest) {
         total_items: pagination.totalItems,
       },
     };
+    endTimer({ route, method });
     return NextResponse.json(response, { status: StatusCodes.OK });
   } catch (error) {
+    endTimer({ route, method });
     return handleError(error, "GET Schemas");
   }
 }
 
 export async function POST(req: NextRequest) {
+  const method = 'POST';
+  const endTimer = apiResponseDuration.startTimer({ route, method });
+  apiMetrics(method, route);
   try {
     const body = await req.json();
     const validatedData = validateSchemaInput(body);
 
     const newSchema = await schemaService.createSchema(validatedData);
 
+    endTimer({ route, method });
     return NextResponse.json(newSchema, { status: StatusCodes.CREATED });
   } catch (error) {
+    endTimer({ route, method });
     return handleError(error, "POST Schemas");
   }
 }
 
 export async function PATCH(req: NextRequest) {
+  const method = 'PATCH';
+  const endTimer = apiResponseDuration.startTimer({ route, method });
+  apiMetrics(method, route);
   try {
     const body = await req.json();
 
@@ -56,13 +70,18 @@ export async function PATCH(req: NextRequest) {
 
     const updatedSchema = await schemaService.updateSchema(body);
 
+    endTimer({ route, method });
     return NextResponse.json(updatedSchema, { status: StatusCodes.OK });
   } catch (error) {
+    endTimer({ route, method });
     return handleError(error, "PATCH Schemas");
   }
 }
 
 export async function DELETE(req: NextRequest) {
+  const method = 'DELETE';
+  const endTimer = apiResponseDuration.startTimer({ route, method });
+  apiMetrics(method, route);
   try {
     const body = await req.json();
 
@@ -71,9 +90,10 @@ export async function DELETE(req: NextRequest) {
     }
 
     await schemaService.deleteSchema(body.id);
-
+    endTimer({ route, method });
     return NextResponse.json({ message: 'Schema deleted successfully' }, { status: StatusCodes.OK });
   } catch (error) {
+    endTimer({ route, method });
     return handleError(error, "DELETE Schemas");
   }
 }

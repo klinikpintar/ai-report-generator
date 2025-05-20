@@ -4,12 +4,17 @@ import { getUserFromRequest } from '@/app/(backend)/utils/authUtils';
 import { QueryReportProcessor } from '@backend/services/query/QueryReportProcessor';
 import { ChatMessage } from '@prisma/client';
 import { QueryValidationResult } from '@backend/interfaces/query';
+import { apiResponseDuration, apiMetrics } from '@/app/(backend)/utils/metrics';
 
+const route = '/api/chat-sessions/[id]';
 // Get a specific chat session with its messages
 export async function GET(
   req: NextRequest,
   context: { params: Promise<{ id: string }> }
 ) {
+  const method = 'GET';
+  const endTimer = apiResponseDuration.startTimer({ route, method });
+  apiMetrics(method, route);
   try {
     const user = await getUserFromRequest();
     if (!user) {
@@ -49,9 +54,11 @@ export async function GET(
 
     session.messages = messages;
 
+    endTimer({ route, method });
     return NextResponse.json({ session });
   } catch (error) {
     console.error('Error fetching chat session:', error);
+    endTimer({ route, method });
     return NextResponse.json({ error: 'Failed to fetch chat session' }, { status: 500 });
   }
 }
@@ -61,6 +68,9 @@ export async function DELETE(
   req: NextRequest,
   context: { params: Promise<{ id: string }> }
 ) {
+  const method = 'DELETE';
+  const endTimer = apiResponseDuration.startTimer({ route, method });
+  apiMetrics(method, route);
   try {
     const user = await getUserFromRequest();
     if (!user) {
@@ -83,9 +93,11 @@ export async function DELETE(
       where: { id },
     });
 
+    endTimer({ route, method });
     return NextResponse.json({ message: 'Session deleted successfully' });
   } catch (error) {
     console.error('Error deleting chat session:', error);
+    endTimer({ route, method });
     return NextResponse.json({ error: 'Failed to delete chat session' }, { status: 500 });
   }
 }
@@ -95,6 +107,9 @@ export async function PATCH(
   req: NextRequest,
   context: { params: Promise<{ id: string }> }
 ) {
+  const method = 'PATCH';
+  const endTimer = apiResponseDuration.startTimer({ route, method });
+  apiMetrics(method, route);
   try {
     const user = await getUserFromRequest();
     if (!user) {
@@ -127,9 +142,11 @@ export async function PATCH(
       data: { title },
     });
 
+    endTimer({ route, method });
     return NextResponse.json({ session });
   } catch (error) {
     console.error('Error updating chat session:', error);
+    endTimer({ route, method });
     return NextResponse.json({ error: 'Failed to update chat session' }, { status: 500 });
   }
 }
