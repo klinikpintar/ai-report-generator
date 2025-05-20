@@ -2,6 +2,7 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import CreateServiceModal from "@frontend/admin/service/components/create-service-modal";
 import { toast } from "react-toastify";
 
+
 jest.mock("react-toastify", () => ({
   toast: {
     error: jest.fn(),
@@ -14,7 +15,7 @@ const mockServices = [
   { id: "2", name: "Keuangan", db: "MySQL" },
 ];
 
-global.fetch = jest.fn();
+global.fetch = jest.fn() as jest.Mock;
 
 describe("Create Service Modal Test", () => {
   beforeEach(() => {
@@ -24,9 +25,7 @@ describe("Create Service Modal Test", () => {
   it("Should not appear when first rendered", () => {
     render(<CreateServiceModal isVisible={false} onClose={() => {}} />);
 
-    expect(
-      screen.queryByText(/Daftar Service Klinik Pintar/i)
-    ).not.toBeInTheDocument();
+    expect(screen.queryByText(/Daftar Service Klinik Pintar/i)).not.toBeInTheDocument();
   });
 
   it("Should call the 'handleClose' function when 'Batal' button is clicked", () => {
@@ -48,6 +47,8 @@ describe("Create Service Modal Test", () => {
 
     await waitFor(() => {
       expect(screen.getByText("Reservasi")).toBeInTheDocument();
+    });
+    await waitFor(() => {
       expect(screen.getByText("Keuangan")).toBeInTheDocument();
     });
   });
@@ -153,9 +154,7 @@ describe("Create Service Modal Test", () => {
     fireEvent.click(screen.getByText("Konfirmasi"));
 
     expect(toast.error).toHaveBeenCalledWith(
-      expect.stringContaining(
-        "Error deleting service: TypeError: Failed to fetch"
-      )
+      expect.stringContaining("Error deleting service: TypeError: Failed to fetch")
     );
 
     expect(screen.getByText("Reservasi")).toBeInTheDocument();
@@ -192,5 +191,27 @@ describe("Create Service Modal Test", () => {
     });
 
     expect(screen.queryByText("Kesehatan")).not.toBeInTheDocument();
+  });
+
+  it("Should close confirmation dialog when cancel is clicked", async () => {
+    (fetch as jest.Mock)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockServices,
+      })
+      .mockResolvedValueOnce({ ok: true });
+
+    render(<CreateServiceModal isVisible={true} onClose={() => {}} />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Reservasi")).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getAllByTestId("delete-service-button")[0]);
+    fireEvent.click(screen.getAllByText("Batal")[1]);
+
+    await waitFor(() => {
+      expect(screen.queryByText("Reservasi")).toBeInTheDocument();
+    });
   });
 });

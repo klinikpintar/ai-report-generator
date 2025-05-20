@@ -26,12 +26,16 @@ const PasswordInput: React.FC<PasswordInputProps> = ({
   confirmPassword = false,
 }) => {
   const [showPassword, setShowPassword] = useState(false);
-  
+
   const toggleShowPassword = () => setShowPassword(!showPassword);
-  
-  const ariaLabel = confirmPassword 
-    ? (showPassword ? "Hide confirm password" : "Show confirm password")
-    : (showPassword ? "Hide password" : "Show password");
+
+  let ariaLabel;
+
+  if (confirmPassword) {
+    ariaLabel = showPassword ? "Hide confirm password" : "Show confirm password";
+  } else {
+    ariaLabel = showPassword ? "Hide password" : "Show password";
+  }
 
   return (
     <div className="relative">

@@ -1,41 +1,53 @@
 "use client";
 
 import { Service } from "@frontend/common/types/service";
-import { createContext, useContext, useState, ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useState,
+  ReactNode,
+  useMemo, // Import useMemo
+  useCallback, // Import useCallback
+} from "react";
 
 interface ServiceContextType {
   selectedService: Service[];
   setSelectedService: (service: Service[]) => void;
   services: Service[];
   setServices: (services: Service[]) => void;
-  getServiceRepresentation: (services: Service[], isAllSelected:boolean) => string;
+  getServiceRepresentation: (services: Service[], isAllSelected: boolean) => string;
 }
 
 const ServiceContext = createContext<ServiceContextType | undefined>(undefined);
 
 export const ServiceProvider = ({ children }: { children: ReactNode }) => {
-  const [services, setServices] = useState<Service[]>([]); // Array of Services
-  const [selectedService, setSelectedService] = useState<Service[]>([]); // Default Service
-  const getServiceRepresentation = (services: Service[], isAllSelected: boolean) => {
-    if (services.length === 0) return "Pilih Service";
-    if (services.length === 1) return services[0].name;
-    if (isAllSelected) return "Select All";
-    else return `${services[0].name} and ${services.length - 1} more`;
-  };
+  const [services, setServices] = useState<Service[]>([]); 
+  const [selectedService, setSelectedService] = useState<Service[]>([]);
 
-  return (
-    <ServiceContext.Provider
-      value={{
-        selectedService,
-        setSelectedService,
-        services,
-        setServices,
-        getServiceRepresentation,
-      }}
-    >
-      {children}
-    </ServiceContext.Provider>
+  const getServiceRepresentation = useCallback(
+    (currentServices: Service[], isAllSelected: boolean) => {
+      if (currentServices.length === 0) return "Pilih Service";
+      if (currentServices.length === 1) return currentServices[0].name;
+      if (isAllSelected)
+        return "Select All";
+      else return `${currentServices[0].name} and ${currentServices.length - 1} more`;
+    },
+    []
   );
+
+  // Memoize the context value
+  const contextValue = useMemo(
+    () => ({
+      selectedService,
+      setSelectedService,
+      services,
+      setServices,
+      getServiceRepresentation,
+    }),
+    [selectedService, services, getServiceRepresentation]
+  );
+
+  return <ServiceContext.Provider value={contextValue}>{children}</ServiceContext.Provider>;
 };
 
 export const useService = () => {

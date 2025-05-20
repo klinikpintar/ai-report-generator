@@ -114,4 +114,23 @@ describe("Auth API - Logout", () => {
     expect(response.status).toBe(401);
     expect(json).toHaveProperty("message", "Unauthorized");
   });
+
+  // Server Error
+  test("❌ Should handle server error gracefully", async () => {
+    (prisma.refreshToken.deleteMany as jest.Mock).mockRejectedValueOnce(new Error("Server error"));
+
+    const request = new NextRequest(new URL(BASE_API_URL_LOGOUT), {
+      method: "POST",
+      headers: {
+        Cookie: `access_token=validToken; refresh_token=validRefreshToken`,
+      },
+      credentials: "include",
+    });
+
+    const response = await logoutHandler(request);
+    const json = await response.json();
+
+    expect(response.status).toBe(500);
+    expect(json).toHaveProperty("message", "Internal server error");
+  });
 });

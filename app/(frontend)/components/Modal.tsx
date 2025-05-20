@@ -1,4 +1,4 @@
-import React, { ReactNode, MouseEvent, useState, useEffect } from "react";
+import React, { ReactNode, useState, useEffect } from "react";
 
 interface ModalProps {
   isVisible: boolean;
@@ -23,12 +23,9 @@ const Modal: React.FC<ModalProps> = (props) => {
     }
   }, [isVisible]);
 
-  const handleClose = (event: MouseEvent<HTMLDivElement>) => {
-    const target = event.target as HTMLDivElement;
-    if (target.id === "wrapper") {
-      if (!isForm) {
-        onClose();
-      }
+  const handleBackdropClick = (e: React.MouseEvent) => {
+    if (e.target === e.currentTarget && !isForm) {
+      onClose();
     }
   };
 
@@ -36,21 +33,19 @@ const Modal: React.FC<ModalProps> = (props) => {
 
   return (
     <div
-      role="button"
-      tabIndex={0}
-      className={`fixed inset-0 flex justify-center cursor-default items-center z-50 ${
+      className={`fixed inset-0 flex justify-center items-center z-50 ${
         isVisible
           ? "visible animate-in fade-in bg-black-9 bg-opacity-70"
           : "invisible animate-out fade-out"
       }`}
-      id="wrapper"
       data-testid="wrapper"
-      onClick={handleClose}
+      onClick={handleBackdropClick}
     >
       <div
         className={`bg-white w-full max-w-[600px] max-h-full rounded-lg shadow transition-all z-50 ${
           isVisible ? "animate-in zoom-in-90" : "animate-out zoom-out-90"
         }`}
+        onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-center p-7 pb-1 rounded-t border-gray-200 ">
           <p

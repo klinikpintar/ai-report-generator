@@ -11,22 +11,22 @@ export class AIModelTransform {
   
 }
 
-export class AIModelSchema {
+export const AIModelSchema = {
   // Skema dasar untuk nama model
-  static readonly NAME_SCHEMA = z
+  NAME_SCHEMA : z
     .string()
     .min(1, { message: "Model name cannot be empty" })
-    .max(255, { message: "Model name is too long" });
+    .max(255, { message: "Model name is too long" }),
 
   // Skema untuk identifier model
-  static readonly IDENTIFIER_SCHEMA = z
+  IDENTIFIER_SCHEMA : z
     .string()
     .min(1, { message: "Model identifier cannot be empty" })
     .max(255, { message: "Model identifier is too long" })
-    .refine((val) => /^[a-z0-9\-\.]+$/.test(val), {
+    .refine((val) => /^[a-z0-9-.]+$/.test(val), {
       message: "Model identifier must contain only lowercase letters, numbers, hyphens, and dots"
-    });
-}
+    })
+};
 
 export class AIModelValidation {
   // Validasi untuk membuat model baru

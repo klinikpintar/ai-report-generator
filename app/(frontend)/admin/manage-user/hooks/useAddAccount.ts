@@ -20,6 +20,12 @@ interface FormErrors {
   role?: string;
 }
 
+const ERROR_MESSAGES = {
+  PASSWORD_TOO_SHORT: "Password must be at least 8 characters long",
+  PASSWORD_MISMATCH: "Password and confirm password must match",
+  ROLE_REQUIRED: "Role is required"
+};
+
 type InputChangeEvent = React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>;
 
 export const useAddAccount = (onClose: () => void) => {
@@ -38,15 +44,15 @@ export const useAddAccount = (onClose: () => void) => {
     const newErrors: FormErrors = {};
 
     if (formData.password.length < 8) {
-      newErrors.password = "Password must be at least 8 characters long";
+      newErrors.password = ERROR_MESSAGES.PASSWORD_TOO_SHORT;
     }
 
     if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = "Password and confirm password must match";
+      newErrors.confirmPassword = ERROR_MESSAGES.PASSWORD_MISMATCH;
     }
 
     if (!formData.role) {
-      newErrors.role = "Role is required";
+      newErrors.role = ERROR_MESSAGES.ROLE_REQUIRED;
     }
 
     setErrors(newErrors);
