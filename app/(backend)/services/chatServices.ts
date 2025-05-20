@@ -3,6 +3,7 @@ import { google } from '@ai-sdk/google';
 import { generateText, CoreMessage } from 'ai';
 import prisma from '@/lib/prisma';
 import { AI_INSTRUCTION } from '@backend/constant/ai-instruction';
+import { QueryValidationResult } from '@backend/interfaces/query';
 
 // Types and interfaces
 export interface Message {
@@ -30,6 +31,7 @@ export interface ApiResponse {
   userPrompt: string;
   aiResponse: string;
   createdAt: string;
+  queryValidationResults?: QueryValidationResult[];
   metadata: {
     finishReason: string;
     usage: {
@@ -192,25 +194,14 @@ export class ResponseFormatter {
     schemaId?: string | string[],
     schemaIncluded: boolean = false,
     schemaName?: string | null,
+    queryValidationResults?: QueryValidationResult[]
   ): ApiResponse {
     // Find the last user message
     const lastUserMessage = messages.find(msg => msg.role === 'user');
     const userPrompt = lastUserMessage ? lastUserMessage.content : '';
     
     // Create metadata object
-    const metadata: {
-      finishReason: string;
-      usage: {
-        promptTokens: number;
-        completionTokens: number;
-      };
-      modelUsed: string;
-      schemaId?: string | string[] | undefined;
-      schemaIncluded?: boolean;
-      schemaName?: string;
-      resourceIds?: number[];
-      warnings?: string[];
-    } = {
+    const metadata: ApiResponse['metadata'] = {
       finishReason: result.finishReason || 'stop',
       usage: {
         promptTokens: result.usage?.promptTokens || 0,
@@ -238,6 +229,7 @@ export class ResponseFormatter {
       aiResponse: result.text,
       createdAt: new Date().toISOString(),
       metadata,
+      queryValidationResults: queryValidationResults || [],
     };
   }
 }

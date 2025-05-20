@@ -50,7 +50,7 @@ export const EditAPIKeyModal = ({ isVisible, onClose, providerId, providerName }
             name="apiKey"
             value={apiKey}
             onChange={handleApiKeyChange}
-            placeholder="(Unchanged)"
+            placeholder="Masukkan API Key baru Anda"
           />
         </div>
         <div className="flex justify-center items-center mt-8">

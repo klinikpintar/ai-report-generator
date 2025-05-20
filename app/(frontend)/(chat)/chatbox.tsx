@@ -2,24 +2,24 @@
 
 import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
-import rehypeRaw from "rehype-raw";
 import Dropdown from "./components/dropdown";
 import { useService } from "./context/serviceContext";
 import Bantuan from "./components/bantuan";
 import type { Service } from "@frontend/common/types";
 import ExportModal from "@/app/(frontend)/(chat)/components/ekspor/modal";
-import { CodeBlock } from "./components/CodeBlock";
 import { useSession } from "./context/sessionContext";
 import { useSearchParams } from "next/navigation";
 import { useUser } from "@frontend/login/context/userContext";
+import { ReportFormatter } from "./components/ReportFormatter";
+import { QueryValidationResult } from "./interfaces/QueryValidationResult";
+
 
 interface Message {
   id: string;
   sender: "user" | "assistant";
   content: string;
   modelUsed?: string;
+  queryValidationResults?: QueryValidationResult[];
 }
 
 interface ApiResponse {
@@ -27,6 +27,7 @@ interface ApiResponse {
   userPrompt: string;
   aiResponse: string;
   createdAt: string;
+  queryValidationResults: QueryValidationResult[];
   metadata: {
     finishReason: string;
     usage: {
@@ -95,12 +96,24 @@ export default function ChatBox() {
       const data = await response.json() as SessionData;
       setTitleSession(data.session.title ?? "AI Report Generator");
 
-      const formattedMessages = data.session.messages.map((msg: SessionMessage) => ({
-        id: msg.id,
-        sender: msg.role === "user" ? "user" : "assistant" as const,
-        content: msg.content,
-        modelUsed: msg.modelUsed ?? undefined,
-      }));
+      interface SessionMessage {
+        id: string;
+        content: string;
+        role: string;
+        modelUsed?: string;
+        queryValidationResults?: QueryValidationResult[];
+      }
+
+      // Convert session messages to your format
+      const formattedMessages = data.session.messages.map(
+        (msg: SessionMessage) => ({
+          id: msg.id,
+          sender: msg.role === "user" ? "user" : "assistant" as const,
+          content: msg.content,
+          modelUsed: msg.modelUsed ?? undefined,
+          queryValidationResults: msg.queryValidationResults ?? undefined,
+        })
+      );
 
       setMessages(formattedMessages as Message[]);
       if (formattedMessages.length > 0) setHasChatted(true);
@@ -187,10 +200,11 @@ export default function ChatBox() {
 
       const data: ApiResponse = await response.json();
       const assistantMessage: Message = {
-        id: data.messageId || `${Date.now()}-ai`,
-        sender: "assistant",
+        id: data.messageId ?? `${Date.now()}-ai`,
+        sender: "assistant", // This is correct for your frontend interface
         content: data.aiResponse,
         modelUsed: data.metadata?.modelUsed,
+        queryValidationResults: data.queryValidationResults ?? [],
       };
 
       setMessages((prev) => [...prev, assistantMessage]);
@@ -231,48 +245,10 @@ export default function ChatBox() {
             >
               <div className={`p-3 rounded-lg ${msg.sender === "user" ? "bg-[#E4F6FC] text-[#00B0EB]" : "bg-gray-200 text-black"}`}>
                 {msg.sender === "assistant" ? (
-                  <ReactMarkdown
-                    data-testid="markdown"
-                    remarkPlugins={[remarkGfm]}
-                    rehypePlugins={[rehypeRaw]}
-                    components={{
-                      h1: (props) => <h1 className="text-2xl font-bold my-4" {...props} />,
-                      h2: (props) => <h2 className="text-xl font-bold my-3" {...props} />,
-                      h3: (props) => <h3 className="text-lg font-bold my-2" {...props} />,
-                      p: (props) => <p className="my-2" {...props} />,
-                      ul: (props) => <ul className="list-disc pl-5 my-2" {...props} />,
-                      ol: (props) => <ol className="list-decimal pl-5 my-2" {...props} />,
-                      li: (props) => <li className="my-1" {...props} />,
-                      code: (props) => {
-                        const { inline, className, children, ...rest } = props as {
-                          inline?: boolean;
-                          className?: string;
-                          children?: React.ReactNode;
-                        };
-                      
-                        const match = /language-(\w+)/.exec(className ?? "");
-                      
-                        if (!inline && match) {
-                          return (
-                            <CodeBlock
-                              language={match[1]}
-                              value={String(children).replace(/\n$/, "")}
-                              isVerified={false}
-                            />
-                          );
-                        }
-                      
-                        return (
-                          <code className="bg-gray-100 px-1 rounded text-sm" {...rest}>
-                            {children}
-                          </code>
-                        );
-                      },
-                      
-                    }}
-                  >
-                    {msg.content}
-                  </ReactMarkdown>
+                  <ReportFormatter
+                  content={msg.content}
+                  validationResults={msg.queryValidationResults}
+                />
                 ) : (
                   <p className="whitespace-pre-wrap">{msg.content}</p>
                 )}

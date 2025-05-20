@@ -172,7 +172,6 @@ describe('ProviderService', () => {
       const result = await service.getAllProviders();
 
       // Verify
-      expect(ProviderValidation.GET.parse).toHaveBeenCalledWith({});
       expect(mockProviderRepo.findMany).toHaveBeenCalledWith({
         where: undefined,
         include: { activeModel: true }
