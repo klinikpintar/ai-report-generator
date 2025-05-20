@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import Image from "next/image";
 import Dropdown from "./components/dropdown";
 import { useService } from "./context/serviceContext";
@@ -44,6 +44,7 @@ interface SessionMessage {
   role: "user" | "assistant";
   content: string;
   modelUsed?: string;
+  queryValidationResults?: QueryValidationResult[];
 }
 
 // Add this interface for the session data
@@ -52,6 +53,7 @@ interface SessionData {
     id: string;
     title?: string;
     messages: SessionMessage[];
+    lastSelectedServices?: string[]; // Keep this for service selection persistence
   }
 }
 
@@ -63,7 +65,12 @@ export default function ChatBox() {
   const [isInitializing, setIsInitializing] = useState(true);
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const [titleSession, setTitleSession] = useState<string>("AI Report Generator");
-  const { selectedService, services, getServiceRepresentation } = useService();
+  const {
+    selectedService,
+    services,
+    getServiceRepresentation,
+    setSelectedService, // Keep this important function
+  } = useService();
   const [isExportModalVisible, setIsExportModalVisible] = useState(false);
   const {
     activeSessionId,
@@ -75,6 +82,17 @@ export default function ChatBox() {
   const [exportModalData, setExportModalData] = useState<{ id: string; content: string } | null>(null);
   const { name } = useUser();
   const searchParams = useSearchParams();
+
+  // Add this effect for selecting all services when starting a new chat
+  useEffect(() => {
+    const sessionId = searchParams.get("sessionId");
+
+    // If there's no sessionId (new chat) and no services are selected yet
+    if (!sessionId && (!selectedService || selectedService.length === 0)) {
+      // Select all services by default
+      setSelectedService(services);
+    }
+  }, [searchParams, services, selectedService, setSelectedService]);
 
   useEffect(() => {
     const sessionId = searchParams.get("sessionId");
@@ -88,23 +106,15 @@ export default function ChatBox() {
     }
   }, [searchParams, setActiveSessionId]);
 
-  
-  const loadSessionMessages = async (sessionId: string) => {
+  // Use useCallback for loadSessionMessages
+  const loadSessionMessages = useCallback(async (sessionId: string) => {
     try {
       const response = await fetch(`/api/chat-sessions/${sessionId}`);
       if (!response.ok) throw new Error("Failed to load session");
       const data = await response.json() as SessionData;
       setTitleSession(data.session.title ?? "AI Report Generator");
 
-      interface SessionMessage {
-        id: string;
-        content: string;
-        role: string;
-        modelUsed?: string;
-        queryValidationResults?: QueryValidationResult[];
-      }
-
-      // Convert session messages to your format
+      // Convert session messages to the right format
       const formattedMessages = data.session.messages.map(
         (msg: SessionMessage) => ({
           id: msg.id,
@@ -117,10 +127,27 @@ export default function ChatBox() {
 
       setMessages(formattedMessages as Message[]);
       if (formattedMessages.length > 0) setHasChatted(true);
+      
+      // Restore saved service selection - keep this important feature
+      if (
+        data.session.lastSelectedServices &&
+        data.session.lastSelectedServices.length > 0
+      ) {
+        // Find services that match the saved IDs
+        const serviceIds = data.session.lastSelectedServices;
+        const servicesToSelect = services.filter((service) =>
+          serviceIds.includes(service.id)
+        );
+
+        // Set selected services if we found matches
+        if (servicesToSelect.length > 0) {
+          setSelectedService(servicesToSelect);
+        }
+      }
     } catch (error) {
       console.error("Error loading session messages:", error);
     }
-  };
+  }, [services, setSelectedService]);
 
   useEffect(() => {
     if (chatContainerRef.current) {
@@ -184,7 +211,12 @@ export default function ChatBox() {
     }
 
     try {
+      // Get the IDs of selected services
+      const serviceIds = selectedService.map((service) => service.id);
+      
+      // Convert service IDs to schema IDs
       const schemaIds = await getRelatedSchemaIds(selectedService);
+      
       const apiMessages = messages.map((msg) => ({
         role: msg.sender === "user" ? "user" : "assistant",
         content: msg.content,
@@ -193,7 +225,12 @@ export default function ChatBox() {
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: apiMessages, schemaId: schemaIds, sessionId: currentSessionId }),
+        body: JSON.stringify({
+          messages: apiMessages,
+          schemaId: schemaIds,
+          sessionId: currentSessionId,
+          serviceIds: serviceIds, // Include serviceIds for storing with the session
+        }),
       });
 
       if (!response.ok) throw new Error("Failed to get response");
@@ -246,9 +283,9 @@ export default function ChatBox() {
               <div className={`p-3 rounded-lg ${msg.sender === "user" ? "bg-[#E4F6FC] text-[#00B0EB]" : "bg-gray-200 text-black"}`}>
                 {msg.sender === "assistant" ? (
                   <ReportFormatter
-                  content={msg.content}
-                  validationResults={msg.queryValidationResults}
-                />
+                    content={msg.content}
+                    validationResults={msg.queryValidationResults}
+                  />
                 ) : (
                   <p className="whitespace-pre-wrap">{msg.content}</p>
                 )}

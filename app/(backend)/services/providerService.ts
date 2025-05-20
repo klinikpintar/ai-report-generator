@@ -23,8 +23,8 @@ export class ProviderService implements IProviderService {
    */
   async getAllProviders(
     optionsInput?: z.infer<typeof ProviderValidation.GET>
-  ): Promise<z.infer<typeof ProviderValidation.RESPONSE>[] | z.infer<typeof ProviderValidation.RESPONSE_WITH_MODELS>[]> {
-    const options = optionsInput ?? {};
+  ): Promise<z.infer<typeof ProviderValidation.RESPONSE_INTERNAL>[] | z.infer<typeof ProviderValidation.RESPONSE_WITH_MODELS_INTERNAL>[]> {
+    const options = ProviderValidation.GET.parse(optionsInput || {});
 
     const include: ProviderInclude = { activeModel: true };
     const where = options.onlyActive ? { isActive: true } : undefined;
@@ -42,7 +42,7 @@ export class ProviderService implements IProviderService {
 
     return providers.map(provider =>
       options.includeModels
-        ? ProviderValidation.RESPONSE_WITH_MODELS.parse(provider)
+        ? ProviderValidation.RESPONSE_WITH_MODELS_INTERNAL.parse(provider)
         : ProviderValidation.RESPONSE.parse(provider)
     );
   }
