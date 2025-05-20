@@ -8,8 +8,8 @@ import { Button } from "@/components/ui/button";
 import { useUserTableContext } from "../context/UserTableContext";
 
 import { toast } from "react-toastify";
-import { useFetchUser } from "../hooks/useFetchUser";
-import { useUserTablePagination } from "../hooks/useUserTablePagination";
+import { useFetchUser } from "@frontend/admin/manage-user/hooks/useFetchUser";
+import { useUserTablePagination } from "@frontend/admin/manage-user/hooks/useUserTablePagination";
 
 type UserTableProps = {
   onEditUser: (user: User) => void;
@@ -27,7 +27,7 @@ export const UserTable: React.FC<UserTableProps> = ({
 
   useEffect(() => {
     refreshUsers();
-  }, [refreshUsers, state.pagination.currentPage, state.filters.role.selected]);
+  }, [state.pagination.currentPage, state.filters.role.selected]);
 
   React.useEffect(() => {
     if (state.error) {

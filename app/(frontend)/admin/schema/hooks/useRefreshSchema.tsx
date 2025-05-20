@@ -42,7 +42,7 @@ export const useRefreshSchema = () => {
         const params: FetchSchemasParams = {
           serviceIds: selectedServiceIds,
           platformCodes: selectedPlatformCodes,
-          page: page || state.pagination.currentPage,
+          page: page ?? state.pagination.currentPage,
         };
 
         const { data, pagination } = await fetchSchemas(params);

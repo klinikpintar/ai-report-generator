@@ -1,8 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { PdfExporter } from "@/app/(backend)/services/pdfExporter";
+import { ZodError } from "zod";
+import { apiResponseDuration, apiMetrics } from '@/app/(backend)/utils/metrics';
 
-// Handle POST (form atau JSON)
+const route = "/api/ekspor/pdf";
 export async function POST(req: NextRequest) {
+  const method = "POST";
+  const endTimer = apiResponseDuration.startTimer({ route, method });
+  apiMetrics(method, route);
   try {
     // Hanya mendukung application/json
     const body = await req.json();
@@ -15,6 +20,7 @@ export async function POST(req: NextRequest) {
     const safeFilename = `${filename}.pdf`;
     const encodedFilename = encodeURIComponent(safeFilename).replace(/['()]/g, escape);
 
+    endTimer({ route, method });
     return new NextResponse(fileBuffer, {
       status: 200,
       headers: {
@@ -35,6 +41,8 @@ export async function POST(req: NextRequest) {
 
 // Handle GET (via query params)
 export async function GET(req: NextRequest) {
+  const method = "GET";
+  const endTimer = apiResponseDuration.startTimer({ route, method });
   try {
     const { searchParams } = req.nextUrl;
 
@@ -48,6 +56,7 @@ export async function GET(req: NextRequest) {
     const filename = exporter.getFileName(title);
     const encodedFilename = encodeURIComponent(filename).replace(/['()]/g, escape);
 
+    endTimer({ route, method });
     return new NextResponse(fileBuffer, {
       status: 200,
       headers: {
@@ -58,6 +67,14 @@ export async function GET(req: NextRequest) {
       },
     });
   } catch (err) {
+    if (err instanceof ZodError) {
+      return NextResponse.json(
+        { message: "Input tidak valid", errors: err.errors },
+        { status: 400 }
+      );
+    }
+
+    endTimer({ route, method });
     return NextResponse.json(
       { message: "Gagal mengekspor laporan", error: (err as Error).message },
       { status: 500 }

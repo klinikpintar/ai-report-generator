@@ -20,12 +20,13 @@ interface RoleConfig {
 // Constants
 const FIVE_MINUTES_IN_SECONDS = 300;
 
-const AUTH_ROUTES = {
+const WHITELIST_ROUTES = {
   LOGIN: "/login",
   API_LOGIN: "/api/auth/login",
   API_LOGOUT: "/api/auth/logout",
   API_VERIFY: "/api/auth/token/verify",
   API_REFRESH: "/api/auth/token/refresh",
+  API_METRICS: "/api/metrics",
 };
 
 const ROLE_REDIRECTS: Record<ROLE, RoleConfig> = {
@@ -65,7 +66,7 @@ export async function refreshAccessToken(
 ): Promise<string | null> {
   try {
     const apiUrl = `${process.env.NEXT_PUBLIC_API_URL ?? req.nextUrl.origin}${
-      AUTH_ROUTES.API_REFRESH
+      WHITELIST_ROUTES.API_REFRESH
     }`;
     const apiResponse = await fetch(apiUrl, {
       method: "POST",
@@ -86,7 +87,7 @@ export async function refreshAccessToken(
 }
 
 function isAuthRoute(pathname: string): boolean {
-  return Object.values(AUTH_ROUTES).some((route) => pathname.includes(route));
+  return Object.values(WHITELIST_ROUTES).some((route) => pathname.includes(route));
 }
 
 function isApiRoute(pathname: string): boolean {
@@ -174,13 +175,9 @@ async function handleBackgroundTokenRefresh(
 export async function middleware(req: NextRequest, event: NextFetchEvent) {
   const { pathname } = req.nextUrl;
 
-  console.log("Middleware triggered for path:", pathname);
-
   if (isAuthRoute(pathname)) {
     return NextResponse.next();
   }
-
-  console.log("Middleware triggered for path:", isAuthRoute(pathname));
 
   let accessToken = req.cookies.get("access_token")?.value ?? null;
   const refreshToken = req.cookies.get("refresh_token")?.value ?? null;
@@ -194,7 +191,7 @@ export async function middleware(req: NextRequest, event: NextFetchEvent) {
 
   if (!user) {
     return NextResponse.redirect(
-      new URL(AUTH_ROUTES.LOGIN, req.nextUrl.origin)
+      new URL(WHITELIST_ROUTES.LOGIN, req.nextUrl.origin)
     );
   }
 

@@ -85,7 +85,10 @@ export default function ExportModal({
             name="format"
             value="markdown"
             checked={selectedFormat === "markdown"}
-            onChange={() => setSelectedFormat("markdown")}
+            onChange={(e) => {
+              e.stopPropagation(); // Stop event from reaching parent elements
+              setSelectedFormat("markdown");
+            }}
           />
           Markdown
         </label>
@@ -95,7 +98,10 @@ export default function ExportModal({
             name="format"
             value="pdf"
             checked={selectedFormat === "pdf"}
-            onChange={() => setSelectedFormat("pdf")}
+            onChange={(e) => {
+              e.stopPropagation(); // Stop event from reaching parent elements
+              setSelectedFormat("pdf");
+            }}
           />
           PDF
         </label>

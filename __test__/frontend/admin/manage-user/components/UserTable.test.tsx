@@ -20,6 +20,8 @@ jest.mock("@frontend/admin/manage-user/hooks/useUserTablePagination", () => ({
   }),
 }));
 
+jest.mock("@prisma/client");
+
 // Mock the context directly - this is the key for performance
 jest.mock("@frontend/admin/manage-user/context/UserTableContext", () => ({
   useUserTableContext: () => ({

@@ -1,12 +1,20 @@
 import { NextResponse, NextRequest } from 'next/server';
 import prisma from '@/lib/prisma';
 import { getUserFromRequest } from '@/app/(backend)/utils/authUtils';
+import { QueryReportProcessor } from '@backend/services/query/QueryReportProcessor';
+import { ChatMessage } from '@prisma/client';
+import { QueryValidationResult } from '@backend/interfaces/query';
+import { apiResponseDuration, apiMetrics } from '@/app/(backend)/utils/metrics';
 
+const route = '/api/chat-sessions/[id]';
 // Get a specific chat session with its messages
 export async function GET(
   req: NextRequest,
   context: { params: Promise<{ id: string }> }
 ) {
+  const method = 'GET';
+  const endTimer = apiResponseDuration.startTimer({ route, method });
+  apiMetrics(method, route);
   try {
     const user = await getUserFromRequest();
     if (!user) {
@@ -14,7 +22,7 @@ export async function GET(
     }
 
     const { id } = await context.params;
-    
+
     // Verify the session exists and belongs to the user
     const session = await prisma.chatSession.findUnique({
       where: { id, userId: user.id },
@@ -29,9 +37,28 @@ export async function GET(
       return NextResponse.json({ error: 'Session not found' }, { status: 404 });
     }
 
+    type MessageWithValidation = ChatMessage & {
+      queryValidationResults?: QueryValidationResult[];
+    }
+    
+    const messages: MessageWithValidation[] = [];
+    const reportProcessor = QueryReportProcessor.getInstance();
+    session?.messages.forEach((message) => {
+      if (message.role === 'assistant') {
+        const validationResults = reportProcessor.processReport(message.content);
+        messages.push({ ...message, queryValidationResults: validationResults });
+      } else {
+        messages.push(message);
+      }
+    })
+
+    session.messages = messages;
+
+    endTimer({ route, method });
     return NextResponse.json({ session });
   } catch (error) {
     console.error('Error fetching chat session:', error);
+    endTimer({ route, method });
     return NextResponse.json({ error: 'Failed to fetch chat session' }, { status: 500 });
   }
 }
@@ -41,6 +68,9 @@ export async function DELETE(
   req: NextRequest,
   context: { params: Promise<{ id: string }> }
 ) {
+  const method = 'DELETE';
+  const endTimer = apiResponseDuration.startTimer({ route, method });
+  apiMetrics(method, route);
   try {
     const user = await getUserFromRequest();
     if (!user) {
@@ -48,7 +78,7 @@ export async function DELETE(
     }
 
     const { id } = await context.params;
-    
+
     // Verify the session exists and belongs to the user
     const existingSession = await prisma.chatSession.findUnique({
       where: { id, userId: user.id },
@@ -63,9 +93,11 @@ export async function DELETE(
       where: { id },
     });
 
+    endTimer({ route, method });
     return NextResponse.json({ message: 'Session deleted successfully' });
   } catch (error) {
     console.error('Error deleting chat session:', error);
+    endTimer({ route, method });
     return NextResponse.json({ error: 'Failed to delete chat session' }, { status: 500 });
   }
 }
@@ -75,6 +107,9 @@ export async function PATCH(
   req: NextRequest,
   context: { params: Promise<{ id: string }> }
 ) {
+  const method = 'PATCH';
+  const endTimer = apiResponseDuration.startTimer({ route, method });
+  apiMetrics(method, route);
   try {
     const user = await getUserFromRequest();
     if (!user) {
@@ -83,7 +118,7 @@ export async function PATCH(
 
     const { id } = await context.params;
     const { title } = await req.json();
-    
+
     // First find by ID only
     const existingSession = await prisma.chatSession.findUnique({
       where: { id }
@@ -107,9 +142,11 @@ export async function PATCH(
       data: { title },
     });
 
+    endTimer({ route, method });
     return NextResponse.json({ session });
   } catch (error) {
     console.error('Error updating chat session:', error);
+    endTimer({ route, method });
     return NextResponse.json({ error: 'Failed to update chat session' }, { status: 500 });
   }
 }
