@@ -20,6 +20,7 @@ const frontendConfig: Config = {
     '^react-markdown$': '<rootDir>/__mocks__/react-markdown.tsx',
     '^rehype-raw$': '<rootDir>/__mocks__/rehype-raw.jsx',
     '^remark-gfm$': '<rootDir>/__mocks__/remark-gfm.jsx',
+    "^@prisma/client$": "<rootDir>/__mocks__/@prisma/client.ts",
   },
   transformIgnorePatterns: [
     "node_modules/(?!react-markdown|remark-gfm|rehype-raw)",
