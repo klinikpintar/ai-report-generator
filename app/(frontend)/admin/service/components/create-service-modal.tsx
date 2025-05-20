@@ -221,7 +221,6 @@ const CreateServiceModal = ({ isVisible, onClose }: Props) => {
           setServiceToDelete(null);
         }}
         onConfirm={confirmDelete}
-        title="Hapus Service"
         description="Apakah Anda yakin ingin menghapus service ini?"
       />
     </>

@@ -78,7 +78,6 @@ export class UserValidation {
 
     role: z
       .enum(["BUSINESS_ANALYST", "ADMIN"])
-      .transform((val) => val.toUpperCase() as "BUSINESS_ANALYST" | "ADMIN")
       .optional(),
 
     isActive: z.boolean().optional(),
