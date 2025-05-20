@@ -3,18 +3,6 @@ import CreateServiceModal from "@frontend/admin/service/components/create-servic
 import { toast } from "react-toastify";
 
 
-jest.mock('@prisma/client', () => ({
-  PrismaClient: jest.fn().mockImplementation(() => ({
-    service: {
-      findMany: jest.fn().mockResolvedValue([]),
-      create: jest.fn().mockResolvedValue({}),
-      delete: jest.fn().mockResolvedValue({}),
-    },
-    $connect: jest.fn(() => Promise.resolve()),
-    $disconnect: jest.fn(() => Promise.resolve()),
-  })),
-}));
-
 jest.mock("react-toastify", () => ({
   toast: {
     error: jest.fn(),
