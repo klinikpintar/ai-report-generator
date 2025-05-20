@@ -36,7 +36,7 @@ export const getAllModelInstances = async (): Promise<ModelInstance[]> => {
 
     return await Promise.all(
       providers.flatMap(async (provider) => {
-        const builder = modelBuilders[provider.name];
+        const builder = modelBuilders[provider.name.toLowerCase()];
         if (!builder) return [];
 
         try {

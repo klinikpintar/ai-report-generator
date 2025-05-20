@@ -11,6 +11,7 @@ import { findRelevantSchemaContent } from '@/lib/schema-embedding';
 import { getUserFromRequest } from '@/app/(backend)/utils/authUtils';
 import prisma from '@/lib/prisma';
 import { NextResponse } from 'next/server';
+import { ServiceFactory } from '@backend/factories/serviceFactory';
 
 // Define an interface for the relevant content items
 export interface RelevantSchemaContentItem {
@@ -26,6 +27,8 @@ export async function POST(req: Request) {
   const formatter = new ResponseFormatter();
   const schemaRepository = new PrismaSchemaRepository();
   const contextEnhancer = new SchemaContextEnhancer(schemaRepository);
+  const providerService = ServiceFactory.getProviderService();
+  const activeProvider = await providerService.getActiveOrDefaultProvider();
 
   try {
     const user = await getUserFromRequest();
@@ -33,8 +36,25 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const providerService = ServiceFactory.getProviderService();
+    const activeProvider = await providerService.getActiveOrDefaultProvider();
+
+    // Tambahkan log debugging
+    console.log('Debug - Active Provider:', activeProvider ? {
+      id: activeProvider.id,
+      name: activeProvider.name,
+      isActive: activeProvider.isActive,
+      activeModel: activeProvider.activeModel ? {
+        id: activeProvider.activeModel.id,
+        name: activeProvider.activeModel.name
+      } : 'No active model'
+    } : 'No active provider found');
+
     // Extract sessionId from request (keep other params as they are)
-    const { messages, model = 'gemini', schemaId, sessionId } = await req.json();
+    const { messages, model = activeProvider?.activeModel?.name || 'gemini', schemaId, sessionId } = await req.json();
+
+    // Log what model will be used
+    console.log('Debug - Using model:', model);
 
     // Verify this session belongs to the user if sessionId is provided
     if (sessionId) {
@@ -103,7 +123,15 @@ Use this schema information if relevant to answer the user's question.`;
     }
     
     // Get the appropriate model provider
+    // Get the appropriate model provider
     const provider = factory.getProvider(model);
+    
+    // Debug provider info
+    console.log('Debug - Selected Provider:', {
+      model: model,
+      providerName: provider.constructor.name,
+      modelName: provider.getModelName()
+    });
     
     // Generate response with enhanced messages
     const result = await provider.generateResponse(enhancedMessages);
@@ -120,6 +148,14 @@ Use this schema information if relevant to answer the user's question.`;
 
     const aiResponse = response.aiResponse;;
     const metadata = { modelUsed: provider.getModelName() };
+    
+    // Debug print for metadata
+    console.log('Debug - Response metadata:', {
+      modelUsed: metadata.modelUsed,
+      schemaId,
+      schemaIncluded: schemaIncluded || relevantContentFound,
+      schemaName
+    });
 
     // Save the conversation to history if sessionId is provided
     if (sessionId) {
