@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { PdfExporter } from "@/app/(backend)/services/pdfExporter";
-import { ReportSchema } from "@/app/(backend)/dtos/report.dto";
 import { ZodError } from "zod";
 import { apiResponseDuration, apiMetrics } from '@/app/(backend)/utils/metrics';
 
