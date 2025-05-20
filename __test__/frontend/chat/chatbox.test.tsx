@@ -59,7 +59,6 @@ jest.mock("next/navigation", () => ({
   }),
 }));
 
-<<<<<<< HEAD
 // Update the top-level service context mock to always include at least one service
 jest.mock("@frontend/(chat)/context/serviceContext", () => ({
   useService: () => ({
@@ -69,7 +68,7 @@ jest.mock("@frontend/(chat)/context/serviceContext", () => ({
     setSelectedService: jest.fn(),
   }),
   ServiceProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
-=======
+  }))
 // Mock the Image component
 jest.mock("next/image", () => ({
   __esModule: true,
@@ -87,7 +86,6 @@ jest.mock("react-markdown", () => ({
 jest.mock("@/app/(frontend)/(chat)/components/ekspor/modal", () => ({
   __esModule: true,
   default: () => <div data-testid="export-modal-mock" />
->>>>>>> 65c5b44b94f3832f0014e7c0621af1530391d10d
 }));
 
 Object.defineProperty(window, "open", { value: jest.fn() });
@@ -223,7 +221,6 @@ describe("ChatBox", () => {
   });
 
   it("✅ should handle empty service list when fetching schemas", async () => {
-<<<<<<< HEAD
     jest.spyOn(require("@frontend/(chat)/context/serviceContext"), "useService")
     .mockImplementation(() => ({
       selectedService: [],
@@ -231,13 +228,6 @@ describe("ChatBox", () => {
       getServiceRepresentation: jest.fn(() => "No Services"),
       setSelectedService: jest.fn(),
     }));
-=======
-    (useService as jest.Mock).mockReturnValue({
-      selectedService: [],
-      services: [],
-      getServiceRepresentation: jest.fn(),
-    });
->>>>>>> 65c5b44b94f3832f0014e7c0621af1530391d10d
 
     renderChatBox();
 
@@ -418,10 +408,8 @@ it("✅ should handle errors when loading session messages", async () => {
     );
   });
 
-<<<<<<< HEAD
   consoleErrorSpy.mockRestore();
 });
-=======
   it("should show loading spinner during initialization", () => {
     getMock.mockImplementation((key: string) => 
       key === "sessionId" ? "test-session-id" : null
@@ -609,7 +597,6 @@ it("should render text with markdown formatting", async () => {
   
   // Skip this test with a better solution
   expect(true).toBe(true);
->>>>>>> 65c5b44b94f3832f0014e7c0621af1530391d10d
 });
 
   // Replace the existing test with this:
