@@ -75,7 +75,7 @@ export const useSchemaFilters = () => {
     } catch {
       toast.error("Failed to load services for filter dropdown");
     }
-  }, [dispatch, state.filters.service.selected]);
+  }, []);
 
   useEffect(() => {
     const unsubscribe = eventBus.subscribe(EVENTS.SERVICE_UPDATED, reloadService);

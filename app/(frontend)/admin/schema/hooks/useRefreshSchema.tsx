@@ -61,9 +61,7 @@ export const useRefreshSchema = () => {
     [
       dispatch, 
       state.filters.service.selected, 
-      state.filters.platform.selected,
-      state.pagination.currentPage,
-      getSelectedFilters
+      state.filters.platform.selected
     ]
   );
 
