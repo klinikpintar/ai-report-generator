@@ -37,6 +37,7 @@ jest.mock("@frontend/(chat)/context/serviceContext", () => ({
     selectedService: [],
     services: [],
     getServiceRepresentation: jest.fn(),
+    setSelectedService: jest.fn(), // Add this
   })),
   ServiceProvider: ({ children }: { children: React.ReactNode }) => (
     <>{children}</>
@@ -98,6 +99,7 @@ beforeEach(() => {
     selectedService: [],
     services: [],
     getServiceRepresentation: jest.fn(),
+    setSelectedService: jest.fn(),
   });
   
   (useUser as jest.Mock).mockReturnValue({
@@ -215,6 +217,7 @@ describe("ChatBox", () => {
       selectedService: [],
       services: [],
       getServiceRepresentation: jest.fn(),
+      setSelectedService: jest.fn(),
     });
 
     renderChatBox();
@@ -494,6 +497,7 @@ describe("ChatBox", () => {
       selectedService: [{ id: 1 }],
       services: [{ id: 1 }, { id: 2 }],
       getServiceRepresentation: () => "All Services",
+      setSelectedService: jest.fn(),
     });
     
     // Mock API responses
@@ -607,6 +611,7 @@ it("should handle keydown events correctly", async () => {
       selectedService: [],
       services: [],
       getServiceRepresentation: () => "No services",
+      setSelectedService: jest.fn(),
     });
     
     renderChatBox();
@@ -626,6 +631,7 @@ it("should handle keydown events correctly", async () => {
       selectedService: [{ id: 1 }],
       services: [{ id: 1 }],
       getServiceRepresentation: () => "Service 1",
+      setSelectedService: jest.fn(),
     });
     
     // First fetch fails (getRelatedSchemaIds)
@@ -658,6 +664,7 @@ it("should handle array responseData in getRelatedSchemaIds", async () => {
     selectedService: [{ id: 1 }],
     services: [{ id: 1 }, { id: 2 }],
     getServiceRepresentation: () => "All Services",
+    setSelectedService: jest.fn(),
   });
   
   // Reset fetch mock
@@ -774,6 +781,7 @@ it("should handle array responseData in getRelatedSchemaIds", async () => {
       selectedService: [{ id: 1 }],
       services: [{ id: 1 }],
       getServiceRepresentation: () => "Service 1",
+      setSelectedService: jest.fn(),
     });
     
     global.fetch = jest.fn()
@@ -924,6 +932,7 @@ it("should handle direct array response format in getRelatedSchemaIds", async ()
     selectedService: [{ id: 1 }],
     services: [{ id: 1 }],
     getServiceRepresentation: () => "Service 1",
+    setSelectedService: jest.fn(),
   });
   
   // Mock useSession
@@ -1006,6 +1015,7 @@ it("should handle responseData.data array format in getRelatedSchemaIds", async 
     selectedService: [{ id: 1 }],
     services: [{ id: 1 }],
     getServiceRepresentation: () => "Service 1",
+    setSelectedService: jest.fn(),
   });
   
   // Mock useSession
