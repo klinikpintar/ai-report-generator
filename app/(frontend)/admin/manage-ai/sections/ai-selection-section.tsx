@@ -28,19 +28,21 @@ const AISelectionSection = () => {
   return (
     <div className="flex flex-wrap justify-center gap-10">
       {loading ? (
-        // Show two skeleton boxes while loading
-        <>
-          <AIBoxSkeleton />
-          <AIBoxSkeleton />
-        </>
+      // Show two skeleton boxes while loading
+      <>
+        <AIBoxSkeleton />
+        <AIBoxSkeleton />
+      </>
       ) : (
-        // Show actual AI provider boxes when loaded
-        aiProviders.map((provider) => (
-          <AIBox key={provider.id} {...{ provider, refreshProviders }} />
+      // Show actual AI provider boxes when loaded, sorted by name
+      [...aiProviders]
+        .sort((a, b) => a.name.localeCompare(b.name))
+        .map((provider) => (
+        <AIBox key={provider.id} {...{ provider, refreshProviders }} />
         ))
       )}
     </div>
   );
-};
+};  
 
 export default AISelectionSection;

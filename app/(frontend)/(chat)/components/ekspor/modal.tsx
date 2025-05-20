@@ -15,7 +15,9 @@ export default function ExportModal({
   content: string;
   title: string;
 }) {
-  const [selectedFormat, setSelectedFormat] = useState<"markdown" | "pdf" | null>(null);
+  const [selectedFormat, setSelectedFormat] = useState<
+    "markdown" | "pdf" | null
+  >(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const handleDownload = async () => {
@@ -28,42 +30,35 @@ export default function ExportModal({
       const createdAt = new Date().toISOString().split("T")[0];
       const fileName = `Klinik Pintar Laporan - ${title}`;
 
-      const endpoint =
-        selectedFormat === "markdown"
-          ? "/api/ekspor/markdown"
-          : "/api/ekspor/pdf?preview=true";
-
-      const res = await fetch(endpoint, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          reportData: {
-            title,
-            content,
-            createdAt,
-          },
-        }),
-      });
-
-      if (!res.ok) {
-        const error = await res.json();
-        setErrorMessage(error.message ?? "Terjadi kesalahan saat mengekspor laporan.");
-        return;
-      }
-
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-
       if (selectedFormat === "markdown") {
+        // tetap pakai fetch blob untuk markdown
+        const res = await fetch("/api/ekspor/markdown", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ reportData: { title, content, createdAt } }),
+        });
+
+        if (!res.ok) {
+          const error = await res.json();
+          setErrorMessage(
+            error.message ?? "Terjadi kesalahan saat ekspor markdown."
+          );
+          return;
+        }
+
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
         a.download = `${fileName}.md`;
         a.click();
         URL.revokeObjectURL(url);
       } else {
-        window.open(url, "_blank");
+        // Redirect to custom PDF viewer
+        const reportDataParam = encodeURIComponent(
+          JSON.stringify({ title, content, createdAt })
+        );
+        window.open(`/pdf-viewer?reportData=${reportDataParam}`, "_blank");
       }
 
       onClose();
@@ -90,7 +85,10 @@ export default function ExportModal({
             name="format"
             value="markdown"
             checked={selectedFormat === "markdown"}
-            onChange={() => setSelectedFormat("markdown")}
+            onChange={(e) => {
+              e.stopPropagation(); // Stop event from reaching parent elements
+              setSelectedFormat("markdown");
+            }}
           />
           Markdown
         </label>
@@ -100,7 +98,10 @@ export default function ExportModal({
             name="format"
             value="pdf"
             checked={selectedFormat === "pdf"}
-            onChange={() => setSelectedFormat("pdf")}
+            onChange={(e) => {
+              e.stopPropagation(); // Stop event from reaching parent elements
+              setSelectedFormat("pdf");
+            }}
           />
           PDF
         </label>

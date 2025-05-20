@@ -86,6 +86,9 @@ export default function Dropdown() {
     };
   }, []);
 
+  // Tentukan apakah dropdown perlu scrollable (lebih dari 7 item)
+  const isScrollable = options.length > 7;
+
   return (
     <div className="relative w-full z-10" ref={dropdownRef}>
       <button
@@ -110,6 +113,11 @@ export default function Dropdown() {
 
       {isOpen && (
         <div className="absolute w-[300px] min-w-[250px] mt-2 border rounded-lg bg-white shadow-lg p-3 border-blue-6">
+          <div 
+            className={`${
+              isScrollable ? "max-h-[280px] overflow-y-auto" : ""
+            }`}
+          >
           {options.length === 1 ? (
             <p className="text-sm text-gray-500 text-center">
               Belum ada layanan tersedia
@@ -141,6 +149,7 @@ export default function Dropdown() {
               </label>
             ))
           )}
+        </div>
         </div>
       )}
     </div>

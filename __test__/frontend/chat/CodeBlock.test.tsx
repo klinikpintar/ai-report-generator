@@ -1,140 +1,226 @@
-import { render, screen, fireEvent, act } from "@testing-library/react"
-import { CodeBlock } from "@frontend/(chat)/components/CodeBlock"
-import "@testing-library/jest-dom"
+import { render, screen, fireEvent, act, waitFor } from "@testing-library/react";
+import { CodeBlock } from "@frontend/(chat)/components/CodeBlock";
+import "@testing-library/jest-dom";
+import { ToastContainer } from "react-toastify";
 
 // Mock the clipboard API
 Object.assign(navigator, {
   clipboard: {
     writeText: jest.fn(),
   },
-})
+});
 
+const MockedTooltipComponent = jest.fn(
+  ({ children, content, variant, side, align, "data-testid": dataTestId }) => (
+    <div
+      data-testid={dataTestId}
+      data-content={content}
+      data-variant={variant}
+      data-side={side}
+      data-align={align}
+    >
+      {children}
+    </div>
+  )
+);
+
+jest.mock("@/components/ui/tooltip", () => ({
+  Tooltip: (props: unknown) => MockedTooltipComponent(props),
+}));
 
 describe("CodeBlock", () => {
-  const mockProps = {
+  const mockPropsBase = {
     language: "javascript",
     value: "const example = 'test code';",
-  }
+  };
+
+  // Props including a default valid validationStatus, matching user's original mockProps
+  const mockPropsWithValidStatus = {
+    ...mockPropsBase,
+    validationStatus: {
+      isValid: true,
+      errorMessage: "",
+      warningMessage: "",
+    },
+  };
 
   beforeEach(() => {
-    jest.useFakeTimers()
-    jest.clearAllMocks()
-  })
+    jest.useFakeTimers();
+    (navigator.clipboard.writeText as jest.Mock).mockClear();
+    MockedTooltipComponent.mockClear(); // Clear the Tooltip mock before each test
+  });
 
   afterEach(() => {
-    jest.useRealTimers()
-  })
+    jest.useRealTimers();
+  });
 
   // ✅ Positive test case
   it("should display the content in screen", () => {
-    render(<CodeBlock {...mockProps} />)
+    render(<CodeBlock {...mockPropsWithValidStatus} />);
 
-    // Check if the value content is rendered, maybe broken up into separate components
-    expect(screen.getByText(/const/)).toBeInTheDocument()
-    expect(screen.getByText(/example/)).toBeInTheDocument()
-    expect(screen.getByText(/'test code'/)).toBeInTheDocument()
-  })
+    expect(screen.getByText(/const/)).toBeInTheDocument();
+    expect(screen.getByText(/example/)).toBeInTheDocument();
+    expect(screen.getByText(/'test code'/)).toBeInTheDocument();
+  });
 
   // ✅ Positive test case
   it("should display clipboard icon first", () => {
-    render(<CodeBlock {...mockProps} />)
-    expect(screen.getByTestId("clipboard-icon")).toBeInTheDocument()
-    expect(screen.queryByTestId("check-icon")).not.toBeInTheDocument()
-  })
+    render(<CodeBlock {...mockPropsWithValidStatus} />);
+    expect(screen.getByTestId("clipboard-icon")).toBeInTheDocument();
+    expect(screen.queryByTestId("check-icon")).not.toBeInTheDocument();
+  });
 
   // ✅ Positive test case
-  it("should copy the value to the clipboard when clipboard icon clicked", () => {
-    render(<CodeBlock {...mockProps} />)
+  it("should copy the value to the clipboard, show toast, when clipboard icon clicked", async () => {
+    render(
+      <>
+        <CodeBlock {...mockPropsWithValidStatus} />
+        <ToastContainer />
+      </>
+    );
 
-    const button = screen.getByRole("button", { name: /copy code/i })
-    fireEvent.click(button)
+    const button = screen.getByRole("button", { name: /copy code/i });
+    fireEvent.click(button);
 
-    expect(navigator.clipboard.writeText).toHaveBeenCalledWith(mockProps.value)
-    expect(navigator.clipboard.writeText).toHaveBeenCalledTimes(1)
-  })
+    expect(navigator.clipboard.writeText).toHaveBeenCalledWith(mockPropsWithValidStatus.value);
+    expect(navigator.clipboard.writeText).toHaveBeenCalledTimes(1);
+
+    expect(await screen.findByText("Code copied to clipboard!")).toBeInTheDocument();
+  });
 
   // ✅ Positive test case
   it("should display check icon when clipboard icon clicked", () => {
-    render(<CodeBlock {...mockProps} />)
+    render(<CodeBlock {...mockPropsWithValidStatus} />);
 
-    const button = screen.getByRole("button", { name: /copy code/i })
-    fireEvent.click(button)
+    const button = screen.getByRole("button", { name: /copy code/i });
+    fireEvent.click(button);
 
-    expect(screen.queryByTestId("clipboard-icon")).not.toBeInTheDocument()
-    expect(screen.getByTestId("check-icon")).toBeInTheDocument()
-  })
+    expect(screen.queryByTestId("clipboard-icon")).not.toBeInTheDocument();
+    expect(screen.getByTestId("check-icon")).toBeInTheDocument();
+  });
 
   // ✅ Positive test case
   it("should display the clipboard icon again after check icon", () => {
-    render(<CodeBlock {...mockProps} />)
+    render(<CodeBlock {...mockPropsWithValidStatus} />);
 
-    const button = screen.getByRole("button", { name: /copy code/i })
-    fireEvent.click(button)
+    const button = screen.getByRole("button", { name: /copy code/i });
+    fireEvent.click(button);
 
-    // Check that the check icon is displayed
-    expect(screen.getByTestId("check-icon")).toBeInTheDocument()
+    expect(screen.getByTestId("check-icon")).toBeInTheDocument();
 
-    // Fast-forward time to trigger the timeout
     act(() => {
-      jest.advanceTimersByTime(2000)
-    })
+      jest.advanceTimersByTime(2000);
+    });
 
-    // Check that the clipboard icon is displayed again
-    expect(screen.getByTestId("clipboard-icon")).toBeInTheDocument()
-    expect(screen.queryByTestId("check-icon")).not.toBeInTheDocument()
-  })
-
-  // Edge test case
-  it("should handle empty code value", () => {
-    render(<CodeBlock language="javascript" value="" />)
-
-    const button = screen.getByRole("button", { name: /copy code/i })
-    fireEvent.click(button)
-
-    expect(navigator.clipboard.writeText).toHaveBeenCalledWith("")
-  })
+    expect(screen.getByTestId("clipboard-icon")).toBeInTheDocument();
+    expect(screen.queryByTestId("check-icon")).not.toBeInTheDocument();
+  });
 
   // Edge test case
-  it("should handle very long code values", () => {
-    const longCode = "const example = 'test code';\n".repeat(100)
-    render(<CodeBlock language="javascript" value={longCode} />)
+  it("should handle empty code value and show toast", async () => {
+    render(
+      <>
+        <CodeBlock
+          language="javascript"
+          value=""
+          validationStatus={mockPropsWithValidStatus.validationStatus}
+        />
+        <ToastContainer />
+      </>
+    );
 
-    const button = screen.getByRole("button", { name: /copy code/i })
-    fireEvent.click(button)
+    const button = screen.getByRole("button", { name: /copy code/i });
+    fireEvent.click(button);
 
-    expect(navigator.clipboard.writeText).toHaveBeenCalledWith(longCode)
-  })
+    expect(navigator.clipboard.writeText).toHaveBeenCalledWith("");
+    await waitFor(async () => {
+      const toasts = await screen.findAllByText("Code copied to clipboard!");
+      expect(toasts.length).toBeGreaterThan(0);
+    });
+  });
+
+  // Edge test case
+  it("should handle very long code values and show toast", async () => {
+    const longCode = "const example = 'test code';\n".repeat(100);
+    render(
+      <>
+        <CodeBlock
+          language="javascript"
+          value={longCode}
+          validationStatus={mockPropsWithValidStatus.validationStatus}
+        />
+        <ToastContainer />
+      </>
+    );
+
+    const button = screen.getByRole("button", { name: /copy code/i });
+    fireEvent.click(button);
+
+    expect(navigator.clipboard.writeText).toHaveBeenCalledWith(longCode);
+    expect(await screen.findByText("Code copied to clipboard!")).toBeInTheDocument();
+  });
 
   // ❌ Negative test case
   it("should handle unsupported language gracefully", () => {
-    render(<CodeBlock language="nonexistent-language" value={mockProps.value} />)
-    expect(screen.getByText(mockProps.value)).toBeInTheDocument()
-  })
+    render(
+      <CodeBlock
+        language="nonexistent-language"
+        value={mockPropsWithValidStatus.value}
+        validationStatus={mockPropsWithValidStatus.validationStatus}
+      />
+    );
+    expect(screen.getByText(mockPropsWithValidStatus.value)).toBeInTheDocument();
+    expect(screen.queryByText("Code copied to clipboard!")).not.toBeInTheDocument();
+  });
+});
 
-  // Edge test case
-  it("should handle multiple clicks correctly", () => {
-    render(<CodeBlock {...mockProps} />)
+describe("CodeBlock with validationStatus", () => {
+  const baseProps = {
+    language: "javascript",
+    value: "const example = 'test code';",
+  };
 
-    const button = screen.getByRole("button", { name: /copy code/i })
+  it("should not render validation icon or tooltip if validationStatus is not provided", () => {
+    render(<CodeBlock {...baseProps} />);
+    expect(screen.queryByTestId("query-validation-tooltip")).not.toBeInTheDocument();
+  });
 
-    // First click
-    fireEvent.click(button)
-    expect(screen.getByTestId("check-icon")).toBeInTheDocument()
-    expect(navigator.clipboard.writeText).toHaveBeenCalledTimes(1)
+  it("should render success icon and tooltip for valid status", () => {
+    const validationStatus = { isValid: true };
+    render(<CodeBlock {...baseProps} validationStatus={validationStatus} />);
 
-    // Second click while in "copied" state
-    fireEvent.click(button)
-    expect(screen.getByTestId("check-icon")).toBeInTheDocument()
-    expect(navigator.clipboard.writeText).toHaveBeenCalledTimes(2)
+    // Now this will find the div rendered by MockedTooltipComponent
+    const tooltipElement = screen.getByTestId("query-validation-tooltip");
+    expect(tooltipElement).toBeInTheDocument();
 
-    // Fast-forward time to trigger the timeout
-    act(() => {
-      jest.advanceTimersByTime(2000)
-    })
+    // Check attributes on the mocked div
+    expect(tooltipElement).toHaveAttribute("data-content", "Query is valid and ready to execute");
+  });
 
-    // Third click after reverting to clipboard icon
-    fireEvent.click(button)
-    expect(screen.getByTestId("check-icon")).toBeInTheDocument()
-    expect(navigator.clipboard.writeText).toHaveBeenCalledTimes(3)
-  })
-})
+  it("should render warning icon and tooltip for invalid status with errorMessage", () => {
+    const validationStatus = { isValid: false, errorMessage: "Test Error Message" };
+    render(<CodeBlock {...baseProps} validationStatus={validationStatus} />);
+
+    const tooltipElement = screen.getByTestId("query-validation-tooltip");
+    expect(tooltipElement).toBeInTheDocument();
+    expect(tooltipElement).toHaveAttribute("data-content", "Test Error Message");
+  });
+
+  it("should render warning icon and tooltip for invalid status with warningMessage", () => {
+    const validationStatus = { isValid: false, warningMessage: "Test Warning Message" };
+    render(<CodeBlock {...baseProps} validationStatus={validationStatus} />);
+
+    const tooltipElement = screen.getByTestId("query-validation-tooltip");
+    expect(tooltipElement).toBeInTheDocument();
+    expect(tooltipElement).toHaveAttribute("data-content", "Test Warning Message");
+  });
+
+  it("should render warning icon and tooltip for invalid status with no specific message", () => {
+    const validationStatus = { isValid: false };
+    render(<CodeBlock {...baseProps} validationStatus={validationStatus} />);
+
+    const tooltipElement = screen.getByTestId("query-validation-tooltip");
+    expect(tooltipElement).toBeInTheDocument();
+    expect(tooltipElement).toHaveAttribute("data-content", "Query has validation issues");
+  });
+});

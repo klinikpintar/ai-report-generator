@@ -42,7 +42,7 @@ export const useRefreshSchema = () => {
         const params: FetchSchemasParams = {
           serviceIds: selectedServiceIds,
           platformCodes: selectedPlatformCodes,
-          page: page || state.pagination.currentPage,
+          page: page ?? state.pagination.currentPage,
         };
 
         const { data, pagination } = await fetchSchemas(params);
@@ -58,7 +58,11 @@ export const useRefreshSchema = () => {
         dispatch({ type: "FETCH_ERROR", payload: "Failed to fetch schemas" });
       }
     },
-    [dispatch, state.filters.service.selected, state.filters.platform.selected]
+    [
+      dispatch, 
+      state.filters.service.selected, 
+      state.filters.platform.selected,
+    ]
   );
 
   return {

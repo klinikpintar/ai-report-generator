@@ -37,8 +37,8 @@ describe("EditAPIKeyModal Display", () => {
     expect(title).toBeInTheDocument();
   });
 
-  it('should display "Unchanged" placeholder for api key input', async () => {
-    const input = await screen.findByPlaceholderText(/Unchanged/i);
+  it('should display placeholder for api key input', async () => {
+    const input = await screen.findByPlaceholderText(/Masukkan API Key baru Anda/i);
     expect(input).toBeInTheDocument();
   });
 
@@ -64,7 +64,7 @@ describe("EditAPIKeyModal Functionality", () => {
   });
 
   it("the submit button should be enabled when the input is filled", async () => {
-    const input = (await screen.findByPlaceholderText(/Unchanged/i)) as HTMLInputElement;
+    const input = (await screen.findByPlaceholderText(/Masukkan API Key baru Anda/i)) as HTMLInputElement;
     const saveButton = await screen.findByText(/Simpan/i);
 
     await userEvent.type(input, "New API Key");
@@ -73,7 +73,7 @@ describe("EditAPIKeyModal Functionality", () => {
 
   it("should call patchAPIKey when the form is submitted", async () => {
     (patchApiKey as jest.Mock).mockResolvedValueOnce({ success: true });
-    const input = (await screen.findByPlaceholderText(/Unchanged/i)) as HTMLInputElement;
+    const input = (await screen.findByPlaceholderText(/Masukkan API Key baru Anda/i)) as HTMLInputElement;
     const saveButton = await screen.findByText(/Simpan/i);
 
     await userEvent.type(input, mockApiKey);
@@ -87,7 +87,7 @@ describe("EditAPIKeyModal Functionality", () => {
 
   it("should display success message when the API key is updated successfully", async () => {
     (patchApiKey as jest.Mock).mockResolvedValueOnce({ success: true });
-    const input = (await screen.findByPlaceholderText(/Unchanged/i)) as HTMLInputElement;
+    const input = (await screen.findByPlaceholderText(/Masukkan API Key baru Anda/i)) as HTMLInputElement;
     const saveButton = await screen.findByText(/Simpan/i);
 
     await userEvent.type(input, mockApiKey);
@@ -106,7 +106,7 @@ describe("EditAPIKeyModal Functionality", () => {
 
   it("should display error message when the API key update fails", async () => {
     (patchApiKey as jest.Mock).mockResolvedValueOnce({ success: false, message: "Update failed" });
-    const input = (await screen.findByPlaceholderText(/Unchanged/i)) as HTMLInputElement;
+    const input = (await screen.findByPlaceholderText(/Masukkan API Key baru Anda/i)) as HTMLInputElement;
     const saveButton = await screen.findByText(/Simpan/i);
 
     await userEvent.type(input, mockApiKey);

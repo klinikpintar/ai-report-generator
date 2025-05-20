@@ -154,4 +154,48 @@ describe("Auth API - Verify Token", () => {
     expect(response.status).toBe(401);
     expect(json).toHaveProperty("message", "Unauthorized");
   });
+
+  // Corner Case - Verify Token but User is Inactive
+  test("❌ Should return 403 if user is inactive", async () => {
+    (jwt.verify as jest.Mock).mockReturnValue({ id: testUser.id });
+    (prisma.user.findUnique as jest.Mock).mockResolvedValue({
+      ...testUser,
+      isActive: false,
+    });
+
+    const request = new NextRequest(new URL(BASE_API_URL_VERIFY_TOKEN), {
+      method: "GET",
+      headers: {
+        Cookie: "access_token=validToken",
+      },
+      credentials: "include",
+    });
+
+    const response = await verifyHandler(request);
+    const json = await response.json();
+
+    expect(response.status).toBe(403);
+    expect(json).toHaveProperty("message", "User is not active");
+  });
+
+  // Server Error
+  test("❌ Should return 500 if an error occurs", async () => {
+    (prisma.user.findUnique as jest.Mock).mockRejectedValueOnce(
+      new Error("Database error")
+    );
+
+    const request = new NextRequest(new URL(BASE_API_URL_VERIFY_TOKEN), {
+      method: "GET",
+      headers: {
+        Cookie: "access_token=validToken",
+      },
+      credentials: "include",
+    });
+
+    const response = await verifyHandler(request);
+    const json = await response.json();
+
+    expect(response.status).toBe(500);
+    expect(json).toHaveProperty("message", "Internal server error");
+  });
 });

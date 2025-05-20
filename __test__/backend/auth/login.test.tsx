@@ -236,4 +236,26 @@ describe("Auth API - Login", () => {
     expect(response.status).toBe(400);
     expect(json).toHaveProperty("message", "Password cannot be empty");
   });
+
+  // Server Error
+  test("Should return 500 on server error", async () => {
+    (prisma.user.findUnique as jest.Mock).mockRejectedValueOnce(
+      new Error("Database error")
+    );
+
+    const request = new NextRequest(new URL(BASE_API_URL_AUTH_LOGIN), {
+      method: "POST",
+      body: JSON.stringify({
+        email: testUser.email,
+        password: "password123",
+      }),
+      headers: { "Content-Type": "application/json" },
+    });
+
+    const response = await loginHandler(request);
+    const json = await response.json();
+
+    expect(response.status).toBe(500);
+    expect(json).toHaveProperty("message", "Internal server error");
+  });
 });

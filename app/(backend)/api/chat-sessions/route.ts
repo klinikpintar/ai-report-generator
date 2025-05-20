@@ -1,9 +1,14 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { getUserFromRequest } from '@/app/(backend)/utils/authUtils';
+import { apiResponseDuration, apiMetrics } from '@/app/(backend)/utils/metrics';
 
 // Get all user's chat sessions
+const route = '/api/chat-sessions';
 export async function GET() {
+  const method = 'GET';
+  const endTimer = apiResponseDuration.startTimer({ route, method });
+  apiMetrics(method, route);
   try {
     const user = await getUserFromRequest();
     if (!user) {
@@ -20,15 +25,20 @@ export async function GET() {
       },
     });
 
+    endTimer({ route, method });
     return NextResponse.json({ sessions });
   } catch (error) {
     console.error('Error fetching chat sessions:', error);
+    endTimer({ route, method });
     return NextResponse.json({ error: 'Failed to fetch chat sessions' }, { status: 500 });
   }
 }
 
 // Create a new chat session
 export async function POST(req: Request) {
+  const method = 'POST';
+  const endTimer = apiResponseDuration.startTimer({ route, method });
+  apiMetrics(method, route);
   try {
     const user = await getUserFromRequest();
     if (!user) {
@@ -44,9 +54,11 @@ export async function POST(req: Request) {
       },
     });
 
+    endTimer({ route, method });
     return NextResponse.json({ session }, { status: 201 });
   } catch (error) {
     console.error('Error creating chat session:', error);
+    endTimer({ route, method });
     return NextResponse.json({ error: 'Failed to create chat session' }, { status: 500 });
   }
 }

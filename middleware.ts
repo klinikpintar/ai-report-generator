@@ -20,10 +20,13 @@ interface RoleConfig {
 // Constants
 const FIVE_MINUTES_IN_SECONDS = 300;
 
-const AUTH_ROUTES = {
+const WHITELIST_ROUTES = {
   LOGIN: "/login",
   API_LOGIN: "/api/auth/login",
+  API_LOGOUT: "/api/auth/logout",
+  API_VERIFY: "/api/auth/token/verify",
   API_REFRESH: "/api/auth/token/refresh",
+  API_METRICS: "/api/metrics",
 };
 
 const ROLE_REDIRECTS: Record<ROLE, RoleConfig> = {
@@ -36,61 +39,6 @@ const ROLE_REDIRECTS: Record<ROLE, RoleConfig> = {
     restrictedPaths: ["/admin"],
   },
 };
-
-const API_ACCESS_RULES: {
-  path: string;
-  permissions: Record<ROLE, string[]>;
-}[] = [
-  {
-    path: "/chat",
-    permissions: {
-      BUSINESS_ANALYST: ["POST"],
-      ADMIN: [],
-    },
-  },
-  {
-    path: "/ekspor",
-    permissions: {
-      BUSINESS_ANALYST: ["POST"],
-      ADMIN: [],
-    },
-  },
-  {
-    path: "/users",
-    permissions: {
-      ADMIN: ["GET", "POST", "DELETE", "PATCH"],
-      BUSINESS_ANALYST: [],
-    },
-  },
-  {
-    path: "/service",
-    permissions: {
-      ADMIN: ["GET", "POST", "DELETE"],
-      BUSINESS_ANALYST: ["GET"],
-    },
-  },
-  {
-    path: "/schema",
-    permissions: {
-      ADMIN: ["GET", "POST", "PATCH", "DELETE"],
-      BUSINESS_ANALYST: ["GET"],
-    },
-  },
-  {
-    path: "/chat-session",
-    permissions: {
-      ADMIN: [],
-      BUSINESS_ANALYST: ["GET", "POST", "DELETE", "PATCH"],
-    },
-  },
-  {
-    path: "/ai",
-    permissions: {
-      ADMIN: ["PATCH", "GET"],
-      BUSINESS_ANALYST: ["GET"],
-    },
-  },
-];
 
 // Token management functions
 export async function verifyAccessToken(
@@ -118,7 +66,7 @@ export async function refreshAccessToken(
 ): Promise<string | null> {
   try {
     const apiUrl = `${process.env.NEXT_PUBLIC_API_URL ?? req.nextUrl.origin}${
-      AUTH_ROUTES.API_REFRESH
+      WHITELIST_ROUTES.API_REFRESH
     }`;
     const apiResponse = await fetch(apiUrl, {
       method: "POST",
@@ -139,7 +87,7 @@ export async function refreshAccessToken(
 }
 
 function isAuthRoute(pathname: string): boolean {
-  return Object.values(AUTH_ROUTES).some((route) => pathname.includes(route));
+  return Object.values(WHITELIST_ROUTES).some((route) => pathname.includes(route));
 }
 
 function isApiRoute(pathname: string): boolean {
@@ -165,30 +113,38 @@ async function logAccess(
   }
 }
 
+const API_ACCESS_RULES: Record<ROLE, Record<string, string[]>> = {
+  ADMIN: {
+    GET: ["/users", "/service", "/schema", "/ai"],
+    POST: ["/users", "/service", "/schema"],
+    PATCH: ["/users", "/schema", "/ai"],
+    DELETE: ["/users", "/service", "/schema"],
+  },
+  BUSINESS_ANALYST: {
+    GET: ["/service", "/schema", "/chat-sessions", "/ai"],
+    POST: ["/chat", "/ekspor", "/chat-sessions"],
+    PATCH: ["/chat-session"],
+    DELETE: ["/chat-session"],
+  }
+};
+
 function checkApiAccess(
   pathname: string,
   role: ROLE,
   method: string
 ): NextResponse | null {
-  const matchingRule = API_ACCESS_RULES.filter((rule) =>
-    pathname.startsWith(`/api${rule.path}`)
-  ).sort((a, b) => b.path.length - a.path.length)[0];
-
-  if (matchingRule) {
-    const allowedMethods = matchingRule.permissions[role] || [];
-
-    if (allowedMethods.length === 0) {
-      return NextResponse.json({ message: "Unauthorized" }, { status: 403 });
-    }
-
-    if (!allowedMethods.includes(method)) {
-      return NextResponse.json(
-        { message: "Method Not Allowed" },
-        { status: 405 }
-      );
-    }
+  const path = pathname.replace(/^\/api/, '');
+  const allowedPaths = API_ACCESS_RULES[role]?.[method] || [];
+  
+  // Check if there's a matching path
+  const hasAccess = allowedPaths.some(allowedPath => 
+    path === allowedPath || path.startsWith(`${allowedPath}/`)
+  );
+  
+  if (!hasAccess) {
+    return NextResponse.json({ message: "Unauthorized" }, { status: 403 });
   }
-
+  
   return null;
 }
 
@@ -235,7 +191,7 @@ export async function middleware(req: NextRequest, event: NextFetchEvent) {
 
   if (!user) {
     return NextResponse.redirect(
-      new URL(AUTH_ROUTES.LOGIN, req.nextUrl.origin)
+      new URL(WHITELIST_ROUTES.LOGIN, req.nextUrl.origin)
     );
   }
 
