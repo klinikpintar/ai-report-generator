@@ -193,4 +193,26 @@ describe("Create Service Modal Test", () => {
 
     expect(screen.queryByText("Kesehatan")).not.toBeInTheDocument();
   });
+
+  it("Should close confirmation dialog when cancel is clicked", async () => {
+    (fetch as jest.Mock)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockServices,
+      })
+      .mockResolvedValueOnce({ ok: true });
+
+    render(<CreateServiceModal isVisible={true} onClose={() => {}} />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Reservasi")).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getAllByTestId("delete-service-button")[0]);
+    fireEvent.click(screen.getAllByText("Batal")[1]);
+
+    await waitFor(() => {
+      expect(screen.queryByText("Reservasi")).toBeInTheDocument();
+    });
+  });
 });

@@ -256,11 +256,8 @@ export default function ChatBox() {
                           return (
                             <CodeBlock
                               language={match[1]}
-                              value={
-                                typeof children === "string"
-                                  ? children.replace(/\n$/, "")
-                                  : String(children)
-                              }
+                              value={String(children).replace(/\n$/, "")}
+                              isVerified={false}
                             />
                           );
                         }

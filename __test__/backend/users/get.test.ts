@@ -115,5 +115,19 @@ describe("User API - Get Users (Corner Cases)", () => {
   
     expect(response.status).toBe(200);
     expect(json.data[0]).toHaveProperty("role", "ADMIN");
-  });  
+  });
+
+  // Server Error
+  test("Should return 500 on server error", async () => {
+    (prisma.user.findMany as jest.Mock).mockRejectedValueOnce(
+      new Error("Database error")
+    );
+
+    const request = new NextRequest(new URL(BASE_API_URL_USERS));
+    const response = await getUsersHandler(request);
+    const json = await response.json();
+
+    expect(response.status).toBe(500);
+    expect(json).toHaveProperty("message", "Internal server error");
+  });
 });
