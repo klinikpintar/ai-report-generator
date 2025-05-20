@@ -53,6 +53,8 @@ describe("CodeBlock", () => {
   afterEach(() => {
     jest.useRealTimers();
   });
+    jest.useRealTimers();
+  });
 
   // ✅ Positive test case
   it("should display the content in screen", () => {
@@ -81,6 +83,8 @@ describe("CodeBlock", () => {
 
     const button = screen.getByRole("button", { name: /copy code/i });
     fireEvent.click(button);
+    const button = screen.getByRole("button", { name: /copy code/i });
+    fireEvent.click(button);
 
     expect(navigator.clipboard.writeText).toHaveBeenCalledWith(mockPropsWithValidStatus.value);
     expect(navigator.clipboard.writeText).toHaveBeenCalledTimes(1);
@@ -94,7 +98,12 @@ describe("CodeBlock", () => {
 
     const button = screen.getByRole("button", { name: /copy code/i });
     fireEvent.click(button);
+    const button = screen.getByRole("button", { name: /copy code/i });
+    fireEvent.click(button);
 
+    expect(screen.queryByTestId("clipboard-icon")).not.toBeInTheDocument();
+    expect(screen.getByTestId("check-icon")).toBeInTheDocument();
+  });
     expect(screen.queryByTestId("clipboard-icon")).not.toBeInTheDocument();
     expect(screen.getByTestId("check-icon")).toBeInTheDocument();
   });
@@ -103,6 +112,8 @@ describe("CodeBlock", () => {
   it("should display the clipboard icon again after check icon", () => {
     render(<CodeBlock {...mockPropsWithValidStatus} />);
 
+    const button = screen.getByRole("button", { name: /copy code/i });
+    fireEvent.click(button);
     const button = screen.getByRole("button", { name: /copy code/i });
     fireEvent.click(button);
 
@@ -131,6 +142,8 @@ describe("CodeBlock", () => {
 
     const button = screen.getByRole("button", { name: /copy code/i });
     fireEvent.click(button);
+    const button = screen.getByRole("button", { name: /copy code/i });
+    fireEvent.click(button);
 
     expect(navigator.clipboard.writeText).toHaveBeenCalledWith("");
     await waitFor(async () => {
@@ -153,6 +166,8 @@ describe("CodeBlock", () => {
       </>
     );
 
+    const button = screen.getByRole("button", { name: /copy code/i });
+    fireEvent.click(button);
     const button = screen.getByRole("button", { name: /copy code/i });
     fireEvent.click(button);
 

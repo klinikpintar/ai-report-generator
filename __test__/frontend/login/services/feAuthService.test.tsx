@@ -136,3 +136,64 @@ describe('FeAuthService', () => {
     });
   });
 });
+
+describe('getUser', () => {
+  test('should return success response with user data when verification succeeds', async () => {
+    // Setup mock response
+    const mockUserData = { 
+      id: '123', 
+      email: 'user@example.com', 
+      name: 'Test User',
+      role: 'USER' 
+    };
+    
+    mockedAxios.get.mockResolvedValueOnce({
+      data: {
+        message: 'User verified',
+        data: mockUserData
+      }
+    });
+
+    const result = await FeAuthService.getUser();
+
+    expect(mockedAxios.get).toHaveBeenCalledWith('/api/auth/token/verify');
+    expect(result).toEqual({
+      success: true,
+      data: mockUserData
+    });
+  });
+
+  test('should return error response when verification fails', async () => {
+    // Setup mock response for failure
+    mockedAxios.get.mockRejectedValueOnce({
+      response: {
+        data: {
+          message: 'Invalid or expired token'
+        }
+      }
+    });
+
+    const result = await FeAuthService.getUser();
+
+    expect(mockedAxios.get).toHaveBeenCalledWith('/api/auth/token/verify');
+    expect(result).toEqual({
+      success: false,
+      message: 'Invalid or expired token'
+    });
+  });
+
+  test('should handle error with no response data during verification', async () => {
+    // Setup mock response for network error
+    mockedAxios.get.mockRejectedValueOnce({
+      // No response object
+    });
+
+    const result = await FeAuthService.getUser();
+
+    expect(mockedAxios.get).toHaveBeenCalledWith('/api/auth/token/verify');
+    expect(result).toEqual({
+      success: false,
+      message: 'Failed to fetch user data'
+    });
+  });
+});
