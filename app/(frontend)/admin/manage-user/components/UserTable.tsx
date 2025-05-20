@@ -27,7 +27,7 @@ export const UserTable: React.FC<UserTableProps> = ({
 
   useEffect(() => {
     refreshUsers();
-  }, [refreshUsers, state.pagination.currentPage, state.filters.role.selected]);
+  }, [state.pagination.currentPage, state.filters.role.selected]);
 
   React.useEffect(() => {
     if (state.error) {
