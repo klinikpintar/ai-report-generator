@@ -1,15 +1,25 @@
 "use client";
 import React, { useState } from "react";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
-import { ClipboardIcon, CheckIcon } from "lucide-react";
+import {
+  ClipboardIcon,
+  CheckIcon,
+  CheckCircleIcon,
+  XCircleIcon,
+} from "lucide-react";
 import { atomDark } from "react-syntax-highlighter/dist/cjs/styles/prism";
 
 type CodeBlockProps = {
   language: string;
   value: string;
+  isVerified?: boolean;
 };
 
-export const CodeBlock: React.FC<CodeBlockProps> = ({ language, value }) => {
+export const CodeBlock: React.FC<CodeBlockProps> = ({
+  language,
+  value,
+  isVerified,
+}) => {
   const [copied, setCopied] = useState(false);
 
   const copyToClipboard = () => {
@@ -19,32 +29,55 @@ export const CodeBlock: React.FC<CodeBlockProps> = ({ language, value }) => {
   };
 
   return (
-    <div className="relative">
-      <div className="absolute right-2 top-2">
-        <button
-          onClick={copyToClipboard}
-          className="p-1 rounded bg-gray-700 hover:bg-gray-600 text-white"
-          aria-label="Copy code"
-        >
-          {copied ? (
-            <CheckIcon size={16} data-testid="check-icon" />
-          ) : (
-            <ClipboardIcon size={16} data-testid="clipboard-icon" />
-          )}
-        </button>
+    <div className="mb-4">
+      <div className="inline-flex items-center gap-1 mb-1 px-2 py-1 text-sm rounded font-mono bg-gray-900">
+        {isVerified ? (
+          <>
+            <CheckCircleIcon
+              size={14}
+              className="text-green-400"
+              data-testid="verified-icon"
+            />
+            <span className="text-green-400">Verified</span>
+          </>
+        ) : (
+          <>
+            <XCircleIcon
+              size={14}
+              className="text-red-400"
+              data-testid="not-verified-icon"
+            />
+            <span className="text-red-400">Not Verified</span>
+          </>
+        )}
       </div>
-      <SyntaxHighlighter
-        language={language}
-        style={atomDark}
-        customStyle={{
-          borderRadius: "0.5rem",
-          padding: "1rem",
-          marginTop: "0.5rem",
-          marginBottom: "0.5rem",
-        }}
-      >
-        {value}
-      </SyntaxHighlighter>
+      <div className="relative">
+        <div className="absolute right-2 top-2">
+          <button
+            onClick={copyToClipboard}
+            className="p-1 rounded bg-gray-700 hover:bg-gray-600 text-white"
+            aria-label="Copy code"
+          >
+            {copied ? (
+              <CheckIcon size={16} data-testid="check-icon" />
+            ) : (
+              <ClipboardIcon size={16} data-testid="clipboard-icon" />
+            )}
+          </button>
+        </div>
+        <SyntaxHighlighter
+          language={language}
+          style={atomDark}
+          customStyle={{
+            borderRadius: "0.5rem",
+            padding: "1rem",
+            marginTop: "0.5rem",
+            marginBottom: "0.5rem",
+          }}
+        >
+          {value}
+        </SyntaxHighlighter>
+      </div>
     </div>
   );
 };
