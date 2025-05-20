@@ -59,16 +59,6 @@ jest.mock("next/navigation", () => ({
   }),
 }));
 
-// Update the top-level service context mock to always include at least one service
-jest.mock("@frontend/(chat)/context/serviceContext", () => ({
-  useService: () => ({
-    selectedService: [],
-    services: [{ id: '1', name: 'Mock Service' }],
-    getServiceRepresentation: jest.fn(() => "Mock Service Representation"),
-    setSelectedService: jest.fn(),
-  }),
-  ServiceProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
-  }))
 // Mock the Image component
 jest.mock("next/image", () => ({
   __esModule: true,
@@ -221,13 +211,11 @@ describe("ChatBox", () => {
   });
 
   it("✅ should handle empty service list when fetching schemas", async () => {
-    jest.spyOn(require("@frontend/(chat)/context/serviceContext"), "useService")
-    .mockImplementation(() => ({
+    (useService as jest.Mock).mockReturnValue({
       selectedService: [],
-      services: [], // Empty services array for this test only
-      getServiceRepresentation: jest.fn(() => "No Services"),
-      setSelectedService: jest.fn(),
-    }));
+      services: [],
+      getServiceRepresentation: jest.fn(),
+    });
 
     renderChatBox();
 
@@ -239,8 +227,6 @@ describe("ChatBox", () => {
     await waitFor(() => {
       expect(screen.getByText("Test empty services")).toBeInTheDocument();
     });
-
-    jest.restoreAllMocks();
   });
 
   it("✅ should handle errors when fetching schemas", async () => {
@@ -378,38 +364,35 @@ describe("ChatBox", () => {
     });
   });
 
-it("✅ should handle errors when loading session messages", async () => {
-  // Mock session ID
-  getMock.mockImplementation((key: string) =>
-    key === "sessionId" ? "invalid-session" : null
-  );
+  it("✅ should handle errors when loading session messages", async () => {
+    // Mock session ID
+    getMock.mockImplementation((key: string) =>
+      key === "sessionId" ? "invalid-session" : null
+    );
 
-  // Mock fetch to return a proper error response
-  global.fetch = jest.fn().mockImplementationOnce(() => 
-    Promise.resolve({
+    // Mock fetch to return error
+    global.fetch = jest.fn().mockResolvedValueOnce({
       ok: false,
       status: 404,
-      json: () => Promise.reject(new Error("Not found"))
-    })
-  );
+    });
 
-  // Spy on console.error
-  const consoleErrorSpy = jest
-    .spyOn(console, "error")
-    .mockImplementation(() => {});
+    // Spy on console.error
+    const consoleErrorSpy = jest
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
 
-  renderChatBox();
+    renderChatBox();
 
-  await waitFor(() => {
-    // Make sure this matches EXACTLY what's in your component
-    expect(consoleErrorSpy).toHaveBeenCalledWith(
-      "Error loading session:", 
-      expect.any(Error)
-    );
+    await waitFor(() => {
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        "Error loading session messages:",
+        expect.any(Error)
+      );
+    });
+
+    consoleErrorSpy.mockRestore();
   });
 
-  consoleErrorSpy.mockRestore();
-});
   it("should show loading spinner during initialization", () => {
     getMock.mockImplementation((key: string) => 
       key === "sessionId" ? "test-session-id" : null
