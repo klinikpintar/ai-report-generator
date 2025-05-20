@@ -67,7 +67,7 @@ class AuthService implements IAuthService, IGenerateToken, IVerifyToken {
     });
 
     if (!user) throw new NotFoundResponse("User not found");
-    if (!user.isActive) throw new BadRequestResponse("User is not active");
+    if (!user.isActive) throw new UnauthorizedResponse("User is not active");
 
     return user;
   }
