@@ -35,7 +35,8 @@ jest.mock('@/app/(backend)/dtos/provider.dto', () => ({
     UPDATE_API_KEY: { parse: jest.fn(data => data) },
     ACTIVATE: { parse: jest.fn(data => data) },
     RESPONSE: { parse: jest.fn(provider => ({ ...provider, parsed: true })) },
-    RESPONSE_WITH_MODELS: { parse: jest.fn(provider => ({ ...provider, parsed: true, withModels: true })) }
+    RESPONSE_WITH_MODELS: { parse: jest.fn(provider => ({ ...provider, parsed: true, withModels: true })) },
+    RESPONSE_WITH_MODELS_INTERNAL: { parse: jest.fn(provider => ({ ...provider, parsed: true, withModels: true })) }
   }
 }));
 

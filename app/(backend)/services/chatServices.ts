@@ -1,5 +1,4 @@
-import { deepseek } from '@ai-sdk/deepseek';
-import { google } from '@ai-sdk/google';
+import { getAllModelInstances } from '@/app/(backend)/utils/AIModelUtils';
 import { generateText, CoreMessage } from 'ai';
 import prisma from '@/lib/prisma';
 import { AI_INSTRUCTION } from '@backend/constant/ai-instruction';
@@ -56,13 +55,19 @@ export interface SchemaRepository {
   getSchemaById(id: number): Promise<Schema | null>;
 }
 
-// Service Classes
 export class DeepseekProvider implements ModelProvider {
-  generateResponse(messages: Message[]): Promise<GenerationResult> {
+  async generateResponse(messages: Message[]): Promise<GenerationResult> {
     const sdkMessages = messages as CoreMessage[];
-    
+    const instances = await getAllModelInstances();
+    console.log("-------", "SEKARANG PAKAI DEEPSEEK")
+    const deepseekInstance = instances.find(i => i.providerName.toLowerCase() === 'deepseek');
+
+    if (!deepseekInstance) {
+      throw new Error('Deepseek model instance not found');
+    }
+
     return generateText({
-      model: deepseek('deepseek-chat'),
+      model: deepseekInstance.instance,
       messages: sdkMessages,
       system: AI_INSTRUCTION,
     });
@@ -74,11 +79,18 @@ export class DeepseekProvider implements ModelProvider {
 }
 
 export class GeminiProvider implements ModelProvider {
-  generateResponse(messages: Message[]): Promise<GenerationResult> {
+  async generateResponse(messages: Message[]): Promise<GenerationResult> {
     const sdkMessages = messages as CoreMessage[];
-    
+    const instances = await getAllModelInstances();
+    console.log("-------", "SEKARANG PAKAI GEMINI")
+    const geminiInstance = instances.find(i => i.providerName.toLowerCase() === 'gemini');
+
+    if (!geminiInstance) {
+      throw new Error('Gemini model instance not found');
+    }
+
     return generateText({
-      model: google('gemini-2.0-flash'),
+      model: geminiInstance.instance,
       messages: sdkMessages,
       system: AI_INSTRUCTION,
     });
@@ -96,7 +108,21 @@ export class ModelFactory {
   };
 
   getProvider(modelName: string): ModelProvider {
-    return this.providers[modelName] || this.providers['gemini'];
+    console.log("MODEL SEKRANG:", modelName)
+    // Convert to lowercase for case-insensitive matching
+    const modelLower = modelName.toLowerCase();
+
+    // Check if the modelName contains provider names
+    if (modelLower.includes('deepseek')) {
+      return this.providers['deepseek'];
+    }
+
+    if (modelLower.includes('gemini')) {
+      return this.providers['gemini'];
+    }
+
+    // Fallback ke provider gemini jika tidak ada yang cocok
+    return this.providers['gemini'];
   }
 
   registerProvider(name: string, provider: ModelProvider): void {
