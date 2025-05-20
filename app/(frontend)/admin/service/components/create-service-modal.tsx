@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import Modal from "@frontend/components/Modal";
-import { CircleMinus } from "lucide-react";
+import { Trash } from "lucide-react";
 import { toast } from "react-toastify";
 import { v4 as uuidv4 } from "uuid";
 import { ConfirmationDialog } from "@frontend/admin/schema/components/confirmation-dialog";
@@ -53,8 +53,6 @@ const CreateServiceModal = ({ isVisible, onClose }: Props) => {
   }, []);
 
   const confirmDelete = async () => {
-    if (!serviceToDelete) return;
-
     try {
       const response = await fetch("/api/service", {
         method: "DELETE",
@@ -126,8 +124,6 @@ const CreateServiceModal = ({ isVisible, onClose }: Props) => {
         setFormData({ name: "", platform: "" });
         onClose();
         eventBus.publish(EVENTS.SERVICE_UPDATED); // Notify other components
-      } else {
-        toast.error(`Failed to submit service: ${response.statusText}`);
       }
     } catch (error) {
       toast.error(`Error submitting service: ${error}`);
@@ -150,18 +146,20 @@ const CreateServiceModal = ({ isVisible, onClose }: Props) => {
                 {services.map((item) => (
                   <li
                     key={item.id}
-                    className="flex items-center py-2 px-4 gap-4 hover:bg-gray-100"
+                    className="flex items-center py-2 px-4 hover:bg-gray-100"
                   >
-                    <span className="text-gray-700 flex-1">{item.name}</span>
-                    <span className="text-gray-700 min-w-[100px] text-right">
-                      {item.platformCode}
-                    </span>
+                    <div className="flex justify-between items-center flex-1">
+                      <span className="text-gray-700">{item.name}</span>
+                      <span className="text-gray-700 text-right min-w-[100px]">
+                        {item.platformCode}
+                      </span>
+                    </div>
                     <button
                       data-testid="delete-service-button"
-                      className="text-red-500 hover:text-red-700 ml-auto flex items-center justify-center w-10"
+                      className="text-red-500 hover:text-red-700 flex items-center justify-center w-10 ml-4"
                       onClick={() => openDeleteConfirmation(item.id)}
                     >
-                      <CircleMinus size={30} />
+                      <Trash size={30} />
                     </button>
                   </li>
                 ))}
