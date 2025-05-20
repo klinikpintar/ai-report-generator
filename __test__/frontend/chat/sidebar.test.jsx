@@ -33,6 +33,27 @@ jest.mock("@frontend/(chat)/context/sessionContext", () => ({
   SessionProvider: ({ children }) => <div>{children}</div>
 }));
 
+// Add this mock for the service context
+jest.mock("@frontend/(chat)/context/serviceContext", () => ({
+  useService: () => ({
+    selectedService: [],
+    services: [{ id: '1', name: 'Mock Service' }],
+    getServiceRepresentation: jest.fn(() => "Mock Service Representation"),
+    setSelectedService: jest.fn(),
+  }),
+  ServiceProvider: ({ children }) => <div>{children}</div>
+}));
+
+// Mock the user context if it's used in Sidebar
+jest.mock("@frontend/login/context/userContext", () => ({
+  useUser: () => ({
+    name: "Test User",
+    email: "test@example.com",
+    isAuthenticated: true,
+  }),
+  UserProvider: ({ children }) => <div>{children}</div>
+}));
+
 // Mock the router
 const mockRouterPush = jest.fn();
 jest.mock('next/navigation', () => ({
