@@ -55,7 +55,7 @@ export async function POST(req: Request) {
     } : 'No active provider found');
 
     // Extract sessionId from request (keep other params as they are)
-    const { messages, model = activeProvider?.activeModel?.name || 'gemini', schemaId, sessionId } = await req.json();
+    const { messages, model = activeProvider?.activeModel?.name || 'gemini', schemaId, sessionId, serviceIds } = await req.json();
 
     // Log what model will be used
     console.log('Debug - Using model:', model);
@@ -184,10 +184,22 @@ Use this schema information if relevant to answer the user's question.`;
       });
       
       // Update session timestamp to show as most recent
-      await prisma.chatSession.update({
-        where: { id: sessionId },
-        data: { updatedAt: new Date() }
-      });
+      if (serviceIds && serviceIds.length > 0) {
+        // Update session with service selection
+        await prisma.chatSession.update({
+          where: { id: sessionId, userId: user.id },
+          data: {
+            lastSelectedServices: serviceIds,
+            updatedAt: new Date()
+          }
+        });
+      } else {
+        // Just update timestamp if no services provided
+        await prisma.chatSession.update({
+          where: { id: sessionId },
+          data: { updatedAt: new Date() }
+        });
+      }
       
       // If it's a new session, update title based on first message
       const session = await prisma.chatSession.findUnique({
