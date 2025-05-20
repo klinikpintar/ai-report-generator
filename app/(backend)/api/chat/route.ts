@@ -27,8 +27,6 @@ export async function POST(req: Request) {
   const formatter = new ResponseFormatter();
   const schemaRepository = new PrismaSchemaRepository();
   const contextEnhancer = new SchemaContextEnhancer(schemaRepository);
-  const providerService = ServiceFactory.getProviderService();
-  const activeProvider = await providerService.getActiveOrDefaultProvider();
 
   try {
     const user = await getUserFromRequest();
