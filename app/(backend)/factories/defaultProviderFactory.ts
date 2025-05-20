@@ -2,6 +2,7 @@ import { IApiKeyService } from "../interfaces/IApiKeyService";
 import { IProviderRepository, ProviderWithModels } from "../interfaces/IProviderRepository";
 import { ProviderValidation } from '../dtos/provider.dto';
 import { AIModelValidation } from "../dtos/aimodel.dto";
+import { randomUUID } from "crypto";
 
 export class DefaultProviderFactory {
   constructor(
@@ -17,8 +18,8 @@ export class DefaultProviderFactory {
     const defaultProviderData = ProviderValidation.POST.parse({
       name: 'gemini',
       displayName: 'Google Gemini',
-      apiKey: process.env.GEMINI_API_KEY ?? (() => {
-        throw new Error('GEMINI_API_KEY env var is required to bootstrap the default provider');
+      apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY ?? (() => {
+        throw new Error('GOOGLE_GENERATIVE_AI_API_KEY env var is required to bootstrap the default provider');
       })(),
       isActive: true,
       isDefault: true,
@@ -31,7 +32,7 @@ export class DefaultProviderFactory {
     const defaultModelData = AIModelValidation.POST.parse({
       name: 'Gemini 2.0 Flash',
       modelIdentifier: 'gemini-2.0-flash',
-      providerId: 'temporary', // Will be replaced in transaction
+      providerId: randomUUID(), // Will be replaced in transaction, only needed to pass validation
       isDefault: true,
       isAvailable: true
     });

@@ -1,4 +1,4 @@
-import React, { ReactNode, MouseEvent, useState, useEffect } from "react";
+import React, { ReactNode, useState, useEffect } from "react";
 
 interface ModalProps {
   isVisible: boolean;
@@ -23,27 +23,22 @@ const Modal: React.FC<ModalProps> = (props) => {
     }
   }, [isVisible]);
 
-  const handleClose = (event: MouseEvent<HTMLDivElement>) => {
-    const target = event.target as HTMLDivElement;
-    if (target.id === "wrapper") {
-      if (!isForm) {
-        onClose();
-      }
+  const handleClose = () => {
+    if (!isForm) {
+      onClose();
     }
   };
 
   if (!shouldRender) return null;
 
   return (
-    <div
-      role="button"
-      tabIndex={0}
+    <button
+      type="button"
       className={`fixed inset-0 flex justify-center cursor-default items-center z-50 ${
         isVisible
           ? "visible animate-in fade-in bg-black-9 bg-opacity-70"
           : "invisible animate-out fade-out"
       }`}
-      id="wrapper"
       data-testid="wrapper"
       onClick={handleClose}
     >
@@ -65,7 +60,7 @@ const Modal: React.FC<ModalProps> = (props) => {
         </div>
         {children}
       </div>
-    </div>
+    </button>
   );
 };
 

@@ -21,6 +21,10 @@ jest.mock('@/app/(backend)/dtos/aimodel.dto', () => ({
   }
 }));
 
+jest.mock('crypto', () => ({
+  randomUUID: jest.fn(() => 'mocked-uuid')
+}));
+
 describe('DefaultProviderFactory', () => {
   let providerRepo: jest.Mocked<IProviderRepository>;
   let apiKeyService: jest.Mocked<IApiKeyService>;
@@ -31,7 +35,7 @@ describe('DefaultProviderFactory', () => {
 
   beforeEach(() => {
     // Mock environment
-    process.env = { ...originalEnv, GEMINI_API_KEY: 'test-gemini-key' };
+    process.env = { ...originalEnv, GOOGLE_GENERATIVE_AI_API_KEY: 'test-gemini-key' };
     
     // Mock repository
     providerRepo = {
@@ -79,7 +83,7 @@ describe('DefaultProviderFactory', () => {
       expect(AIModelValidation.POST.parse).toHaveBeenCalledWith({
         name: 'Gemini 2.0 Flash',
         modelIdentifier: 'gemini-2.0-flash',
-        providerId: 'temporary',
+        providerId: 'mocked-uuid',
         isDefault: true,
         isAvailable: true
       });
@@ -108,14 +112,14 @@ describe('DefaultProviderFactory', () => {
       expect(result).toEqual(mockProvider);
     });
     
-    test('should throw error when GEMINI_API_KEY env var is missing', async () => {
+    test('should throw error when GOOGLE_GENERATIVE_AI_API_KEY env var is missing', async () => {
       // Remove env var
-      delete process.env.GEMINI_API_KEY;
+      delete process.env.GOOGLE_GENERATIVE_AI_API_KEY;
       
       // Expect error
       await expect(factory.createDefault())
         .rejects
-        .toThrow('GEMINI_API_KEY env var is required');
+        .toThrow('GOOGLE_GENERATIVE_AI_API_KEY env var is required');
     });
     
     test('should throw error when creation fails', async () => {
