@@ -48,7 +48,7 @@ export const UserTableSection = () => {
         <Button
           size="lg"
           onClick={() => setShowAddModal(true)}
-          className="mr-2 bg-blue-600 hover:bg-blue-700"
+          className="mr-2 bg-blue-6 hover:bg-blue-6/90"
         >
           Tambah Pengguna
         </Button>
