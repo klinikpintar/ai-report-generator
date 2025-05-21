@@ -44,7 +44,7 @@ export function GenericTable<T>({
       </TableHeader>
       <TableBody>
         {isLoading &&
-          [...Array(5)].map((i) => (
+          [...Array(5)].map((num, i) => (
             <TableRow key={`loader-${i}`}>
               {columns.map((column) => (
                 <TableCell key={column.key} style={{ width: column.width }} className="h-12">
