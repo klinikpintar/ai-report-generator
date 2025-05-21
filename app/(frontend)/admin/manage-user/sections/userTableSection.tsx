@@ -11,6 +11,7 @@ import EditAccountModal from "../components/editAccountModal";
 import { ConfirmationDialog } from "@frontend/components/ConfirmationDialog";
 import { useUserActions } from "@frontend/admin/manage-user/hooks/useUserAction";
 import { useFetchUser } from "@frontend/admin/manage-user/hooks/useFetchUser";
+import { toast } from "react-toastify";
 
 export const UserTableSection = () => {
   const [userToEdit, setUserToEdit] = useState<User | null>(null);
@@ -21,18 +22,19 @@ export const UserTableSection = () => {
   const { handleDeleteUser } = useUserActions();
 
   const handleConfirmDelete = async () => {
-    const success = await handleDeleteUser(userToDelete!.id);
+    const { success, message } = await handleDeleteUser(userToDelete!.id);
     if (success) {
-      setUserToDelete(null);
       await refreshUsers();
+    } else {
+      toast.error(message);
     }
+    setUserToDelete(null);
   };
 
   const handleEditUser = async (user: User) => {
-    setUserToEdit(user)
-    console.log("KOK GA DI EDTI")
+    setUserToEdit(user);
     await refreshUsers();
-  }
+  };
 
   return (
     <section className="container max-w-screen-xl mx-auto mt-6 flex flex-col items-center justify-center space-y-10">
@@ -40,10 +42,7 @@ export const UserTableSection = () => {
         <FilterByRoleDropdown />
       </div>
 
-      <UserTable
-        onEditUser={handleEditUser}
-        onDeleteUser={(user) => setUserToDelete(user)}
-      />
+      <UserTable onEditUser={handleEditUser} onDeleteUser={(user) => setUserToDelete(user)} />
 
       <div className="flex justify-center">
         <Button
@@ -68,7 +67,7 @@ export const UserTableSection = () => {
             fullName: userToEdit.name,
             email: userToEdit.email,
             status: userToEdit.isActive ? "Aktif" : "Nonaktif",
-            role: userToEdit.role
+            role: userToEdit.role,
           }}
           onSuccess={refreshUsers}
         />
