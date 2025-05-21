@@ -12,6 +12,7 @@ import { useSearchParams } from "next/navigation";
 import { useUser } from "@frontend/login/context/userContext";
 import { ReportFormatter } from "./components/ReportFormatter";
 import { QueryValidationResult } from "./interfaces/QueryValidationResult";
+import TextareaAutosize from 'react-textarea-autosize';
 
 
 interface Message {
@@ -337,7 +338,7 @@ export default function ChatBox() {
             Service: {getServiceRepresentation(selectedService, selectedService.length === services.length)}
           </p>
           <div className="flex items-center p-1 gap-2">
-            <textarea
+            <TextareaAutosize
               className="flex-1 border border-gray-300 rounded-xl p-4 text-black resize-none outline-none"
               placeholder="Type a message..."
               value={input}
@@ -355,7 +356,8 @@ export default function ChatBox() {
                   }
                 }
               }}
-              rows={1}
+              minRows={1}
+              maxRows={8}
               disabled={isLoading}
             />
             <button
