@@ -18,7 +18,7 @@ export const patchActivateProvider = async ({ providerId }: PatchActivateProvide
     });
 
     if (!response.ok) {
-      throw new Error("Failed to activate provider");
+      throw new Error(`Response error: ${response.status} ${response.statusText}`);
     }
 
     const data = {
@@ -27,10 +27,10 @@ export const patchActivateProvider = async ({ providerId }: PatchActivateProvide
 
     return data as PatchActivateProviderResponse;
   } catch (error) {
-    console.error("Error activating provider:", error);
+    console.error("Error activating provider | ", error);
     return {
       success: false,
-      message: (error as Error).message,
+      message: "Failed to activate provider",
     };
   }
 }

@@ -35,7 +35,7 @@ export const fetchAiProvider = async (): Promise<FetchAIProviderResponse> => {
     });
 
     if (!response.ok) {
-      throw new Error("Failed to fetch AI providers");
+      throw new Error(`Response error: ${response.status} ${response.statusText}`);
     }
 
     const data: AIProvider[] = await response.json();
@@ -45,10 +45,10 @@ export const fetchAiProvider = async (): Promise<FetchAIProviderResponse> => {
       data: data.map((provider) => setLogoUrl(provider)),
     }
   } catch (error) {
-    console.error("Error fetching AI providers:", error);
+    console.error("Error fetching AI providers | ", error);
     return {
       success: false,
-      message: (error as Error).message,
+      message: "Failed to fetch AI providers",
       data: [],
     }
   }
