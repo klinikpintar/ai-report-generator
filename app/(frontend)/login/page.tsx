@@ -39,9 +39,9 @@ const LoginPage = () => {
 
         setTimeout(async () => {
           if (user.role === "ADMIN") {
-            router.push("/admin");
+            router.replace("/admin");
           } else {
-            router.push("/");
+            router.replace("/");
           }
         }, 300);
       } else {
