@@ -11,9 +11,10 @@ import { toast as mockedToast, ToastContainer } from "react-toastify";
 
 // Mock useRouter
 const pushMock = jest.fn();
+const replaceMock = jest.fn();
 jest.mock("next/navigation", () => ({
   useRouter: () => ({
-    push: pushMock,
+    replace: replaceMock
   }),
 }));
 
@@ -190,7 +191,7 @@ describe("LoginPage", () => {
     });
 
     // Sekarang verifikasi router.push seharusnya dipanggil
-    expect(pushMock).toHaveBeenCalledWith("/");
+    expect(replaceMock).toHaveBeenCalledWith("/");
 
     // Restore real timers
     jest.useRealTimers();
@@ -241,7 +242,7 @@ describe("LoginPage", () => {
     });
 
     // Admin users should be redirected to /admin
-    expect(pushMock).toHaveBeenCalledWith("/admin");
+    expect(replaceMock).toHaveBeenCalledWith("/admin");
 
     // Restore real timers
     jest.useRealTimers();
