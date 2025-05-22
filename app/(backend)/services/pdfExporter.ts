@@ -97,14 +97,29 @@ export class PdfExporter implements IExporter {
     page.drawImage(logoImage.image, { x: 50, y: height - 60, width: logoImage.width, height: logoImage.height });
 
     let inCodeBlock = false;
+    let codeBlockType = '';
     const lines = content.split("\n");
 
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
       const trimmed = line.trim();
 
-      if (["```", "```sql"].includes(trimmed)) {
-        inCodeBlock = !inCodeBlock;
+      // Handle code block start/end markers with optional ID
+      if (trimmed.startsWith("```")) {
+        if (!inCodeBlock) {
+          // Starting a code block - extract type but remove ID if present
+          const codeBlockMatch = trimmed.match(/^```(\w+)(?:\s+id=[\w\d]+)?$/);
+          if (codeBlockMatch) {
+            codeBlockType = codeBlockMatch[1]; // Store the code block type (sql, js, etc.)
+          } else {
+            codeBlockType = '';
+          }
+          inCodeBlock = true;
+        } else {
+          // Ending a code block
+          inCodeBlock = false;
+          codeBlockType = '';
+        }
         continue;
       }
 
@@ -115,7 +130,18 @@ export class PdfExporter implements IExporter {
       }
 
       const styleInfo = this.extractStyle(trimmed);
-      const wrappedLines = wrapText(styleInfo.content, width - styleInfo.xStart - 50, fonts.regular, styleInfo.fontSize);
+
+      // If we're in a code block and this line has an ID, remove it before rendering
+      let contentToRender = styleInfo.content;
+      if (inCodeBlock && codeBlockType === 'sql') {
+        // Check for ID pattern and remove it
+        const idMatch = contentToRender.match(/^(\s*sql\s+id=[\w\d]+\s*)/i);
+        if (idMatch) {
+          contentToRender = contentToRender.slice(idMatch[0].length);
+        }
+      }
+
+      const wrappedLines = wrapText(contentToRender, width - styleInfo.xStart - 50, fonts.regular, styleInfo.fontSize);
 
       for (const wrappedLine of wrappedLines) {
         if (y < 50) {
