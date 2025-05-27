@@ -31,6 +31,6 @@
     ".next/types/**/*.ts",
     "__test__/frontend/login/login.test.tsx",
     "__test__/schema/AddSchemaModal.test.jsx"
-, "__test__/frontend/chat/dropdown.test.tsx", "__test__/frontend/chat/chatbox.test.tsx"  ],
+, "__test__/frontend/chat/dropdown.test.tsx", "__test__/frontend/chat/chatbox.test.tsx" ],
   "exclude": ["node_modules"]
 }

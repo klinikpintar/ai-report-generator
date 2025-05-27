@@ -13,6 +13,7 @@ RUN pnpm install --frozen-lockfile
 FROM node:20-alpine AS builder
 
 ENV PNPM_VERSION=8.15.4
+ENV ENCRYPTION_KEY="828187fad2eb8efda9fbac19c975f0ab8504b99774e44bc0c54301f8e72c5be1"
 RUN corepack enable && corepack prepare pnpm@$PNPM_VERSION --activate
 
 WORKDIR /app
@@ -35,18 +36,16 @@ WORKDIR /app
 
 RUN corepack enable && corepack prepare pnpm@$PNPM_VERSION --activate
 
-# Copy standalone app (includes server.js and necessary node_modules)
+# Copy standalone Next.js app
 COPY --from=builder /app/.next/standalone ./
-
-# Copy static files and public assets
 COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/public ./public
 
-# Copy prisma schema/migrations
+# Copy Prisma schema & migration files
 COPY --from=builder /app/prisma ./prisma
 
-# Copy entrypoint script
-COPY entrypoint.sh .
+# Copy entrypoint
+COPY entrypoint.sh ./
 RUN chmod +x entrypoint.sh
 
 EXPOSE 3000
